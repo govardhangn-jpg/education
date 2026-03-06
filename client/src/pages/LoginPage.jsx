@@ -53,13 +53,15 @@ export default function LoginPage() {
         .avatar-option{font-size:22px;cursor:pointer;padding:6px;border-radius:8px;border:2px solid transparent;transition:all 0.15s;}
         .avatar-option.selected{border-color:#ffd700;background:rgba(255,215,0,0.15);}
         .avatar-option:hover{background:rgba(255,255,255,0.1);}
+        .reg-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+        @media(max-width:480px){.reg-grid{grid-template-columns:1fr!important;}}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:4px}
       `}</style>
 
       <div style={{ position:'fixed', width:400, height:400, borderRadius:'50%', background:'#ffd700', filter:'blur(100px)', opacity:0.08, top:-100, right:-100, pointerEvents:'none' }} />
       <div style={{ position:'fixed', width:300, height:300, borderRadius:'50%', background:'#4ecdc4', filter:'blur(80px)', opacity:0.08, bottom:-80, left:-80, pointerEvents:'none' }} />
 
-      <div style={{ background:'rgba(255,255,255,0.04)', backdropFilter:'blur(20px)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:28, padding:'36px 32px', width:'100%', maxWidth:460, boxShadow:'0 32px 80px rgba(0,0,0,0.5)', maxHeight:'90vh', overflowY:'auto' }}>
+      <div style={{ background:'rgba(255,255,255,0.04)', backdropFilter:'blur(20px)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:28, padding:'28px 20px', width:'100%', maxWidth:460, boxShadow:'0 32px 80px rgba(0,0,0,0.5)', maxHeight:'90vh', overflowY:'auto' }}>
         {/* Logo */}
         <div style={{ textAlign:'center', marginBottom:24 }}>
           <div style={{ fontSize:48, marginBottom:6 }}>🎓</div>
@@ -89,7 +91,7 @@ export default function LoginPage() {
           </form>
         ) : (
           <form onSubmit={handleRegister}>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
+            <div className="reg-grid">
               <div>
                 <label style={{ color:'rgba(255,255,255,0.6)', fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>FULL NAME</label>
                 <input className="login-input" placeholder="Your name" value={form.name} onChange={e=>set('name',e.target.value)} required />
@@ -103,7 +105,7 @@ export default function LoginPage() {
               <label style={{ color:'rgba(255,255,255,0.6)', fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>PASSWORD</label>
               <input className="login-input" type="password" placeholder="Min 6 characters" value={form.password} onChange={e=>set('password',e.target.value)} required minLength={6} />
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
+            <div className="reg-grid">
               <div>
                 <label style={{ color:'rgba(255,255,255,0.6)', fontSize:12, fontWeight:700, display:'block', marginBottom:6 }}>CLASS</label>
                 <select className="login-input" value={form.grade} onChange={e=>set('grade',e.target.value)}>
