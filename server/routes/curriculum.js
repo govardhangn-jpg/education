@@ -11,13 +11,20 @@ const router = express.Router();
 router.get('/', protect, (req, res) => {
   const { grade, syllabus, subject } = req.query;
   if (!grade || !syllabus) return res.status(400).json({ error: 'Grade and syllabus required' });
+
+  // For exam prep modes, syllabus IS the top-level key (NEET/KCET)
+  // and grade IS the exam name (e.g. "NEET Preparation")
+  const isExamMode = grade === 'NEET Preparation' || grade === 'KCET Preparation';
+  const lookupSyllabus = isExamMode ? syllabus : syllabus;          // NEET / KCET / CBSE etc.
+  const lookupGrade    = isExamMode ? grade : grade;
+
   if (subject) {
-    const chapters = CURRICULUM[syllabus]?.[grade]?.[subject] || [];
+    const chapters = CURRICULUM[lookupSyllabus]?.[lookupGrade]?.[subject] || [];
     return res.json({ chapters, subject, grade, syllabus });
   }
   const subjects = SUBJECTS_BY_GRADE[grade] || [];
   const curriculum = {};
-  subjects.forEach(sub => { curriculum[sub] = CURRICULUM[syllabus]?.[grade]?.[sub] || []; });
+  subjects.forEach(sub => { curriculum[sub] = CURRICULUM[lookupSyllabus]?.[lookupGrade]?.[sub] || []; });
   res.json({ curriculum, grade, syllabus, subjects });
 });
 

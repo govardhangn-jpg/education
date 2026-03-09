@@ -3,14 +3,28 @@ import { useSearchParams } from 'react-router-dom';
 import { sendMessage, getCurriculum, getChatSessions, getChatSession, deleteChatSession } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { useTTS, useSpeechRecognition } from '../hooks/useSpeech';
-import { SUBJECT_META, SUBJECTS_BY_GRADE, LANGUAGES } from '../utils/constants';
+import { SUBJECT_META, SUBJECTS_BY_GRADE, EXAM_META, EXAM_MODES, LANGUAGES } from '../utils/constants';
 
 export default function ChatPage() {
   const { user } = useAuth();
   const [params] = useSearchParams();
-  const [grade, setGrade] = useState(user?.grade || 'Class 7');
-  const [syllabus, setSyllabus] = useState(user?.syllabus || 'CBSE');
-  const [subject, setSubject] = useState(params.get('subject') || SUBJECTS_BY_GRADE[user?.grade]?.[0] || 'Mathematics');
+  const [grade, setGrade] = useState(() => {
+    const examMode = params.get('examMode');
+    return examMode || user?.grade || 'Class 7';
+  });
+  const [syllabus, setSyllabus] = useState(() => {
+    const em = params.get('examMode');
+    if (em === 'NEET Preparation') return 'NEET';
+    if (em === 'KCET Preparation') return 'KCET';
+    return user?.syllabus || 'CBSE';
+  });
+  const [subject, setSubject] = useState(() => {
+    const em = params.get('examMode');
+    const subj = params.get('subject');
+    if (subj) return subj;
+    const gradeKey = em || user?.grade || 'Class 7';
+    return SUBJECTS_BY_GRADE[gradeKey]?.[0] || 'Mathematics';
+  });
   const [chapter, setChapter] = useState('');
   const [language, setLanguage] = useState(user?.preferredLanguage || 'English');
   const [chapters, setChapters] = useState([]);
@@ -48,7 +62,12 @@ export default function ChatPage() {
   useEffect(() => {
     if (!currentSessionId) {
       const meta = SUBJECT_META[subject] || SUBJECT_META.English;
-      setMessages([{ role:'assistant', content:`Namaste ${user?.name}! 🙏\n\nWelcome to **${subject}** for **${grade}** (${syllabus})!\n\nI'm your SamarthaaEdu tutor. Ask me anything in ${language}.\n\nYou can:\n• Type your question below\n• 🎙️ Use voice to ask\n• Tap any chapter to study it\n• 🔊 Listen to my answers\n\nWhat would you like to learn today? ${meta.icon}` }]);
+      const isExam = EXAM_MODES.includes(grade);
+      const examM  = isExam ? EXAM_META[grade] : null;
+      const welcomeMsg = isExam
+        ? `Namaste ${user?.name}! 🙏\n\nWelcome to **${grade}** — ${examM?.description}.\n\nI'm your SamarthaaEdu ${examM?.label} specialist tutor. I'll help you:\n• Master every topic with conceptual clarity\n• Solve previous year questions (PYQs)\n• Learn exam-specific tricks and mnemonics\n• Practice MCQs with detailed explanations\n\nCurrently studying: **${subject}** ${meta.icon}\n\nWhat topic would you like to tackle today?`
+        : `Namaste ${user?.name}! 🙏\n\nWelcome to **${subject}** for **${grade}** (${syllabus})!\n\nI'm your SamarthaaEdu tutor. Ask me anything in ${language}.\n\nYou can:\n• Type your question below\n• 🎙️ Use voice to ask\n• Tap any chapter to study it\n• 🔊 Listen to my answers\n\nWhat would you like to learn today? ${meta.icon}`;
+      setMessages([{ role:'assistant', content: welcomeMsg }]);
     }
   }, [subject, chapter]);
 
@@ -81,7 +100,7 @@ export default function ChatPage() {
     setMessages(prev => [...prev, { role:'user', content:msg }]);
     setLoading(true);
     try {
-      const r = await sendMessage({ sessionId: currentSessionId, message: msg, subject, grade, syllabus, chapter, language });
+      const r = await sendMessage({ sessionId: currentSessionId, message: msg, subject, grade, syllabus: isExamMode ? (grade === 'NEET Preparation' ? 'NEET' : 'KCET') : syllabus, chapter, language });
       setCurrentSessionId(r.data.sessionId);
       setMessages(prev => [...prev, { role:'assistant', content:r.data.reply }]);
       getChatSessions({ subject, limit: 15 }).then(r2 => setSessions(r2.data.sessions || [])).catch(() => {});
@@ -92,8 +111,10 @@ export default function ChatPage() {
     setLoading(false);
   };
 
-  const subjects = SUBJECTS_BY_GRADE[grade] || [];
-  const meta = SUBJECT_META[subject] || SUBJECT_META.English;
+  const isExamMode = EXAM_MODES.includes(grade);
+  const examMeta   = isExamMode ? EXAM_META[grade] : null;
+  const subjects   = SUBJECTS_BY_GRADE[grade] || [];
+  const meta       = SUBJECT_META[subject] || SUBJECT_META.English;
 
   const SidebarContent = () => (
     <>
@@ -191,12 +212,22 @@ export default function ChatPage() {
             <div style={{ color:'rgba(255,255,255,0.4)', fontSize:10 }}>{grade} • {syllabus}</div>
           </div>
           <div className="chat-header-selects">
-            <select value={grade} onChange={e => setGrade(e.target.value)}>
-              {Array.from({length:10},(_,i)=>`Class ${i+1}`).map(g=><option key={g} value={g}>{g}</option>)}
-            </select>
-            <select value={syllabus} onChange={e => setSyllabus(e.target.value)}>
-              {['CBSE','ICSE','Karnataka State'].map(s=><option key={s} value={s}>{s}</option>)}
-            </select>
+            {isExamMode ? (
+              <span style={{ fontSize:11, padding:'4px 10px', borderRadius:10, fontWeight:700,
+                background: examMeta?.bg, color: examMeta?.color,
+                border:`1px solid ${examMeta?.color}55` }}>
+                {examMeta?.badge}
+              </span>
+            ) : (
+              <>
+                <select value={grade} onChange={e => setGrade(e.target.value)}>
+                  {['Class 1','Class 2','Class 3','Class 4','Class 5','Class 6','Class 7','Class 8','Class 9','Class 10','Class 11','Class 12'].map(g=><option key={g} value={g}>{g}</option>)}
+                </select>
+                <select value={syllabus} onChange={e => setSyllabus(e.target.value)}>
+                  {['CBSE','ICSE','Karnataka State'].map(s=><option key={s} value={s}>{s}</option>)}
+                </select>
+              </>
+            )}
             <select value={language} onChange={e => setLanguage(e.target.value)}>
               {LANGUAGES.map(l=><option key={l} value={l}>{l}</option>)}
             </select>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDashboard } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
-import { SUBJECT_META } from '../utils/constants';
+import { SUBJECT_META, EXAM_META, EXAM_MODES } from '../utils/constants';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -117,13 +117,29 @@ export default function DashboardPage() {
       )}
 
       {/* Quick Start */}
-      <div>
-        <div style={{ color:'white', fontWeight:800, fontSize:15, marginBottom:12 }}>⚡ Quick Start</div>
+      <div style={{ marginBottom:20 }}>
+        <div style={{ color:'white', fontWeight:800, fontSize:15, marginBottom:12 }}>⚡ Quick Start — Subjects</div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))', gap:10 }}>
           {Object.entries(SUBJECT_META).slice(0,6).map(([sub, meta]) => (
             <button key={sub} onClick={() => navigate(`/chat?subject=${sub}`)}
               style={{ background:meta.bg, border:`1px solid ${meta.color}40`, borderRadius:14, padding:'12px 10px', color:meta.color, fontSize:13, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:7 }}>
               <span style={{ fontSize:18 }}>{meta.icon}</span>{sub}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Exam Prep Cards */}
+      <div>
+        <div style={{ color:'white', fontWeight:800, fontSize:15, marginBottom:12 }}>🎯 Entrance Exam Preparation</div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+          {Object.entries(EXAM_META).map(([key, em]) => (
+            <button key={key} onClick={() => navigate(`/chat?examMode=${encodeURIComponent(key)}`)}
+              style={{ background:em.bg, border:`1px solid ${em.color}50`, borderRadius:18, padding:'18px 16px', cursor:'pointer', textAlign:'left', transition:'all 0.2s' }}>
+              <div style={{ fontSize:28, marginBottom:8 }}>{em.icon}</div>
+              <div style={{ color:'white', fontSize:14, fontWeight:800, marginBottom:4 }}>{em.fullLabel}</div>
+              <div style={{ color:'rgba(255,255,255,0.55)', fontSize:11, lineHeight:1.4 }}>{em.description}</div>
+              <div style={{ marginTop:10, display:'inline-block', background:`${em.color}25`, border:`1px solid ${em.color}50`, borderRadius:8, padding:'4px 10px', color:em.color, fontSize:11, fontWeight:700 }}>Start Preparing →</div>
             </button>
           ))}
         </div>
