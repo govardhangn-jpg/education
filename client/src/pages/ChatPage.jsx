@@ -122,7 +122,8 @@ export default function ChatPage() {
       <div style={{ padding:'12px 10px 8px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ color:'rgba(255,255,255,0.3)', fontSize:9, fontWeight:800, letterSpacing:1.5, textTransform:'uppercase', padding:'0 4px 8px' }}>Subjects</div>
         {subjects.map(sub => {
-          const sm = SUBJECT_META[sub]; const active = subject===sub;
+          const sm = SUBJECT_META[sub] || { icon:'📖', color:'#4f8ef7', bg:'#4f8ef718' };
+          const active = subject===sub;
           return <div key={sub} className="chat-sidebar-item" onClick={() => { setSubject(sub); setCurrentSessionId(null); setSidebarOpen(false); }}
             style={{ background:active?`${sm.color}15`:'', borderLeft:`3px solid ${active?sm.color:'transparent'}`, color:active?sm.color:'' }}>
             <span style={{ fontSize:14 }}>{sm?.icon}</span><span>{sub}</span>

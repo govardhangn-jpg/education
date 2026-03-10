@@ -33,9 +33,11 @@ export default function DashboardPage() {
       <style>{`
         .dash-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
         .dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+        .exam-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
         @media(max-width:768px){
           .dash-grid-2{grid-template-columns:1fr!important;}
           .dash-stats{grid-template-columns:repeat(2,1fr)!important;}
+          .exam-grid{grid-template-columns:1fr!important;}
         }
       `}</style>
 
@@ -132,7 +134,7 @@ export default function DashboardPage() {
       {/* Exam Prep Cards */}
       <div>
         <div style={{ color:'white', fontWeight:800, fontSize:15, marginBottom:12 }}>🎯 Entrance Exam Preparation</div>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+        <div className="exam-grid">
           {Object.entries(EXAM_META).map(([key, em]) => (
             <button key={key} onClick={() => navigate(`/chat?examMode=${encodeURIComponent(key)}`)}
               style={{ background:em.bg, border:`1px solid ${em.color}50`, borderRadius:18, padding:'18px 16px', cursor:'pointer', textAlign:'left', transition:'all 0.2s' }}>

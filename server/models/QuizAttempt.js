@@ -15,7 +15,7 @@ const quizAttemptSchema = new mongoose.Schema({
   grade: { type: String, required: true },
   syllabus: { type: String, required: true },
   subject: { type: String, required: true },
-  chapter: { type: String, required: true },
+  chapter: { type: String, default: '' },
   topic: { type: String },
   difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
   totalQuestions: { type: Number, required: true },

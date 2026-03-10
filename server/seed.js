@@ -1,20 +1,36 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import User from './models/User.js';
 
-dotenv.config();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, '.env') });
 
 const DEMO_STUDENTS = [
-  { username: 'arjun_k', password: 'learn123', name: 'Arjun Kumar', grade: 'Class 7', syllabus: 'CBSE', avatar: '🧑‍🎓', email: 'arjun@demo.com', preferredLanguage: 'English' },
-  { username: 'priya_s', password: 'study456', name: 'Priya Sharma', grade: 'Class 5', syllabus: 'ICSE', avatar: '👧', email: 'priya@demo.com', preferredLanguage: 'English' },
-  { username: 'ravi_m', password: 'learn789', name: 'Ravi Murthy', grade: 'Class 9', syllabus: 'Karnataka State', avatar: '🧒', email: 'ravi@demo.com', preferredLanguage: 'Kannada' },
-  { username: 'ananya_r', password: 'study123', name: 'Ananya Rao', grade: 'Class 6', syllabus: 'CBSE', avatar: '👩‍🎓', email: 'ananya@demo.com', preferredLanguage: 'English' },
-  { username: 'kiran_b', password: 'learn456', name: 'Kiran Babu', grade: 'Class 10', syllabus: 'CBSE', avatar: '🎓', email: 'kiran@demo.com', preferredLanguage: 'English' },
-  { username: 'deepa_n', password: 'study789', name: 'Deepa Nair', grade: 'Class 3', syllabus: 'ICSE', avatar: '🌸', email: 'deepa@demo.com', preferredLanguage: 'Hindi' },
-  { username: 'suresh_g', password: 'learn000', name: 'Suresh Gowda', grade: 'Class 8', syllabus: 'Karnataka State', avatar: '📚', email: 'suresh@demo.com', preferredLanguage: 'Kannada' },
-  { username: 'meera_v', password: 'study000', name: 'Meera Venkat', grade: 'Class 4', syllabus: 'CBSE', avatar: '🌟', email: 'meera@demo.com', preferredLanguage: 'Telugu' },
-  { username: 'admin', password: 'admin@samarthaa', name: 'Admin User', grade: 'Class 10', syllabus: 'CBSE', avatar: '🛡️', role: 'admin' },
-  { username: 'teacher1', password: 'teacher@123', name: 'Smt. Kavitha Reddy', grade: 'Class 7', syllabus: 'CBSE', avatar: '👩‍🏫', role: 'teacher' },
+  // Class 1-10 students
+  { username: 'arjun_k',  password: 'learn123',   name: 'Arjun Kumar',        grade: 'Class 7',  syllabus: 'CBSE',            avatar: '🧑‍🎓', email: 'arjun@demo.com',   preferredLanguage: 'English' },
+  { username: 'priya_s',  password: 'study456',   name: 'Priya Sharma',       grade: 'Class 5',  syllabus: 'ICSE',            avatar: '👧',   email: 'priya@demo.com',   preferredLanguage: 'English' },
+  { username: 'ravi_m',   password: 'learn789',   name: 'Ravi Murthy',        grade: 'Class 9',  syllabus: 'Karnataka State', avatar: '🧒',   email: 'ravi@demo.com',    preferredLanguage: 'Kannada' },
+  { username: 'ananya_r', password: 'study123',   name: 'Ananya Rao',         grade: 'Class 6',  syllabus: 'CBSE',            avatar: '👩‍🎓', email: 'ananya@demo.com',  preferredLanguage: 'English' },
+  { username: 'kiran_b',  password: 'learn456',   name: 'Kiran Babu',         grade: 'Class 10', syllabus: 'CBSE',            avatar: '🎓',   email: 'kiran@demo.com',   preferredLanguage: 'English' },
+  { username: 'deepa_n',  password: 'study789',   name: 'Deepa Nair',         grade: 'Class 3',  syllabus: 'ICSE',            avatar: '🌸',   email: 'deepa@demo.com',   preferredLanguage: 'Hindi' },
+  { username: 'suresh_g', password: 'learn000',   name: 'Suresh Gowda',       grade: 'Class 8',  syllabus: 'Karnataka State', avatar: '📚',   email: 'suresh@demo.com',  preferredLanguage: 'Kannada' },
+  { username: 'meera_v',  password: 'study000',   name: 'Meera Venkat',       grade: 'Class 4',  syllabus: 'CBSE',            avatar: '🌟',   email: 'meera@demo.com',   preferredLanguage: 'Telugu' },
+  // Class 11-12 students (Science stream)
+  { username: 'rahul_11', password: 'study11cbse', name: 'Rahul Verma',       grade: 'Class 11', syllabus: 'CBSE',            avatar: '⚛️',   email: 'rahul11@demo.com', preferredLanguage: 'English' },
+  { username: 'sneha_12', password: 'study12cbse', name: 'Sneha Iyer',        grade: 'Class 12', syllabus: 'CBSE',            avatar: '🧬',   email: 'sneha12@demo.com', preferredLanguage: 'English' },
+  { username: 'vijay_11', password: 'study11ks',   name: 'Vijay Patil',       grade: 'Class 11', syllabus: 'Karnataka State', avatar: '🎯',   email: 'vijay11@demo.com', preferredLanguage: 'Kannada' },
+  { username: 'divya_12', password: 'study12ks',   name: 'Divya Lakshmi',     grade: 'Class 12', syllabus: 'Karnataka State', avatar: '🌺',   email: 'divya12@demo.com', preferredLanguage: 'Kannada' },
+  // NEET aspirants
+  { username: 'neet_arya',  password: 'neet2025',  name: 'Arya Krishnan',     grade: 'NEET Preparation', syllabus: 'NEET', avatar: '🩺',   email: 'arya@demo.com',    preferredLanguage: 'English' },
+  { username: 'neet_rohit', password: 'neet2026',  name: 'Rohit Hegde',       grade: 'NEET Preparation', syllabus: 'NEET', avatar: '🏥',   email: 'rohit@demo.com',   preferredLanguage: 'Kannada' },
+  // KCET aspirants
+  { username: 'kcet_kavya', password: 'kcet2025',  name: 'Kavya Gowda',       grade: 'KCET Preparation', syllabus: 'KCET', avatar: '🏫',   email: 'kavya@demo.com',   preferredLanguage: 'Kannada' },
+  { username: 'kcet_arun',  password: 'kcet2026',  name: 'Arun Prasad',       grade: 'KCET Preparation', syllabus: 'KCET', avatar: '🎯',   email: 'arun@demo.com',    preferredLanguage: 'English' },
+  // Staff
+  { username: 'admin',    password: 'admin@samarthaa', name: 'Admin User',    grade: 'Class 10', syllabus: 'CBSE', avatar: '🛡️', role: 'admin' },
+  { username: 'teacher1', password: 'teacher@123',     name: 'Smt. Kavitha Reddy', grade: 'Class 7', syllabus: 'CBSE', avatar: '👩‍🏫', role: 'teacher' },
 ];
 
 async function seed() {
