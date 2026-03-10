@@ -12,19 +12,25 @@ router.get('/', protect, (req, res) => {
   const { grade, syllabus, subject } = req.query;
   if (!grade || !syllabus) return res.status(400).json({ error: 'Grade and syllabus required' });
 
-  // For exam prep modes, syllabus IS the top-level key (NEET/KCET)
-  // and grade IS the exam name (e.g. "NEET Preparation")
-  const isExamMode = grade === 'NEET Preparation' || grade === 'KCET Preparation';
-  const lookupSyllabus = isExamMode ? syllabus : syllabus;          // NEET / KCET / CBSE etc.
-  const lookupGrade    = isExamMode ? grade : grade;
+  // Resolve the correct CURRICULUM top-level key for ALL course types
+  const syllabusMap = {
+    'NEET Preparation': 'NEET',
+    'KCET Preparation': 'KCET',
+    'NEET PG':          'NEET PG',
+    'IIT-JEE':          'IIT-JEE',
+  };
+  let lookupSyllabus = syllabusMap[grade] || syllabus;
+  if (['LLB Year 1','LLB Year 2','LLB Year 3','LLB Year 4','LLB Year 5'].includes(grade)) lookupSyllabus = 'LLB';
+  if (grade.startsWith('UPSC') || grade.startsWith('Optional –')) lookupSyllabus = 'UPSC';
+  if (/^(MBBS|BDS|B\.Pharm|BSc Nursing|BMLT|BPT|BOT)/.test(grade)) lookupSyllabus = 'RGUHS';
 
   if (subject) {
-    const chapters = CURRICULUM[lookupSyllabus]?.[lookupGrade]?.[subject] || [];
+    const chapters = CURRICULUM[lookupSyllabus]?.[grade]?.[subject] || [];
     return res.json({ chapters, subject, grade, syllabus });
   }
   const subjects = SUBJECTS_BY_GRADE[grade] || [];
   const curriculum = {};
-  subjects.forEach(sub => { curriculum[sub] = CURRICULUM[lookupSyllabus]?.[lookupGrade]?.[sub] || []; });
+  subjects.forEach(sub => { curriculum[sub] = CURRICULUM[lookupSyllabus]?.[grade]?.[sub] || []; });
   res.json({ curriculum, grade, syllabus, subjects });
 });
 
@@ -36,13 +42,27 @@ router.get('/progress', protect, async (req, res) => {
     const s = syllabus || req.user.syllabus;
     const subjects = SUBJECTS_BY_GRADE[g] || [];
 
-    // Get quiz attempts grouped by subject+chapter
-    const attempts = await QuizAttempt.find({ userId: req.user._id, grade: g });
+    // Resolve correct CURRICULUM top-level key for ALL course types
+    const syllabusMap = {
+      'NEET Preparation': 'NEET',
+      'KCET Preparation': 'KCET',
+      'NEET PG':          'NEET PG',
+      'IIT-JEE':          'IIT-JEE',
+    };
+    let lookupSyllabus = syllabusMap[g] || s;
+    // LLB grades
+    if (['LLB Year 1','LLB Year 2','LLB Year 3','LLB Year 4','LLB Year 5'].includes(g)) lookupSyllabus = 'LLB';
+    // UPSC grades
+    if (g.startsWith('UPSC') || g.startsWith('Optional –')) lookupSyllabus = 'UPSC';
+    // RGUHS grades (MBBS, BDS, B.Pharm, BSc Nursing, BMLT, BPT, BOT)
+    if (/^(MBBS|BDS|B\.Pharm|BSc Nursing|BMLT|BPT|BOT)/.test(g)) lookupSyllabus = 'RGUHS';
+
+    const attempts    = await QuizAttempt.find({ userId: req.user._id, grade: g });
     const chatSessions = await ChatSession.find({ userId: req.user._id, grade: g });
 
     const progress = {};
     subjects.forEach(sub => {
-      const chapters = CURRICULUM[s]?.[g]?.[sub] || [];
+      const chapters = CURRICULUM[lookupSyllabus]?.[g]?.[sub] || [];
       progress[sub] = chapters.map(ch => {
         const chAttempts = attempts.filter(a => a.subject === sub && a.chapter === ch);
         const chSessions = chatSessions.filter(cs => cs.subject === sub && cs.chapter === ch);
