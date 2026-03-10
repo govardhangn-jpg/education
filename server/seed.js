@@ -28,6 +28,30 @@ const DEMO_STUDENTS = [
   // KCET aspirants
   { username: 'kcet_kavya', password: 'kcet2025',  name: 'Kavya Gowda',       grade: 'KCET Preparation', syllabus: 'KCET', avatar: '🏫',   email: 'kavya@demo.com',   preferredLanguage: 'Kannada' },
   { username: 'kcet_arun',  password: 'kcet2026',  name: 'Arun Prasad',       grade: 'KCET Preparation', syllabus: 'KCET', avatar: '🎯',   email: 'arun@demo.com',    preferredLanguage: 'English' },
+  // IIT-JEE aspirants
+  { username: 'jee_aryan',   password: 'jee2025',   name: 'Aryan Mehta',       grade: 'IIT-JEE', syllabus: 'IIT-JEE', avatar: '⚙️',  email: 'aryan@demo.com',   preferredLanguage: 'English' },
+  { username: 'jee_pooja',   password: 'jee2026',   name: 'Pooja Iyer',        grade: 'IIT-JEE', syllabus: 'IIT-JEE', avatar: '🔬',  email: 'pooja@demo.com',   preferredLanguage: 'English' },
+  // UPSC aspirants
+  { username: 'upsc_kaveri', password: 'upsc2025',  name: 'Kaveri Nair',       grade: 'UPSC Prelims',      syllabus: 'UPSC', avatar: '🇮🇳', email: 'kaveri@demo.com',  preferredLanguage: 'English' },
+  { username: 'upsc_rajan',  password: 'upsc2026',  name: 'Rajan Pillai',      grade: 'UPSC Mains – GS',   syllabus: 'UPSC', avatar: '📚',  email: 'rajan@demo.com',   preferredLanguage: 'English' },
+  { username: 'upsc_shruti', password: 'upsc2027',  name: 'Shruti Desai',      grade: 'Optional – History',syllabus: 'UPSC', avatar: '📜',  email: 'shruti@demo.com',  preferredLanguage: 'English' },
+  // NEET PG aspirants
+  { username: 'neetpg_sneha',  password: 'neetpg2025', name: 'Dr. Sneha Menon',   grade: 'NEET PG', syllabus: 'NEET PG', avatar: '🩺', email: 'sneha_pg@demo.com', preferredLanguage: 'English' },
+  { username: 'neetpg_vivek',  password: 'neetpg2026', name: 'Dr. Vivek Sharma',  grade: 'NEET PG', syllabus: 'NEET PG', avatar: '🎓', email: 'vivek_pg@demo.com',  preferredLanguage: 'English' },
+  // LLB students — Bar Council of Karnataka
+  { username: 'llb_riya',   password: 'llb2025',   name: 'Riya Shenoy',       grade: 'LLB Year 1', syllabus: 'LLB', avatar: '⚖️',  email: 'riya@demo.com',    preferredLanguage: 'English' },
+  { username: 'llb_sanjay', password: 'llb2026',   name: 'Sanjay Kulkarni',   grade: 'LLB Year 3', syllabus: 'LLB', avatar: '🏛️',  email: 'sanjay@demo.com',  preferredLanguage: 'Kannada' },
+  // RGUHS — MBBS
+  { username: 'mbbs_preethi', password: 'mbbs2025', name: 'Preethi Ramesh',   grade: 'MBBS Year 1', syllabus: 'RGUHS', avatar: '🩺',  email: 'preethi@demo.com', preferredLanguage: 'English' },
+  { username: 'mbbs_rahul',   password: 'mbbs2026', name: 'Rahul Shetty',     grade: 'MBBS Year 3 Part 1', syllabus: 'RGUHS', avatar: '🏥', email: 'rahulm@demo.com', preferredLanguage: 'Kannada' },
+  // RGUHS — BDS
+  { username: 'bds_swathi',  password: 'bds2025',  name: 'Swathi Kamath',     grade: 'BDS Year 2', syllabus: 'RGUHS', avatar: '🦷',  email: 'swathi@demo.com',  preferredLanguage: 'Kannada' },
+  // RGUHS — B.Pharm
+  { username: 'pharm_sunil', password: 'pharm2025', name: 'Sunil Babu',       grade: 'B.Pharm Year 2', syllabus: 'RGUHS', avatar: '💊', email: 'sunil@demo.com',   preferredLanguage: 'English' },
+  // RGUHS — B.Sc Nursing
+  { username: 'nurse_latha', password: 'nurse2025', name: 'Latha Devi',       grade: 'BSc Nursing Year 2', syllabus: 'RGUHS', avatar: '💉', email: 'latha@demo.com', preferredLanguage: 'Kannada' },
+  // RGUHS — BPT
+  { username: 'bpt_harish',  password: 'bpt2025',  name: 'Harish Naik',       grade: 'BPT Year 2', syllabus: 'RGUHS', avatar: '💪',  email: 'harish@demo.com',  preferredLanguage: 'English' },
   // Staff
   { username: 'admin',    password: 'admin@samarthaa', name: 'Admin User',    grade: 'Class 10', syllabus: 'CBSE', avatar: '🛡️', role: 'admin' },
   { username: 'teacher1', password: 'teacher@123',     name: 'Smt. Kavitha Reddy', grade: 'Class 7', syllabus: 'CBSE', avatar: '👩‍🏫', role: 'teacher' },

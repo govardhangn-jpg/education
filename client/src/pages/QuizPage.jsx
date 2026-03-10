@@ -2,28 +2,30 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { generateQuiz, submitQuiz, getQuizHistory, getCurriculum, getLeaderboard } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
-import { SUBJECT_META, SUBJECTS_BY_GRADE, DIFFICULTY_META, LANGUAGES, GRADES, SYLLABI, EXAM_META, EXAM_MODES } from '../utils/constants';
+import { SUBJECT_META, SUBJECTS_BY_GRADE, DIFFICULTY_META, LANGUAGES, GRADES, SYLLABI,
+         EXAM_META, EXAM_MODES, LLB_META, LLB_MODES, RGUHS_META, RGUHS_MODES,
+         IIT_JEE_META, UPSC_META, UPSC_GRADES,
+         ALL_PROFESSIONAL_MODES, getSyllabusKey } from '../utils/constants';
 
 export default function QuizPage() {
   const { user } = useAuth();
   const [params] = useSearchParams();
   const [tab, setTab] = useState('setup');
+
   const [config, setConfig] = useState(() => {
-    // URL param ?examMode=NEET+Preparation takes highest priority
-    const examMode = params.get('examMode');
-    if (examMode && EXAM_MODES.includes(examMode)) {
-      const syllabus = examMode === 'NEET Preparation' ? 'NEET' : 'KCET';
-      const subs = SUBJECTS_BY_GRADE[examMode] || [];
-      return { grade: examMode, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English' };
+    // URL param ?examMode=... takes highest priority (works for NEET/KCET/LLB/RGUHS)
+    const urlMode = params.get('examMode');
+    if (urlMode && ALL_PROFESSIONAL_MODES.includes(urlMode)) {
+      const syllabus = getSyllabusKey(urlMode) || 'CBSE';
+      const subs = SUBJECTS_BY_GRADE[urlMode] || [];
+      return { grade: urlMode, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English' };
     }
-    // Then user's own grade
-    const grade = user?.grade || 'Class 7';
-    const syllabus = EXAM_MODES.includes(grade)
-      ? (grade === 'NEET Preparation' ? 'NEET' : 'KCET')
-      : (user?.syllabus || 'CBSE');
-    const subs = SUBJECTS_BY_GRADE[grade] || [];
+    const grade    = user?.grade    || 'Class 7';
+    const syllabus = getSyllabusKey(grade) || user?.syllabus || 'CBSE';
+    const subs     = SUBJECTS_BY_GRADE[grade] || [];
     return { grade, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English' };
   });
+
   const [chapters, setChapters]       = useState([]);
   const [questions, setQuestions]     = useState([]);
   const [answers, setAnswers]         = useState({});
@@ -37,14 +39,17 @@ export default function QuizPage() {
 
   const set = (k, v) => setConfig(c => ({ ...c, [k]: v }));
 
-  // Derive whether we're in exam mode
-  const isExamMode = EXAM_MODES.includes(config.grade);
-  const examMeta   = isExamMode ? EXAM_META[config.grade] : null;
+  // Classify current mode
+  const isExamMode  = EXAM_MODES.includes(config.grade);
+  const isLLBMode   = LLB_MODES.includes(config.grade);
+  const isRGUHSMode = RGUHS_MODES.includes(config.grade);
+  const isUPSCMode  = UPSC_GRADES.includes(config.grade);
+  const isProfMode  = isExamMode || isLLBMode || isRGUHSMode || isUPSCMode;
 
-  // Resolve syllabus key for exam modes
-  const effectiveSyllabus = isExamMode
-    ? (config.grade === 'NEET Preparation' ? 'NEET' : 'KCET')
-    : config.syllabus;
+  const examMeta = isExamMode ? EXAM_META[config.grade] : null;
+
+  // Effective syllabus key for curriculum lookup
+  const effectiveSyllabus = getSyllabusKey(config.grade) || config.syllabus;
 
   // Subjects for current grade
   const subjects = SUBJECTS_BY_GRADE[config.grade] || [];
@@ -107,18 +112,23 @@ export default function QuizPage() {
   return (
     <div style={{ padding: '14px', maxWidth: 900, margin: '0 auto', fontFamily: "'Nunito',sans-serif" }}>
       <style>{`
-        select{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:9px 12px;color:white;font-family:'Nunito',sans-serif;font-size:13px;outline:none;cursor:pointer;width:100%;}
+        /* font-size:16px prevents iOS auto-zoom */
+        select{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;color:white;font-family:'Nunito',sans-serif;font-size:16px;outline:none;cursor:pointer;width:100%;-webkit-appearance:none;}
         select option{background:#1a1a2e;}
-        .q-tab{padding:10px 14px;background:transparent;border:none;color:rgba(255,255,255,0.5);font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
+        .q-tab{padding:11px 14px;background:transparent;border:none;color:rgba(255,255,255,0.5);font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;min-height:44px;}
         .q-tab.active{color:#ffd700;border-bottom-color:#ffd700;}
-        .option-btn{width:100%;text-align:left;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 14px;color:white;font-family:'Nunito',sans-serif;font-size:14px;cursor:pointer;transition:all 0.2s;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+        .option-btn{width:100%;text-align:left;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:13px 14px;color:white;font-family:'Nunito',sans-serif;font-size:14px;cursor:pointer;transition:all 0.2s;margin-bottom:10px;display:flex;align-items:center;gap:10px;min-height:50px;}
         .option-btn:hover,.option-btn:active{background:rgba(255,255,255,0.08);}
         .option-btn.selected{border-color:#4f8ef7;background:rgba(79,142,247,0.12);}
         .quiz-setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-        .grade-mode-row{display:flex;gap:8px;flex-wrap:wrap;}
+        .quiz-mode-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:12px;}
         @media(max-width:640px){
           .quiz-setup-grid{grid-template-columns:1fr!important;}
-          .q-tab{padding:8px 10px;font-size:11px;}
+          .q-tab{padding:9px 10px;font-size:11px;}
+          .quiz-mode-grid{grid-template-columns:repeat(3,1fr)!important;}
+        }
+        @media(max-width:360px){
+          .quiz-mode-grid{grid-template-columns:repeat(3,1fr)!important;}
         }
       `}</style>
 
@@ -145,37 +155,41 @@ export default function QuizPage() {
           <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: 18 }}>
             <div style={{ color: 'white', fontWeight: 800, fontSize: 15, marginBottom: 16 }}>⚙️ Settings</div>
 
-            {/* Mode toggle: School vs Exam */}
+            {/* Mode toggle: 5 modes */}
             <div style={{ marginBottom: 12 }}>
               <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 8 }}>MODE</label>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                <button onClick={() => {
-                  if (isExamMode) {
-                    const g = 'Class 7';
-                    setConfig(c => ({ ...c, grade: g, syllabus: 'CBSE', subject: '', chapter: '' }));
-                  }
-                }} style={{ flex: 1, padding: '10px 6px', background: !isExamMode ? 'rgba(79,142,247,0.2)' : 'rgba(255,255,255,0.05)', border: `1.5px solid ${!isExamMode ? '#4f8ef7' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, color: !isExamMode ? '#4f8ef7' : 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🏫 School</button>
-                <button onClick={() => {
-                  if (!isExamMode) {
-                    setConfig(c => ({ ...c, grade: 'NEET Preparation', syllabus: 'NEET', subject: 'Physics', chapter: '' }));
-                  }
-                }} style={{ flex: 1, padding: '10px 6px', background: isExamMode ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.05)', border: `1.5px solid ${isExamMode ? '#ffd700' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, color: isExamMode ? '#ffd700' : 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🎯 Entrance Exam</button>
+              <div className="quiz-mode-grid">
+                {[
+                  { id:'school', icon:'🏫', label:'School',  active: !isProfMode,  color:'#4f8ef7' },
+                  { id:'exam',   icon:'🎯', label:'Entrance', active: isExamMode,  color:'#ffd700' },
+                  { id:'upsc',   icon:'🇮🇳', label:'UPSC',    active: isUPSCMode,  color:'#e67e22' },
+                  { id:'llb',    icon:'⚖️', label:'LLB',      active: isLLBMode,   color:'#c0392b' },
+                  { id:'rguhs',  icon:'🏥', label:'RGUHS',    active: isRGUHSMode, color:'#16a085' },
+                ].map(m => (
+                  <button key={m.id} onClick={() => {
+                    if (m.id === 'school') setConfig(c => ({ ...c, grade:'Class 7',     syllabus:'CBSE',    subject:'', chapter:'' }));
+                    if (m.id === 'exam')   setConfig(c => ({ ...c, grade:'IIT-JEE',     syllabus:'IIT-JEE', subject:'Physics', chapter:'' }));
+                    if (m.id === 'upsc')   setConfig(c => ({ ...c, grade:'UPSC Prelims',syllabus:'UPSC',    subject:SUBJECTS_BY_GRADE['UPSC Prelims'][0], chapter:'' }));
+                    if (m.id === 'llb')    setConfig(c => ({ ...c, grade:'LLB Year 1',  syllabus:'LLB',     subject:SUBJECTS_BY_GRADE['LLB Year 1'][0], chapter:'' }));
+                    if (m.id === 'rguhs')  setConfig(c => ({ ...c, grade:'MBBS Year 1', syllabus:'RGUHS',   subject:SUBJECTS_BY_GRADE['MBBS Year 1'][0], chapter:'' }));
+                  }} style={{ padding:'8px 4px', background: m.active ? m.color+'28' : 'rgba(255,255,255,0.04)', border:`1.5px solid ${m.active ? m.color : 'rgba(255,255,255,0.1)'}`, borderRadius:10, color: m.active ? m.color : 'rgba(255,255,255,0.45)', fontSize:11, fontWeight:700, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                    <span style={{ fontSize:14 }}>{m.icon}</span>
+                    <span style={{ fontSize:10 }}>{m.label}</span>
+                  </button>
+                ))}
               </div>
 
-              {/* School: grade + syllabus selects */}
-              {!isExamMode && (
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 700, display: 'block', marginBottom: 4 }}>GRADE</label>
-                    <select value={config.grade} onChange={e => {
-                      const g = e.target.value;
-                      setConfig(c => ({ ...c, grade: g, subject: '', chapter: '' }));
-                    }}>
+              {/* School: grade + syllabus dropdowns */}
+              {!isProfMode && (
+                <div style={{ display:'flex', gap:8 }}>
+                  <div style={{ flex:1 }}>
+                    <label style={{ color:'rgba(255,255,255,0.5)', fontSize:10, fontWeight:700, display:'block', marginBottom:4 }}>GRADE</label>
+                    <select value={config.grade} onChange={e => setConfig(c => ({ ...c, grade:e.target.value, subject:'', chapter:'' }))}>
                       {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 700, display: 'block', marginBottom: 4 }}>SYLLABUS</label>
+                  <div style={{ flex:1 }}>
+                    <label style={{ color:'rgba(255,255,255,0.5)', fontSize:10, fontWeight:700, display:'block', marginBottom:4 }}>SYLLABUS</label>
                     <select value={config.syllabus} onChange={e => set('syllabus', e.target.value)}>
                       {SYLLABI.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
@@ -183,24 +197,109 @@ export default function QuizPage() {
                 </div>
               )}
 
-              {/* Entrance exam: NEET / KCET buttons */}
+              {/* Entrance exam selector: IIT-JEE / NEET / KCET / NEET PG */}
               {isExamMode && (
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                   {EXAM_MODES.map(em => {
                     const em_meta = EXAM_META[em];
-                    const active = config.grade === em;
+                    const active  = config.grade === em;
+                    const syllabusMap = { 'NEET Preparation':'NEET','KCET Preparation':'KCET','NEET PG':'NEET PG','IIT-JEE':'IIT-JEE' };
+                    const firstSub = SUBJECTS_BY_GRADE[em]?.[0] || '';
                     return (
-                      <button key={em} onClick={() => setConfig(c => ({
-                        ...c, grade: em,
-                        syllabus: em === 'NEET Preparation' ? 'NEET' : 'KCET',
-                        subject: SUBJECTS_BY_GRADE[em]?.[0] || '', chapter: ''
-                      }))} style={{ flex: 1, padding: '12px 8px', background: active ? em_meta.bg : 'rgba(255,255,255,0.04)', border: `2px solid ${active ? em_meta.color : 'rgba(255,255,255,0.1)'}`, borderRadius: 12, color: active ? em_meta.color : 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                        <span style={{ fontSize: 22 }}>{em_meta.icon}</span>
+                      <button key={em} onClick={() => setConfig(c => ({ ...c, grade:em, syllabus:syllabusMap[em], subject:firstSub, chapter:'' }))}
+                        style={{ padding:'10px 8px', background: active?em_meta.bg:'rgba(255,255,255,0.04)', border:`2px solid ${active?em_meta.color:'rgba(255,255,255,0.1)'}`, borderRadius:12, color: active?em_meta.color:'rgba(255,255,255,0.5)', fontSize:12, fontWeight:800, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                        <span style={{ fontSize:18 }}>{em_meta.icon}</span>
                         <span>{em_meta.label}</span>
-                        <span style={{ fontSize: 10, fontWeight: 400, opacity: 0.7 }}>{em === 'NEET Preparation' ? 'Medical' : 'Karnataka'}</span>
                       </button>
                     );
                   })}
+                </div>
+              )}
+
+              {/* UPSC: stage + optional selector */}
+              {isUPSCMode && (
+                <div>
+                  <label style={{ color:'rgba(255,255,255,0.5)', fontSize:10, fontWeight:700, display:'block', marginBottom:6 }}>UPSC STAGE</label>
+                  <div style={{ display:'flex', gap:6, marginBottom:8 }}>
+                    {[
+                      ['UPSC Prelims',      'UPSC','📝 Prelims'],
+                      ['UPSC Mains – GS',   'UPSC','📚 Mains GS'],
+                      ['UPSC Mains – Essay','UPSC','✍️ Essay'],
+                    ].map(([g,s,lbl]) => {
+                      const active = config.grade === g;
+                      return (
+                        <button key={g} onClick={() => setConfig(c => ({ ...c, grade:g, syllabus:s, subject:SUBJECTS_BY_GRADE[g]?.[0]||'', chapter:'' }))}
+                          style={{ flex:1, padding:'8px 4px', background: active?'rgba(230,126,34,0.2)':'rgba(255,255,255,0.04)', border:`1.5px solid ${active?'#e67e22':'rgba(255,255,255,0.1)'}`, borderRadius:10, color: active?'#e67e22':'rgba(255,255,255,0.5)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                          {lbl}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <label style={{ color:'rgba(255,255,255,0.5)', fontSize:10, fontWeight:700, display:'block', marginBottom:6 }}>OPTIONAL SUBJECT</label>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                    {UPSC_META.stages.optional.grades.map(g => {
+                      const lbl = UPSC_META.stages.optional.labels[g];
+                      const active = config.grade === g;
+                      return (
+                        <button key={g} onClick={() => setConfig(c => ({ ...c, grade:g, syllabus:'UPSC', subject:SUBJECTS_BY_GRADE[g]?.[0]||'', chapter:'' }))}
+                          style={{ padding:'6px 8px', background: active?'rgba(155,89,182,0.2)':'rgba(255,255,255,0.04)', border:`1.5px solid ${active?'#9b59b6':'rgba(255,255,255,0.1)'}`, borderRadius:8, color: active?'#c39bd3':'rgba(255,255,255,0.45)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                          {lbl}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* LLB year selector */}
+              {isLLBMode && (
+                <div>
+                  <label style={{ color:'rgba(255,255,255,0.5)', fontSize:10, fontWeight:700, display:'block', marginBottom:6 }}>LLB YEAR</label>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                    {LLB_META.years.map(y => {
+                      const active = config.grade === y;
+                      return (
+                        <button key={y} onClick={() => setConfig(c => ({ ...c, grade:y, syllabus:'LLB', subject:SUBJECTS_BY_GRADE[y]?.[0]||'', chapter:'' }))}
+                          style={{ padding:'7px 10px', background: active?'rgba(192,57,43,0.2)':'rgba(255,255,255,0.04)', border:`1.5px solid ${active?'#c0392b':'rgba(255,255,255,0.1)'}`, borderRadius:10, color: active?'#e74c3c':'rgba(255,255,255,0.5)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                          {LLB_META.yearLabels[y]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* RGUHS programme + year selector */}
+              {isRGUHSMode && (
+                <div>
+                  <label style={{ color:'rgba(255,255,255,0.5)', fontSize:10, fontWeight:700, display:'block', marginBottom:6 }}>PROGRAMME</label>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:10 }}>
+                    {Object.entries(RGUHS_META.programs).map(([key, prog]) => {
+                      const isActiveProg = prog.years.includes(config.grade);
+                      return (
+                        <button key={key} onClick={() => setConfig(c => ({ ...c, grade:prog.years[0], syllabus:'RGUHS', subject:SUBJECTS_BY_GRADE[prog.years[0]]?.[0]||'', chapter:'' }))}
+                          style={{ padding:'7px 10px', background: isActiveProg?prog.color+'25':'rgba(255,255,255,0.04)', border:`1.5px solid ${isActiveProg?prog.color:'rgba(255,255,255,0.1)'}`, borderRadius:10, color: isActiveProg?prog.color:'rgba(255,255,255,0.5)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                          {prog.icon} {prog.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <label style={{ color:'rgba(255,255,255,0.5)', fontSize:10, fontWeight:700, display:'block', marginBottom:6 }}>YEAR</label>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                    {(() => {
+                      const activeProg = Object.values(RGUHS_META.programs).find(p => p.years.includes(config.grade));
+                      if (!activeProg) return null;
+                      return activeProg.years.map(y => {
+                        const active = config.grade === y;
+                        return (
+                          <button key={y} onClick={() => setConfig(c => ({ ...c, grade:y, syllabus:'RGUHS', subject:SUBJECTS_BY_GRADE[y]?.[0]||'', chapter:'' }))}
+                            style={{ padding:'7px 10px', background: active?activeProg.color+'25':'rgba(255,255,255,0.04)', border:`1.5px solid ${active?activeProg.color:'rgba(255,255,255,0.1)'}`, borderRadius:10, color: active?activeProg.color:'rgba(255,255,255,0.5)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                            {y}
+                          </button>
+                        );
+                      });
+                    })()}
+                  </div>
                 </div>
               )}
             </div>

@@ -11,9 +11,17 @@ export function useTTS() {
   const [loadingAudio,    setLoadingAudio] = useState(false);
   const [elevenAvailable, setEleven]       = useState(false);
 
-  const $ = useRef({ audio: null, blobUrl: null, aborted: false, eleven: false });
+  // generation: incremented on every speak() call.
+  // Every async step captures its gen at start and checks it before proceeding —
+  // if the generation has moved on, a newer speak() won the race and this one exits.
+  const $ = useRef({
+    audio:      null,
+    blobUrl:    null,
+    generation: 0,
+    eleven:     false,
+  });
 
-  // Check ElevenLabs status on mount
+  // ── Check ElevenLabs on mount ─────────────────────────────────────────────
   useEffect(() => {
     const BACKEND = process.env.REACT_APP_API_URL
       ? process.env.REACT_APP_API_URL.replace(/\/api$/, '')
@@ -21,7 +29,6 @@ export function useTTS() {
     fetch(`${BACKEND}/api/tts/status`)
       .then(r => r.json())
       .then(data => {
-        console.log('[TTS] Status:', data);
         $.current.eleven = !!data.available;
         setEleven(!!data.available);
       })
@@ -31,8 +38,10 @@ export function useTTS() {
   useEffect(() => { $.current.eleven = elevenAvailable; }, [elevenAvailable]);
 
   // ── STOP ─────────────────────────────────────────────────────────────────
+  // Bumping generation is the key: any in-flight async speak() that checks
+  // `myGen !== $.current.generation` will bail out immediately.
   const stop = useCallback(() => {
-    $.current.aborted = true;
+    $.current.generation += 1;
     const audio = $.current.audio;
     if (audio) {
       audio.onplay = audio.onended = audio.onerror = audio.oncanplaythrough = null;
@@ -52,88 +61,97 @@ export function useTTS() {
   }, []);
 
   // ── Browser TTS fallback ──────────────────────────────────────────────────
-  const speakWithBrowser = useCallback((text, language) => {
-    console.log('[TTS] Browser TTS, lang:', language);
+  const speakWithBrowser = useCallback((text, language, gen) => {
+    if (gen !== $.current.generation) return;
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const clean = text.replace(/[*_`#]/g, '').replace(/\n+/g, ' ').slice(0, 2000);
     const utt = new SpeechSynthesisUtterance(clean);
-    utt.lang = LANG_MAP[language] || 'en-IN';
-    utt.rate = 0.92; utt.pitch = 1.05;
-    utt.onstart = () => setSpeaking(true);
-    utt.onend   = () => setSpeaking(false);
-    utt.onerror = () => setSpeaking(false);
+    utt.lang  = LANG_MAP[language] || 'en-IN';
+    utt.rate  = 0.92; utt.pitch = 1.05;
+    utt.onstart = () => { if (gen === $.current.generation) setSpeaking(true); };
+    utt.onend   = () => { if (gen === $.current.generation) setSpeaking(false); };
+    utt.onerror = () => { if (gen === $.current.generation) setSpeaking(false); };
     window.speechSynthesis.speak(utt);
   }, []);
 
   // ── ElevenLabs TTS ────────────────────────────────────────────────────────
-  // MOBILE FIX: Must call audio.play() synchronously inside a user-gesture
-  // handler. We create and start the Audio element BEFORE the async fetch,
-  // then swap in the blob URL once data arrives.
-  const speakWithElevenLabs = useCallback(async (text, language) => {
-    stop();
-    $.current.aborted = false;
+  // Mobile note: audio.play() must be called inside a synchronous user-gesture
+  // handler. We create the Audio element and run a silent play BEFORE the async
+  // fetch to keep the iOS/Android audio permission chain alive.
+  const speakWithElevenLabs = useCallback(async (text, language, gen) => {
     setLoadingAudio(true);
-    console.log('[TTS] ElevenLabs, lang:', language);
 
-    // Create audio element immediately (inside the click handler = user gesture)
     const audio = new Audio();
     $.current.audio = audio;
 
-    // Start a silent play immediately to "unlock" audio on iOS/Android
-    // This keeps the user gesture chain alive through the async fetch
+    // Silent unlock play (keeps user-gesture chain alive on iOS/Android)
     audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
     try { await audio.play(); } catch(_) {}
 
+    // Check after the silent-play await
+    if (gen !== $.current.generation) { audio.src = ''; setLoadingAudio(false); return; }
+
     try {
       const { data: arrayBuffer } = await speakText({ text, language });
-      if ($.current.aborted) { setLoadingAudio(false); audio.src = ''; return; }
 
-      console.log('[TTS] Audio bytes:', arrayBuffer.byteLength);
+      // Check after the network round-trip
+      if (gen !== $.current.generation) { audio.src = ''; setLoadingAudio(false); return; }
 
       const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
       const url  = URL.createObjectURL(blob);
       $.current.blobUrl = url;
 
       audio.onended = () => {
-        setSpeaking(false);
+        if (gen === $.current.generation) setSpeaking(false);
         URL.revokeObjectURL(url);
         $.current.blobUrl = null;
         $.current.audio   = null;
       };
       audio.onerror = (e) => {
         console.error('[TTS] audio error:', e);
+        if (gen !== $.current.generation) return;
         setSpeaking(false);
         setLoadingAudio(false);
         $.current.audio = null;
-        speakWithBrowser(text, language);
+        speakWithBrowser(text, language, gen);
       };
 
-      // Swap in the real audio src and play
+      // Final check before playing real audio
+      if (gen !== $.current.generation) {
+        URL.revokeObjectURL(url);
+        $.current.blobUrl = null;
+        audio.src = '';
+        setLoadingAudio(false);
+        return;
+      }
+
       audio.src = url;
       setLoadingAudio(false);
       setSpeaking(true);
-
       await audio.play();
 
     } catch (err) {
-      if ($.current.aborted) { setLoadingAudio(false); return; }
+      if (gen !== $.current.generation) { setLoadingAudio(false); return; }
       console.error('[TTS] ElevenLabs error:', err.message);
       setLoadingAudio(false);
-      speakWithBrowser(text, language);
+      speakWithBrowser(text, language, gen);
     }
-  }, [stop, speakWithBrowser]);
+  }, [speakWithBrowser]);
 
   // ── Public speak ──────────────────────────────────────────────────────────
+  // stop() bumps generation first — every prior async flow will detect the
+  // mismatch on its next await and exit without playing anything.
   const speak = useCallback((text, language = 'English') => {
     if (!text?.trim()) return;
-    console.log('[TTS] speak() | eleven:', $.current.eleven, '| lang:', language);
+    stop();                             // bumps generation, kills current audio
+    const gen = $.current.generation;  // capture the new generation AFTER stop()
     if ($.current.eleven) {
-      speakWithElevenLabs(text, language);
+      speakWithElevenLabs(text, language, gen);
     } else {
-      speakWithBrowser(text, language);
+      speakWithBrowser(text, language, gen);
     }
-  }, [speakWithElevenLabs, speakWithBrowser]);
+  }, [stop, speakWithElevenLabs, speakWithBrowser]);
 
   return { speaking, loadingAudio, elevenAvailable, speak, stop };
 }

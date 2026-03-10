@@ -47,36 +47,42 @@ export default function DashboardPage() {
     <div style={{ padding:'16px', maxWidth:1100, margin:'0 auto', fontFamily:"'Nunito',sans-serif" }}>
       <style>{`
         .dash-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-        .dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
-        .exam-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-        .quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;}
+        .dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+        .exam-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+        .quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
+        .welcome-card{border-radius:20px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
         @media(max-width:768px){
           .dash-grid-2{grid-template-columns:1fr!important;}
           .dash-stats{grid-template-columns:repeat(2,1fr)!important;}
+        }
+        @media(max-width:480px){
+          .dash-stats{grid-template-columns:repeat(2,1fr)!important;}
+          .quick-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))!important;}
           .exam-grid{grid-template-columns:1fr!important;}
+          .welcome-avatar{font-size:36px!important;}
+          .welcome-name{font-size:17px!important;}
         }
       `}</style>
 
       {/* Welcome card */}
-      <div style={{ background: isExamMode
+      <div className="welcome-card" style={{ background: isExamMode
           ? `linear-gradient(135deg,${examMeta?.bg},rgba(255,215,0,0.06))`
           : 'linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,149,0,0.08))',
-        border: isExamMode ? `1px solid ${examMeta?.color}40` : '1px solid rgba(255,215,0,0.2)',
-        borderRadius:20, padding:'18px 20px', marginBottom:20, display:'flex', alignItems:'center', gap:14 }}>
-        <div style={{ fontSize:48 }}>{user?.avatar}</div>
+        border: isExamMode ? `1px solid ${examMeta?.color}40` : '1px solid rgba(255,215,0,0.2)' }}>
+        <div className="welcome-avatar" style={{ fontSize:44, flexShrink:0 }}>{user?.avatar}</div>
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ color:'rgba(255,255,255,0.6)', fontSize:12 }}>Welcome back,</div>
-          <div style={{ color:'white', fontSize:20, fontWeight:800, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.name} 👋</div>
-          <div style={{ color:'rgba(255,255,255,0.5)', fontSize:12, marginTop:2, display:'flex', alignItems:'center', gap:6 }}>
-            <span>{gradeLabel}</span>
+          <div style={{ color:'rgba(255,255,255,0.6)', fontSize:11 }}>Welcome back,</div>
+          <div className="welcome-name" style={{ color:'white', fontSize:20, fontWeight:800, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.name} 👋</div>
+          <div style={{ color:'rgba(255,255,255,0.5)', fontSize:11, marginTop:2, display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+            <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'60vw' }}>{gradeLabel}</span>
             {isExamMode
-              ? <span style={{ background:examMeta?.bg, color:examMeta?.color, border:`1px solid ${examMeta?.color}50`, borderRadius:8, padding:'2px 7px', fontSize:10, fontWeight:700 }}>{examMeta?.badge}</span>
-              : <span>• {user?.syllabus}</span>
+              ? <span style={{ background:examMeta?.bg, color:examMeta?.color, border:`1px solid ${examMeta?.color}50`, borderRadius:8, padding:'2px 7px', fontSize:10, fontWeight:700, flexShrink:0 }}>{examMeta?.badge}</span>
+              : <span style={{ flexShrink:0 }}>• {user?.syllabus}</span>
             }
           </div>
         </div>
         <div style={{ textAlign:'right', flexShrink:0 }}>
-          <div style={{ color:'#ffd700', fontSize:24, fontWeight:800 }}>🔥 {data?.streakDays || user?.streakDays || 0}</div>
+          <div style={{ color:'#ffd700', fontSize:20, fontWeight:800 }}>🔥 {data?.streakDays || user?.streakDays || 0}</div>
           <div style={{ color:'rgba(255,255,255,0.5)', fontSize:10 }}>Day streak</div>
         </div>
       </div>

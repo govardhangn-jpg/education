@@ -51,15 +51,20 @@ export default function ProgressPage() {
   return (
     <div style={{ padding:'14px', maxWidth:1000, margin:'0 auto', fontFamily:"'Nunito',sans-serif" }}>
       <style>{`
-        select{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 10px;color:white;font-family:'Nunito',sans-serif;font-size:12px;outline:none;}
+        /* font-size:16px prevents iOS auto-zoom */
+        select{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:9px 10px;color:white;font-family:'Nunito',sans-serif;font-size:16px;outline:none;-webkit-appearance:none;}
         select option{background:#1a1a2e;}
-        .prog-grid{display:grid;grid-template-columns:260px 1fr;gap:16px;}
-        .sub-btn{padding:8px 12px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;border:1.5px solid;transition:all 0.15s;white-space:nowrap;}
-        @media(max-width:700px){
+        .prog-grid{display:grid;grid-template-columns:250px 1fr;gap:16px;}
+        .sub-btn{padding:9px 12px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;border:1.5px solid;transition:all 0.15s;white-space:nowrap;min-height:40px;}
+        @media(max-width:768px){
           .prog-grid{grid-template-columns:1fr!important;}
           .prog-summary{display:none;}
           .prog-summary.visible{display:block!important;}
-          .progress-selects{flex-direction:column!important;align-items:flex-start!important;}
+          .progress-selects{flex-direction:column!important;align-items:stretch!important;width:100%!important;}
+          .progress-selects select{width:100%!important;}
+        }
+        @media(max-width:480px){
+          .sub-btn{padding:8px 10px;font-size:11px;}
         }
       `}</style>
 

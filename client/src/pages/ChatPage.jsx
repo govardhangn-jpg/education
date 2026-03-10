@@ -159,30 +159,35 @@ export default function ChatPage() {
   return (
     <div style={{ display:'flex', height:'calc(100vh - 60px)', fontFamily:"'Nunito',sans-serif", position:'relative' }}>
       <style>{`
-        .chat-sidebar-item{padding:9px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);transition:all 0.15s;display:flex;align-items:center;gap:8px;}
+        .chat-sidebar-item{padding:10px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);transition:all 0.15s;display:flex;align-items:center;gap:8px;min-height:40px;}
         .chat-sidebar-item:hover,.chat-sidebar-item:active{background:rgba(255,255,255,0.07);color:white;}
-        .chat-input-field{flex:1;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:11px 14px;color:white;font-size:14px;font-family:'Nunito',sans-serif;outline:none;resize:none;line-height:1.5;}
+        /* font-size:16px prevents iOS auto-zoom */
+        .chat-input-field{flex:1;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:11px 14px;color:white;font-size:16px;font-family:'Nunito',sans-serif;outline:none;resize:none;line-height:1.5;min-height:44px;}
         .chat-input-field:focus{border-color:rgba(255,215,0,0.5);background:rgba(255,255,255,0.09);}
         .chat-input-field::placeholder{color:rgba(255,255,255,0.3);}
         @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes blink{0%,80%,100%{opacity:0}40%{opacity:1}}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-        select{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:6px 8px;color:white;font-family:'Nunito',sans-serif;font-size:11px;outline:none;cursor:pointer;max-width:100px;}
+        select{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:7px 8px;color:white;font-family:'Nunito',sans-serif;font-size:16px;outline:none;cursor:pointer;max-width:110px;-webkit-appearance:none;}
         select option{background:#1a1a2e;}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
         /* Desktop sidebar */
-        .chat-sidebar-desktop{width:220px;background:rgba(255,255,255,0.02);border-right:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
-        /* Mobile sidebar drawer */
-        .chat-sidebar-mobile{display:none;position:fixed;top:60px;left:0;bottom:0;width:280px;background:#12122a;z-index:120;flex-direction:column;overflow-y:auto;border-right:1px solid rgba(255,255,255,0.1);box-shadow:4px 0 20px rgba(0,0,0,0.5);}
+        .chat-sidebar-desktop{width:210px;background:rgba(255,255,255,0.02);border-right:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+        /* Mobile sidebar drawer — stops above bottom nav */
+        .chat-sidebar-mobile{display:none;position:fixed;top:60px;left:0;bottom:56px;width:min(280px,85vw);background:#12122a;z-index:120;flex-direction:column;overflow-y:auto;border-right:1px solid rgba(255,255,255,0.1);box-shadow:4px 0 20px rgba(0,0,0,0.5);}
         .chat-sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:110;}
         .chat-header-selects{display:flex;gap:6px;align-items:center;}
+        .chat-voice-badge{flex-shrink:0;}
+        .chat-hint{color:rgba(255,255,255,0.2);font-size:10px;margin-top:4px;text-align:center;}
         @media(max-width:768px){
           .chat-sidebar-desktop{display:none!important;}
           .chat-sidebar-mobile{display:flex!important;}
           .chat-sidebar-overlay{display:block!important;}
           .chat-header-selects{display:none!important;}
-          .chat-height{height:calc(100vh - 60px - 70px)!important;}
+          .chat-voice-badge{display:none!important;}
+          .chat-height{height:calc(100vh - 60px - 56px)!important;}
+          .chat-hint{display:none!important;}
         }
       `}</style>
 
@@ -233,7 +238,7 @@ export default function ChatPage() {
               {LANGUAGES.map(l=><option key={l} value={l}>{l}</option>)}
             </select>
           </div>
-          <span style={{ fontSize:10, padding:'3px 8px', borderRadius:10, fontWeight:700, flexShrink:0,
+          <span className="chat-voice-badge" style={{ fontSize:10, padding:'3px 8px', borderRadius:10, fontWeight:700,
             background: elevenAvailable ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.05)',
             color: elevenAvailable ? '#a78bfa' : 'rgba(255,255,255,0.2)',
             border: elevenAvailable ? '1px solid rgba(167,139,250,0.3)' : '1px solid rgba(255,255,255,0.06)' }}>
@@ -293,7 +298,7 @@ export default function ChatPage() {
               {loading?<span style={{ width:16, height:16, border:'2.5px solid #1a1a2e', borderTopColor:'transparent', borderRadius:'50%', display:'inline-block', animation:'spin 0.7s linear infinite' }}/>:'➤'}
             </button>
           </div>
-          <div style={{ color:'rgba(255,255,255,0.2)', fontSize:10, marginTop:4, textAlign:'center' }}>Enter to send • Shift+Enter new line • 🎙️ voice</div>
+          <div className="chat-hint">Enter to send • Shift+Enter new line • 🎙️ voice</div>
         </div>
       </div>
     </div>

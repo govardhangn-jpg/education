@@ -42,9 +42,10 @@ export default function AdminPage() {
   return (
     <div style={{ padding:'14px', maxWidth:1100, margin:'0 auto', fontFamily:"'Nunito',sans-serif" }}>
       <style>{`
-        .admin-tab{padding:9px 12px;background:transparent;border:none;color:rgba(255,255,255,0.5);font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+        .admin-tab{padding:10px 12px;background:transparent;border:none;color:rgba(255,255,255,0.5);font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;min-height:44px;}
         .admin-tab.active{color:#ffd700;border-bottom-color:#ffd700;}
-        input,select,textarea{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:9px 12px;color:white;font-family:'Nunito',sans-serif;font-size:13px;outline:none;}
+        /* font-size:16px prevents iOS auto-zoom */
+        input,select,textarea{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;color:white;font-family:'Nunito',sans-serif;font-size:16px;outline:none;-webkit-appearance:none;}
         input::placeholder,textarea::placeholder{color:rgba(255,255,255,0.3);}
         select option{background:#1a1a2e;}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
@@ -53,7 +54,7 @@ export default function AdminPage() {
         /* Desktop table */
         .student-table-wrap{display:block;}
         .student-cards-wrap{display:none;}
-        @media(max-width:700px){
+        @media(max-width:768px){
           .student-table-wrap{display:none!important;}
           .student-cards-wrap{display:block!important;}
           .admin-search-row{flex-direction:column!important;}
