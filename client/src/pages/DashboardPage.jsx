@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDashboard } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
-import { SUBJECT_META, EXAM_META, EXAM_MODES } from '../utils/constants';
+import { SUBJECT_META, EXAM_META, EXAM_MODES, SUBJECTS_BY_GRADE } from '../utils/constants';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -13,6 +13,17 @@ export default function DashboardPage() {
   useEffect(() => {
     getDashboard().then(r => setData(r.data)).catch(console.error).finally(() => setLoading(false));
   }, []);
+
+  const isExamMode = EXAM_MODES.includes(user?.grade);
+  const examMeta   = isExamMode ? EXAM_META[user?.grade] : null;
+
+  // Quick-start subjects: show subjects relevant to the user's grade
+  const quickStartSubjects = (() => {
+    const subs = SUBJECTS_BY_GRADE[user?.grade] || [];
+    if (subs.length) return subs.slice(0, 6);
+    // fallback
+    return Object.keys(SUBJECT_META).slice(0, 6);
+  })();
 
   const statCard = (icon, label, value, color) => (
     <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:16, padding:'16px', display:'flex', alignItems:'center', gap:12 }}>
@@ -28,12 +39,17 @@ export default function DashboardPage() {
 
   const avgQuiz = data?.quizStats?.length ? Math.round(data.quizStats.reduce((s,q)=>s+q.avgScore,0)/data.quizStats.length) : 0;
 
+  // Grade display label
+  const gradeLabel = isExamMode ? examMeta?.fullLabel : user?.grade;
+  const syllabusLabel = isExamMode ? examMeta?.badge : user?.syllabus;
+
   return (
-    <div style={{ padding:'16px', maxWidth:1100, margin:'0 auto' }}>
+    <div style={{ padding:'16px', maxWidth:1100, margin:'0 auto', fontFamily:"'Nunito',sans-serif" }}>
       <style>{`
         .dash-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
         .dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
         .exam-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+        .quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;}
         @media(max-width:768px){
           .dash-grid-2{grid-template-columns:1fr!important;}
           .dash-stats{grid-template-columns:repeat(2,1fr)!important;}
@@ -42,12 +58,22 @@ export default function DashboardPage() {
       `}</style>
 
       {/* Welcome card */}
-      <div style={{ background:'linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,149,0,0.08))', border:'1px solid rgba(255,215,0,0.2)', borderRadius:20, padding:'18px 20px', marginBottom:20, display:'flex', alignItems:'center', gap:14 }}>
+      <div style={{ background: isExamMode
+          ? `linear-gradient(135deg,${examMeta?.bg},rgba(255,215,0,0.06))`
+          : 'linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,149,0,0.08))',
+        border: isExamMode ? `1px solid ${examMeta?.color}40` : '1px solid rgba(255,215,0,0.2)',
+        borderRadius:20, padding:'18px 20px', marginBottom:20, display:'flex', alignItems:'center', gap:14 }}>
         <div style={{ fontSize:48 }}>{user?.avatar}</div>
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ color:'rgba(255,255,255,0.6)', fontSize:12 }}>Welcome back,</div>
           <div style={{ color:'white', fontSize:20, fontWeight:800, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.name} 👋</div>
-          <div style={{ color:'rgba(255,255,255,0.5)', fontSize:12, marginTop:2 }}>{user?.grade} • {user?.syllabus}</div>
+          <div style={{ color:'rgba(255,255,255,0.5)', fontSize:12, marginTop:2, display:'flex', alignItems:'center', gap:6 }}>
+            <span>{gradeLabel}</span>
+            {isExamMode
+              ? <span style={{ background:examMeta?.bg, color:examMeta?.color, border:`1px solid ${examMeta?.color}50`, borderRadius:8, padding:'2px 7px', fontSize:10, fontWeight:700 }}>{examMeta?.badge}</span>
+              : <span>• {user?.syllabus}</span>
+            }
+          </div>
         </div>
         <div style={{ textAlign:'right', flexShrink:0 }}>
           <div style={{ color:'#ffd700', fontSize:24, fontWeight:800 }}>🔥 {data?.streakDays || user?.streakDays || 0}</div>
@@ -68,7 +94,7 @@ export default function DashboardPage() {
         <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:18, padding:18 }}>
           <div style={{ color:'white', fontWeight:800, fontSize:15, marginBottom:12 }}>💬 Recent Chats</div>
           {data?.recentSessions?.length ? data.recentSessions.slice(0,4).map(s => {
-            const meta = SUBJECT_META[s.subject] || SUBJECT_META.English;
+            const meta = SUBJECT_META[s.subject] || { bg:'#ffffff12', icon:'📖' };
             return (
               <div key={s._id} onClick={() => navigate(`/chat?session=${s._id}`)}
                 style={{ display:'flex', alignItems:'center', gap:10, padding:'10px', borderRadius:12, cursor:'pointer', marginBottom:6, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)' }}>
@@ -80,26 +106,32 @@ export default function DashboardPage() {
               </div>
             );
           }) : <div style={{ color:'rgba(255,255,255,0.3)', fontSize:12, textAlign:'center', padding:'16px 0' }}>No chats yet 🚀</div>}
-          <button onClick={() => navigate('/chat')} style={{ width:'100%', marginTop:8, background:'rgba(79,142,247,0.12)', border:'1px solid rgba(79,142,247,0.3)', borderRadius:10, padding:'9px', color:'#4f8ef7', fontSize:13, fontWeight:700, cursor:'pointer' }}>Start Chatting →</button>
+          <button onClick={() => navigate(isExamMode ? `/chat?examMode=${encodeURIComponent(user.grade)}` : '/chat')}
+            style={{ width:'100%', marginTop:8, background:'rgba(79,142,247,0.12)', border:'1px solid rgba(79,142,247,0.3)', borderRadius:10, padding:'9px', color:'#4f8ef7', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+            {isExamMode ? `Study ${examMeta?.label} →` : 'Start Chatting →'}
+          </button>
         </div>
 
         <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:18, padding:18 }}>
           <div style={{ color:'white', fontWeight:800, fontSize:15, marginBottom:12 }}>📝 Recent Quizzes</div>
           {data?.recentQuizzes?.length ? data.recentQuizzes.slice(0,4).map(q => {
-            const meta = SUBJECT_META[q.subject] || SUBJECT_META.English;
+            const meta = SUBJECT_META[q.subject] || { bg:'#ffffff12', icon:'📖' };
             const color = q.score >= 80 ? '#27ae60' : q.score >= 50 ? '#f39c12' : '#e74c3c';
             return (
               <div key={q._id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px', borderRadius:12, marginBottom:6, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)' }}>
                 <div style={{ width:30, height:30, borderRadius:8, background:meta.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{meta.icon}</div>
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ color:'white', fontSize:12, fontWeight:700, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{q.chapter}</div>
+                  <div style={{ color:'white', fontSize:12, fontWeight:700, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{q.chapter || q.subject}</div>
                   <div style={{ color:'rgba(255,255,255,0.4)', fontSize:11 }}>{q.subject}</div>
                 </div>
                 <div style={{ color, fontSize:15, fontWeight:800, flexShrink:0 }}>{q.score}%</div>
               </div>
             );
           }) : <div style={{ color:'rgba(255,255,255,0.3)', fontSize:12, textAlign:'center', padding:'16px 0' }}>No quizzes yet 🎯</div>}
-          <button onClick={() => navigate('/quiz')} style={{ width:'100%', marginTop:8, background:'rgba(39,174,96,0.12)', border:'1px solid rgba(39,174,96,0.3)', borderRadius:10, padding:'9px', color:'#27ae60', fontSize:13, fontWeight:700, cursor:'pointer' }}>Take a Quiz →</button>
+          <button onClick={() => navigate(isExamMode ? `/quiz?examMode=${encodeURIComponent(user.grade)}` : '/quiz')}
+            style={{ width:'100%', marginTop:8, background:'rgba(39,174,96,0.12)', border:'1px solid rgba(39,174,96,0.3)', borderRadius:10, padding:'9px', color:'#27ae60', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+            {isExamMode ? `Take ${examMeta?.label} Quiz →` : 'Take a Quiz →'}
+          </button>
         </div>
       </div>
 
@@ -118,32 +150,60 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Quick Start */}
+      {/* Quick Start — user-relevant subjects */}
       <div style={{ marginBottom:20 }}>
-        <div style={{ color:'white', fontWeight:800, fontSize:15, marginBottom:12 }}>⚡ Quick Start — Subjects</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))', gap:10 }}>
-          {Object.entries(SUBJECT_META).slice(0,6).map(([sub, meta]) => (
-            <button key={sub} onClick={() => navigate(`/chat?subject=${sub}`)}
-              style={{ background:meta.bg, border:`1px solid ${meta.color}40`, borderRadius:14, padding:'12px 10px', color:meta.color, fontSize:13, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:7 }}>
-              <span style={{ fontSize:18 }}>{meta.icon}</span>{sub}
-            </button>
-          ))}
+        <div style={{ color:'white', fontWeight:800, fontSize:15, marginBottom:12 }}>
+          ⚡ Quick Start {isExamMode ? `— ${examMeta?.label} Subjects` : '— Subjects'}
+        </div>
+        <div className="quick-grid">
+          {quickStartSubjects.map(sub => {
+            const meta = SUBJECT_META[sub] || { bg:'#ffffff12', color:'#fff', icon:'📖' };
+            return (
+              <button key={sub} onClick={() => navigate(
+                  isExamMode
+                    ? `/chat?examMode=${encodeURIComponent(user.grade)}&subject=${encodeURIComponent(sub)}`
+                    : `/chat?subject=${encodeURIComponent(sub)}`
+                )}
+                style={{ background:meta.bg, border:`1px solid ${meta.color}40`, borderRadius:14, padding:'12px 10px', color:meta.color, fontSize:13, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:7 }}>
+                <span style={{ fontSize:18 }}>{meta.icon}</span>{sub}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Exam Prep Cards */}
+      {/* Exam Prep Cards — shown to all users */}
       <div>
         <div style={{ color:'white', fontWeight:800, fontSize:15, marginBottom:12 }}>🎯 Entrance Exam Preparation</div>
         <div className="exam-grid">
-          {Object.entries(EXAM_META).map(([key, em]) => (
-            <button key={key} onClick={() => navigate(`/chat?examMode=${encodeURIComponent(key)}`)}
-              style={{ background:em.bg, border:`1px solid ${em.color}50`, borderRadius:18, padding:'18px 16px', cursor:'pointer', textAlign:'left', transition:'all 0.2s' }}>
-              <div style={{ fontSize:28, marginBottom:8 }}>{em.icon}</div>
-              <div style={{ color:'white', fontSize:14, fontWeight:800, marginBottom:4 }}>{em.fullLabel}</div>
-              <div style={{ color:'rgba(255,255,255,0.55)', fontSize:11, lineHeight:1.4 }}>{em.description}</div>
-              <div style={{ marginTop:10, display:'inline-block', background:`${em.color}25`, border:`1px solid ${em.color}50`, borderRadius:8, padding:'4px 10px', color:em.color, fontSize:11, fontWeight:700 }}>Start Preparing →</div>
-            </button>
-          ))}
+          {Object.entries(EXAM_META).map(([key, em]) => {
+            const isActive = user?.grade === key;
+            return (
+              <div key={key} style={{ background: isActive ? em.bg : 'rgba(255,255,255,0.03)',
+                border:`1px solid ${isActive ? em.color : 'rgba(255,255,255,0.08)'}`,
+                borderRadius:18, padding:'18px 16px', textAlign:'left',
+                outline: isActive ? `2px solid ${em.color}60` : 'none' }}>
+                <div style={{ display:'flex', alignItems:'flex-start', gap:10, marginBottom:10 }}>
+                  <div style={{ fontSize:28 }}>{em.icon}</div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ color:'white', fontSize:14, fontWeight:800, marginBottom:3 }}>{em.fullLabel}</div>
+                    <div style={{ color:'rgba(255,255,255,0.55)', fontSize:11, lineHeight:1.4 }}>{em.description}</div>
+                    {isActive && <span style={{ marginTop:5, display:'inline-block', background:`${em.color}30`, border:`1px solid ${em.color}60`, borderRadius:8, padding:'2px 8px', color:em.color, fontSize:10, fontWeight:700 }}>Your Exam</span>}
+                  </div>
+                </div>
+                <div style={{ display:'flex', gap:8 }}>
+                  <button onClick={() => navigate(`/chat?examMode=${encodeURIComponent(key)}`)}
+                    style={{ flex:1, background:`${em.color}20`, border:`1px solid ${em.color}50`, borderRadius:10, padding:'8px 6px', color:em.color, fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                    💬 Study
+                  </button>
+                  <button onClick={() => navigate(`/quiz?examMode=${encodeURIComponent(key)}`)}
+                    style={{ flex:1, background:`${em.color}20`, border:`1px solid ${em.color}50`, borderRadius:10, padding:'8px 6px', color:em.color, fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                    📝 Quiz
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
