@@ -145,43 +145,65 @@ export default function QuizPage() {
           <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: 18 }}>
             <div style={{ color: 'white', fontWeight: 800, fontSize: 15, marginBottom: 16 }}>⚙️ Settings</div>
 
-            {/* Grade selector — school classes + exam modes */}
+            {/* Mode toggle: School vs Exam */}
             <div style={{ marginBottom: 12 }}>
-              <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 5 }}>GRADE / EXAM</label>
-              <select value={config.grade} onChange={e => {
-                const g = e.target.value;
-                const newSyllabus = g === 'NEET Preparation' ? 'NEET' : g === 'KCET Preparation' ? 'KCET' : config.syllabus;
-                setConfig(c => ({ ...c, grade: g, syllabus: newSyllabus, subject: '', chapter: '' }));
-              }}>
-                <optgroup label="── School Classes ──">
-                  {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
-                </optgroup>
-                <optgroup label="── Entrance Exams ──">
-                  {EXAM_MODES.map(e => <option key={e} value={e}>{e}</option>)}
-                </optgroup>
-              </select>
-            </div>
-
-            {/* Syllabus — hidden for exam modes */}
-            {!isExamMode && (
-              <div style={{ marginBottom: 12 }}>
-                <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 5 }}>SYLLABUS</label>
-                <select value={config.syllabus} onChange={e => set('syllabus', e.target.value)}>
-                  {SYLLABI.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+              <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 8 }}>MODE</label>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                <button onClick={() => {
+                  if (isExamMode) {
+                    const g = 'Class 7';
+                    setConfig(c => ({ ...c, grade: g, syllabus: 'CBSE', subject: '', chapter: '' }));
+                  }
+                }} style={{ flex: 1, padding: '10px 6px', background: !isExamMode ? 'rgba(79,142,247,0.2)' : 'rgba(255,255,255,0.05)', border: `1.5px solid ${!isExamMode ? '#4f8ef7' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, color: !isExamMode ? '#4f8ef7' : 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🏫 School</button>
+                <button onClick={() => {
+                  if (!isExamMode) {
+                    setConfig(c => ({ ...c, grade: 'NEET Preparation', syllabus: 'NEET', subject: 'Physics', chapter: '' }));
+                  }
+                }} style={{ flex: 1, padding: '10px 6px', background: isExamMode ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.05)', border: `1.5px solid ${isExamMode ? '#ffd700' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, color: isExamMode ? '#ffd700' : 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>🎯 Entrance Exam</button>
               </div>
-            )}
 
-            {/* Exam mode badge */}
-            {isExamMode && (
-              <div style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 12, background: examMeta?.bg, border: `1px solid ${examMeta?.color}50`, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 20 }}>{examMeta?.icon}</span>
-                <div>
-                  <div style={{ color: examMeta?.color, fontWeight: 800, fontSize: 13 }}>{examMeta?.fullLabel}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>{examMeta?.description}</div>
+              {/* School: grade + syllabus selects */}
+              {!isExamMode && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 700, display: 'block', marginBottom: 4 }}>GRADE</label>
+                    <select value={config.grade} onChange={e => {
+                      const g = e.target.value;
+                      setConfig(c => ({ ...c, grade: g, subject: '', chapter: '' }));
+                    }}>
+                      {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 700, display: 'block', marginBottom: 4 }}>SYLLABUS</label>
+                    <select value={config.syllabus} onChange={e => set('syllabus', e.target.value)}>
+                      {SYLLABI.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Entrance exam: NEET / KCET buttons */}
+              {isExamMode && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {EXAM_MODES.map(em => {
+                    const em_meta = EXAM_META[em];
+                    const active = config.grade === em;
+                    return (
+                      <button key={em} onClick={() => setConfig(c => ({
+                        ...c, grade: em,
+                        syllabus: em === 'NEET Preparation' ? 'NEET' : 'KCET',
+                        subject: SUBJECTS_BY_GRADE[em]?.[0] || '', chapter: ''
+                      }))} style={{ flex: 1, padding: '12px 8px', background: active ? em_meta.bg : 'rgba(255,255,255,0.04)', border: `2px solid ${active ? em_meta.color : 'rgba(255,255,255,0.1)'}`, borderRadius: 12, color: active ? em_meta.color : 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                        <span style={{ fontSize: 22 }}>{em_meta.icon}</span>
+                        <span>{em_meta.label}</span>
+                        <span style={{ fontSize: 10, fontWeight: 400, opacity: 0.7 }}>{em === 'NEET Preparation' ? 'Medical' : 'Karnataka'}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             <div style={{ marginBottom: 12 }}>
               <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 5 }}>LANGUAGE</label>
