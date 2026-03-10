@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { sendMessage, getCurriculum, getChatSessions, getChatSession, deleteChatSession } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { useTTS, useSpeechRecognition } from '../hooks/useSpeech';
-import { SUBJECT_META, SUBJECTS_BY_GRADE, EXAM_META, EXAM_MODES, LANGUAGES } from '../utils/constants';
+import { SUBJECT_META, SUBJECTS_BY_GRADE, EXAM_META, EXAM_MODES, LANGUAGES, getSyllabusKey } from '../utils/constants';
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -13,10 +13,10 @@ export default function ChatPage() {
     return examMode || user?.grade || 'Class 7';
   });
   const [syllabus, setSyllabus] = useState(() => {
-    const em = params.get('examMode');
-    if (em === 'NEET Preparation') return 'NEET';
-    if (em === 'KCET Preparation') return 'KCET';
-    return user?.syllabus || 'CBSE';
+    const examMode = params.get('examMode');
+    const g = examMode || user?.grade || 'Class 7';
+    // getSyllabusKey handles ALL modes: NEET, KCET, LLB, RGUHS, UPSC, IIT-JEE, school
+    return getSyllabusKey(g) || user?.syllabus || 'CBSE';
   });
   const [subject, setSubject] = useState(() => {
     const em = params.get('examMode');
@@ -43,6 +43,18 @@ export default function ChatPage() {
   const { listening, start: startMic, stop: stopMic } = useSpeechRecognition(handleVoice, ttsLangCode);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  // Re-sync grade/syllabus once user loads from auth (user starts as null)
+  useEffect(() => {
+    if (!user) return;
+    const urlExamMode = params.get('examMode');
+    if (urlExamMode) return; // URL params take precedence
+    const g = user.grade || 'Class 7';
+    setGrade(g);
+    setSyllabus(getSyllabusKey(g) || user.syllabus || 'CBSE');
+    const subs = SUBJECTS_BY_GRADE[g] || [];
+    if (subs.length) setSubject(subs[0]);
+  }, [user?.grade]); // eslint-disable-line
 
   useEffect(() => {
     if (!subject || !grade || !syllabus) return;
@@ -100,7 +112,7 @@ export default function ChatPage() {
     setMessages(prev => [...prev, { role:'user', content:msg }]);
     setLoading(true);
     try {
-      const r = await sendMessage({ sessionId: currentSessionId, message: msg, subject, grade, syllabus: isExamMode ? (grade === 'NEET Preparation' ? 'NEET' : 'KCET') : syllabus, chapter, language });
+      const r = await sendMessage({ sessionId: currentSessionId, message: msg, subject, grade, syllabus: getSyllabusKey(grade) || syllabus, chapter, language });
       setCurrentSessionId(r.data.sessionId);
       setMessages(prev => [...prev, { role:'assistant', content:r.data.reply }]);
       getChatSessions({ subject, limit: 15 }).then(r2 => setSessions(r2.data.sessions || [])).catch(() => {});

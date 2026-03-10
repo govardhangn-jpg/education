@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getProgress } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
-import { SUBJECT_META, SUBJECTS_BY_GRADE, GRADES, SYLLABI } from '../utils/constants';
+import { SUBJECT_META, SUBJECTS_BY_GRADE, GRADES, SYLLABI, getSyllabusKey } from '../utils/constants';
 import { useNavigate } from 'react-router-dom';
 
 const STATUS_META = {
@@ -18,10 +18,16 @@ export default function ProgressPage() {
   const [grade, setGrade]       = useState(user?.grade || 'Class 7');
   const [syllabus, setSyllabus] = useState(user?.syllabus || 'CBSE');
 
-  // For exam modes, syllabus in URL should be NEET/KCET
-  const effectiveSyllabus = grade === 'NEET Preparation' ? 'NEET'
-    : grade === 'KCET Preparation' ? 'KCET'
-    : syllabus;
+  // getSyllabusKey handles ALL modes: NEET, KCET, LLB, RGUHS, UPSC, IIT-JEE, school
+  const effectiveSyllabus = getSyllabusKey(grade) || syllabus;
+
+  // Re-sync once user loads from auth (user starts as null on first render)
+  useEffect(() => {
+    if (!user) return;
+    const g = user.grade || 'Class 7';
+    setGrade(g);
+    setSyllabus(getSyllabusKey(g) || user.syllabus || 'CBSE');
+  }, [user?.grade]); // eslint-disable-line
   const [data, setData]         = useState(null);
   const [loading, setLoading]   = useState(true);
   const [activeSubject, setActiveSubject] = useState('');
@@ -78,8 +84,7 @@ export default function ProgressPage() {
           <select value={grade} onChange={e => {
               const g = e.target.value;
               setGrade(g);
-              if (g === 'NEET Preparation') setSyllabus('NEET');
-              else if (g === 'KCET Preparation') setSyllabus('KCET');
+              setSyllabus(getSyllabusKey(g) || syllabus);
             }}>
             <optgroup label="── School Classes ──">
               {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
