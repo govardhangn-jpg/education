@@ -41,22 +41,24 @@ app.set('trust proxy', 1);
 
 // Helmet with CSP configured to allow model-viewer CDN on AR pages
 // The /ar/* routes serve HTML pages that load the model-viewer script from Google CDN
+// model-viewer uses fetch() internally to load src — so data: must be in connect-src
 app.use((req, res, next) => {
   if (req.path.startsWith('/ar/')) {
-    // AR HTML pages need external scripts and are not API routes
     helmet({
       contentSecurityPolicy: {
         directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc:  ["'self'", 'https://ajax.googleapis.com', "'unsafe-inline'"],
+          defaultSrc: ["'self'", 'data:', 'blob:'],
+          scriptSrc:  ["'self'", 'https://ajax.googleapis.com', "'unsafe-inline'", "'unsafe-eval'"],
           styleSrc:   ["'self'", "'unsafe-inline'"],
-          imgSrc:     ["'self'", 'data:', 'blob:'],
-          connectSrc: ["'self'", 'https:'],
-          workerSrc:  ["'self'", 'blob:'],
+          imgSrc:     ["'self'", 'data:', 'blob:', 'https:'],
+          connectSrc: ["'self'", 'https:', 'data:', 'blob:'],
+          workerSrc:  ["'self'", 'blob:', 'data:'],
           frameSrc:   ["'none'"],
+          mediaSrc:   ["'self'", 'data:', 'blob:'],
         },
       },
       crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
     })(req, res, next);
   } else {
     helmet()(req, res, next);
