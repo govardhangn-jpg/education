@@ -520,7 +520,8 @@ const BACKEND = process.env.REACT_APP_API_URL
 //  3. No custom element registration race conditions
 // ══════════════════════════════════════════════════════════════════════════
 function ARViewer({ model, subjectColor, onBack }) {
-  const arPageUrl = `${BACKEND}/ar/view/${model.id}`;
+  const glbUrl   = `${BACKEND}/api/ar/model/${model.id}`;
+  const arPageUrl = `${BACKEND}/ar/view/${model.id}?glb=${encodeURIComponent(glbUrl)}`;
 
   return (
     <div style={{ position:'relative', width:'100%' }}>

@@ -270,17 +270,19 @@ router.get('/view/:id', (req, res) => {
   if (!meta) return res.status(404).send('Model not found');
 
   // Build the server's public HTTPS URL reliably.
-  // On Render, req.protocol is always 'http' (behind proxy) even though
-  // the public URL is https://. We use x-forwarded-proto when available,
-  // and fall back to the SERVER_URL env var or host header.
+  // PRIMARY: client passes the GLB URL as a query param — most reliable since
+  // the React app always knows the correct backend URL (from REACT_APP_API_URL).
+  // FALLBACK: reconstruct from env var or request headers.
   const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
   const host  = req.get('x-forwarded-host') || req.get('host') || '';
-  // Prefer the explicit SERVER_URL env var if set (most reliable)
   const serverUrl = process.env.SERVER_URL
     ? process.env.SERVER_URL.replace(/\/$/, '')
     : `${proto}://${host}`;
 
-  const glbUrl  = `${serverUrl}/api/ar/model/${id}`;
+  // Use client-supplied GLB URL if valid, else build it ourselves
+  const glbUrl = (req.query.glb && req.query.glb.startsWith('https://'))
+    ? req.query.glb
+    : `${serverUrl}/api/ar/model/${id}`;
   const backUrl = (process.env.CLIENT_URL || 'https://samarthaaedu.netlify.app') + '/ar-lab';
 
   // Set CORS so model-viewer can fetch the GLB from the same origin
@@ -381,6 +383,7 @@ router.get('/view/:id', (req, res) => {
 
     // Show the GLB URL for debugging
     console.log('[AR] src =', mv.getAttribute('src'));
+    console.log('[AR] canActivateAR will be set after load event');
   </script>
 </body>
 </html>`);
