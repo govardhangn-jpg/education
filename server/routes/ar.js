@@ -263,29 +263,27 @@ router.get('/model/:id', (req, res) => {
   }
 });
 
-// ── GET /ar/view/:id  → standalone HTML page with model-viewer ─────────────
+// ── GET /ar/view/:id  → standalone HTML page with embedded GLB ─────────────
+// The GLB binary is base64-encoded and embedded directly in the HTML page.
+// This eliminates ALL URL/env/CORS/proxy issues — no external fetch needed.
 router.get('/view/:id', (req, res) => {
   const { id } = req.params;
   const meta = MODEL_META[id];
-  if (!meta) return res.status(404).send('Model not found');
+  const gen  = GENERATORS[id];
+  if (!meta || !gen) return res.status(404).send(`<h2 style="color:white;padding:2rem">Model "${id}" not found</h2>`);
 
-  // Build the server's public HTTPS URL reliably.
-  // PRIMARY: client passes the GLB URL as a query param — most reliable since
-  // the React app always knows the correct backend URL (from REACT_APP_API_URL).
-  // FALLBACK: reconstruct from env var or request headers.
-  const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
-  const host  = req.get('x-forwarded-host') || req.get('host') || '';
-  const serverUrl = process.env.SERVER_URL
-    ? process.env.SERVER_URL.replace(/\/$/, '')
-    : `${proto}://${host}`;
+  let glbBase64;
+  try {
+    const meshes = gen();
+    const glbBuf = buildGLBBuffer(meshes);
+    glbBase64 = glbBuf.toString('base64');
+  } catch(e) {
+    return res.status(500).send(`<h2 style="color:red;padding:2rem">Error: ${e.message}</h2>`);
+  }
 
-  // Use client-supplied GLB URL if valid, else build it ourselves
-  const glbUrl = (req.query.glb && req.query.glb.startsWith('https://'))
-    ? req.query.glb
-    : `${serverUrl}/api/ar/model/${id}`;
   const backUrl = (process.env.CLIENT_URL || 'https://samarthaaedu.netlify.app') + '/ar-lab';
+  const color   = meta.color || '#ffd700';
 
-  // Set CORS so model-viewer can fetch the GLB from the same origin
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -294,96 +292,48 @@ router.get('/view/:id', (req, res) => {
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>${meta.label} — SamarthaaEdu AR</title>
+  <title>${meta.label} — AR</title>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{width:100%;height:100%;overflow:hidden;background:#050510}
-    body{font-family:'Nunito',sans-serif;display:flex;flex-direction:column;align-items:center}
-    model-viewer{
-      width:100%;height:100svh;
-      background:linear-gradient(135deg,#050510,#0a0a1f);
-      --poster-color:transparent;
-    }
-    /* AR button — styled via slot, positioned by model-viewer */
-    #ar-btn{
-      background:${meta.color};border:none;border-radius:16px;
-      padding:14px 28px;color:white;font-size:16px;font-weight:800;
-      cursor:pointer;font-family:'Nunito',sans-serif;
-      box-shadow:0 6px 24px rgba(0,0,0,0.5);
-      display:inline-flex;align-items:center;gap:10px;
-      letter-spacing:0.3px;
-    }
-    #back-btn{
-      position:fixed;top:max(env(safe-area-inset-top),16px);left:16px;
-      background:rgba(0,0,0,0.6);border:1.5px solid rgba(255,255,255,0.25);
-      border-radius:12px;padding:10px 18px;color:white;font-size:14px;font-weight:700;
-      cursor:pointer;font-family:'Nunito',sans-serif;z-index:200;
-      text-decoration:none;display:inline-flex;align-items:center;gap:6px;
-      backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    }
-    #title-label{
-      position:fixed;top:max(env(safe-area-inset-top),16px);left:50%;transform:translateX(-50%);
-      background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,0.15);border-radius:20px;
-      padding:8px 20px;color:white;font-size:14px;font-weight:700;
-      white-space:nowrap;z-index:200;pointer-events:none;
-    }
-    #status{
-      position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
-      color:rgba(255,255,255,0.5);font-size:12px;text-align:center;
-      pointer-events:none;z-index:100;
-    }
+    model-viewer{width:100%;height:100svh;background:linear-gradient(135deg,#050510,#0a0a1f);--poster-color:transparent}
+    #ar-btn{background:${color};border:none;border-radius:16px;padding:14px 28px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,0.5);display:inline-flex;align-items:center;gap:10px}
+    #back{position:fixed;top:max(env(safe-area-inset-top,0px),16px);left:16px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:10px 18px;color:#fff;font-size:14px;font-weight:700;text-decoration:none;z-index:200;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+    #lbl{position:fixed;top:max(env(safe-area-inset-top,0px),16px);left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:8px 20px;color:#fff;font-size:14px;font-weight:700;white-space:nowrap;z-index:200;pointer-events:none;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+    #st{position:fixed;bottom:110px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.55);font-size:13px;pointer-events:none;z-index:100}
   </style>
 </head>
 <body>
-  <a href="${backUrl}" id="back-btn">← Back</a>
-  <div id="title-label">${meta.label}</div>
-  <div id="status">Loading 3D model…</div>
-
-  <model-viewer
-    id="mv"
-    src="${glbUrl}"
-    alt="${meta.label} 3D model"
-    ar
-    ar-modes="quick-look webxr scene-viewer"
-    ar-scale="auto"
-    camera-controls
-    auto-rotate
-    auto-rotate-delay="1500"
-    rotation-per-second="15deg"
-    shadow-intensity="1"
-    exposure="1.1"
-    environment-image="neutral"
-    loading="eager"
-  >
-    <button slot="ar-button" id="ar-btn">🌍&nbsp;&nbsp;View in AR</button>
+  <a href="${backUrl}" id="back">← Back</a>
+  <div id="lbl">${meta.label}</div>
+  <div id="st">Decoding 3D model…</div>
+  <model-viewer id="mv" alt="${meta.label}" ar ar-modes="quick-look webxr scene-viewer" ar-scale="auto" camera-controls auto-rotate auto-rotate-delay="1500" rotation-per-second="15deg" shadow-intensity="1" exposure="1.1" environment-image="neutral">
+    <button slot="ar-button" id="ar-btn">🌍&nbsp; View in AR</button>
   </model-viewer>
-
   <script>
+    const GLB = "${glbBase64}";
     const mv = document.getElementById('mv');
-    const status = document.getElementById('status');
-
+    const st = document.getElementById('st');
+    customElements.whenDefined('model-viewer').then(() => {
+      st.textContent = 'Loading 3D model…';
+      try {
+        const bin = atob(GLB);
+        const buf = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+        const blobUrl = URL.createObjectURL(new Blob([buf], {type:'model/gltf-binary'}));
+        mv.src = blobUrl;
+      } catch(e) { st.textContent = 'Decode error: ' + e.message; }
+    });
     mv.addEventListener('load', () => {
-      status.textContent = mv.canActivateAR
-        ? 'Model ready — tap View in AR'
-        : '3D model ready';
-      console.log('[AR] Loaded. canActivateAR:', mv.canActivateAR);
+      st.textContent = mv.canActivateAR ? 'Tap "View in AR" to place in your room ↗' : '3D model ready — drag to rotate';
     });
-
-    mv.addEventListener('error', (e) => {
-      status.textContent = 'Failed to load model: ' + (e.detail?.message || e.message || 'unknown');
-      console.error('[AR] Error:', e);
+    mv.addEventListener('error', e => {
+      const msg = e.detail?.sourceError?.message || e.detail?.message || 'unknown';
+      st.textContent = 'Load error: ' + msg;
+      console.error('[AR]', e.detail);
     });
-
-    mv.addEventListener('ar-status', (e) => {
-      console.log('[AR] ar-status:', e.detail.status);
-      status.textContent = e.detail.status;
-    });
-
-    // Show the GLB URL for debugging
-    console.log('[AR] src =', mv.getAttribute('src'));
-    console.log('[AR] canActivateAR will be set after load event');
+    mv.addEventListener('ar-status', e => { console.log('[AR]', e.detail.status); });
   </script>
 </body>
 </html>`);
