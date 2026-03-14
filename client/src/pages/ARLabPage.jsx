@@ -675,12 +675,12 @@ function ARViewer({ model, subjectColor, onBack }) {
         </div>
       )}
 
-      {/* model-viewer container — NO overflow:hidden (clips the AR button on iOS) */}
-      {!loading && !error && (
-        <div style={{ position:'relative', borderRadius:16, border:`1.5px solid ${subjectColor}30`, background:'#050510' }}>
-          <div ref={containerRef} style={{ width:'100%', minHeight:460 }} />
-        </div>
-      )}
+      {/* model-viewer container — ALWAYS rendered so containerRef is never null.
+          Visibility toggled via CSS display, not conditional rendering.
+          overflow:visible is critical — the AR button renders outside model-viewer bounds on iOS. */}
+      <div style={{ display: loading || error ? 'none' : 'block', position:'relative', borderRadius:16, border:`1.5px solid ${subjectColor}30`, background:'#050510' }}>
+        <div ref={containerRef} style={{ width:'100%', minHeight:460 }} />
+      </div>
 
       {/* iOS-specific tip */}
       {arSupported === 'ios' && !loading && !error && (

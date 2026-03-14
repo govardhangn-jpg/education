@@ -19,6 +19,8 @@ export function useTTS() {
     blobUrl:    null,
     generation: 0,
     eleven:     false,
+    actx:       null,   // AudioContext — persists across calls, unlocked once
+    sourceNode: null,   // current AudioBufferSourceNode
   });
 
   // ── Check ElevenLabs on mount ─────────────────────────────────────────────
@@ -42,12 +44,19 @@ export function useTTS() {
   // `myGen !== $.current.generation` will bail out immediately.
   const stop = useCallback(() => {
     $.current.generation += 1;
+    // Stop AudioBufferSourceNode (iOS AudioContext path)
+    if ($.current.sourceNode) {
+      try { $.current.sourceNode.stop(); } catch(_) {}
+      $.current.sourceNode.disconnect();
+      $.current.sourceNode = null;
+    }
+    // Stop Audio element (Android / desktop fallback path)
     const audio = $.current.audio;
     if (audio) {
       audio.onplay = audio.onended = audio.onerror = audio.oncanplaythrough = null;
-      audio.pause();
-      audio.currentTime = 0;
-      audio.src = '';
+      try { audio.pause(); } catch(_) {}
+      try { audio.currentTime = 0; } catch(_) {}
+      try { audio.src = ''; } catch(_) {}
       try { audio.load(); } catch(_) {}
       $.current.audio = null;
     }
@@ -76,60 +85,91 @@ export function useTTS() {
   }, []);
 
   // ── ElevenLabs TTS ────────────────────────────────────────────────────────
-  // Mobile note: audio.play() must be called inside a synchronous user-gesture
-  // handler. We create the Audio element and run a silent play BEFORE the async
-  // fetch to keep the iOS/Android audio permission chain alive.
+  // iOS Safari fix: we cannot reassign audio.src after an await — iOS revokes
+  // the user-gesture audio unlock when .src changes asynchronously.
+  // Solution: use AudioContext (unlocked once by the silent play, stays unlocked)
+  // then decode the MP3 ArrayBuffer and play it through AudioBufferSourceNode.
   const speakWithElevenLabs = useCallback(async (text, language, gen) => {
     setLoadingAudio(true);
 
-    const audio = new Audio();
-    $.current.audio = audio;
+    // ── Step 1: Unlock AudioContext synchronously inside the user gesture ──
+    // This must happen before any await. The AudioContext stays unlocked for
+    // the entire session once resumed, even across async boundaries.
+    let actx = $.current.actx;
+    if (!actx || actx.state === 'closed') {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      $.current.actx = actx;
+    }
+    if (actx.state === 'suspended') {
+      try { await actx.resume(); } catch(_) {}
+    }
 
-    // Silent unlock play (keeps user-gesture chain alive on iOS/Android)
-    audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
-    try { await audio.play(); } catch(_) {}
+    // Also create a silent buffer and play it NOW (inside user gesture)
+    // to satisfy iOS's requirement for a synchronous play() call
+    const silentBuf = actx.createBuffer(1, 1, 22050);
+    const silentSrc = actx.createBufferSource();
+    silentSrc.buffer = silentBuf;
+    silentSrc.connect(actx.destination);
+    silentSrc.start(0);
 
-    // Check after the silent-play await
-    if (gen !== $.current.generation) { audio.src = ''; setLoadingAudio(false); return; }
+    // Check generation after unlock
+    if (gen !== $.current.generation) { setLoadingAudio(false); return; }
 
     try {
       const { data: arrayBuffer } = await speakText({ text, language });
 
-      // Check after the network round-trip
-      if (gen !== $.current.generation) { audio.src = ''; setLoadingAudio(false); return; }
+      if (gen !== $.current.generation) { setLoadingAudio(false); return; }
 
-      const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
-      const url  = URL.createObjectURL(blob);
-      $.current.blobUrl = url;
-
-      audio.onended = () => {
-        if (gen === $.current.generation) setSpeaking(false);
-        URL.revokeObjectURL(url);
-        $.current.blobUrl = null;
-        $.current.audio   = null;
-      };
-      audio.onerror = (e) => {
-        console.error('[TTS] audio error:', e);
-        if (gen !== $.current.generation) return;
-        setSpeaking(false);
-        setLoadingAudio(false);
-        $.current.audio = null;
-        speakWithBrowser(text, language, gen);
-      };
-
-      // Final check before playing real audio
-      if (gen !== $.current.generation) {
-        URL.revokeObjectURL(url);
-        $.current.blobUrl = null;
-        audio.src = '';
-        setLoadingAudio(false);
+      // ── Step 2: Decode the MP3 ArrayBuffer ──────────────────────────────
+      // decodeAudioData works with MP3 on all modern iOS Safari versions
+      let audioBuffer;
+      try {
+        audioBuffer = await actx.decodeAudioData(arrayBuffer.slice(0)); // slice to copy
+      } catch (decodeErr) {
+        console.error('[TTS] decodeAudioData failed:', decodeErr);
+        // Fallback: try playing via Audio element (non-iOS or older devices)
+        const audio2 = new Audio();
+        const blob2  = new Blob([arrayBuffer], { type:'audio/mpeg' });
+        const url2   = URL.createObjectURL(blob2);
+        $.current.blobUrl = url2;
+        $.current.audio   = audio2;
+        audio2.src = url2;
+        audio2.onended = () => {
+          if (gen === $.current.generation) setSpeaking(false);
+          URL.revokeObjectURL(url2);
+          $.current.blobUrl = null; $.current.audio = null;
+        };
+        audio2.onerror = () => { if (gen === $.current.generation) { setSpeaking(false); setLoadingAudio(false); } };
+        setLoadingAudio(false); setSpeaking(true);
+        try { await audio2.play(); } catch(_) { speakWithBrowser(text, language, gen); }
         return;
       }
 
-      audio.src = url;
+      if (gen !== $.current.generation) { setLoadingAudio(false); return; }
+
+      // ── Step 3: Play via AudioBufferSourceNode ───────────────────────────
+      // Stop any previous source node
+      if ($.current.sourceNode) {
+        try { $.current.sourceNode.stop(); } catch(_) {}
+        $.current.sourceNode.disconnect();
+        $.current.sourceNode = null;
+      }
+
+      const source = actx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(actx.destination);
+      $.current.sourceNode = source;
+      $.current.audio = { pause:()=>{ try{source.stop();}catch(_){} }, currentTime:0, src:'', onplay:null, onended:null, onerror:null, oncanplaythrough:null, load:()=>{} };
+
+      source.onended = () => {
+        if (gen === $.current.generation) setSpeaking(false);
+        $.current.sourceNode = null;
+        $.current.audio = null;
+      };
+
       setLoadingAudio(false);
       setSpeaking(true);
-      await audio.play();
+      source.start(0);
 
     } catch (err) {
       if (gen !== $.current.generation) { setLoadingAudio(false); return; }
