@@ -181,27 +181,45 @@ function buildGLBBuffer(meshes) {
   let offset=0;
 
   meshes.forEach((mesh,mi)=>{
-    const pos=mesh.positions instanceof Float32Array?mesh.positions:new Float32Array(mesh.positions);
-    const idx=mesh.indices instanceof Uint16Array?mesh.indices:new Uint16Array(mesh.indices);
-    const [r,g,b]=mesh.color||[0.8,0.8,0.8];
-    const pb=pos.buffer, ib=idx.buffer;
-    const ipad=ib.byteLength%4===0?0:4-(ib.byteLength%4);
+    const pos = mesh.positions instanceof Float32Array ? mesh.positions : new Float32Array(mesh.positions);
+    const idx = mesh.indices  instanceof Uint16Array  ? mesh.indices   : new Uint16Array(mesh.indices);
+    const [r,g,b] = mesh.color || [0.8,0.8,0.8];
 
-    chunks.push(Buffer.from(pb));
-    bufferViews.push({buffer:0,byteOffset:offset,byteLength:pb.byteLength,target:34962});
-    offset+=pb.byteLength;
-    chunks.push(Buffer.from(ib));
-    bufferViews.push({buffer:0,byteOffset:offset,byteLength:ib.byteLength,target:34963});
-    offset+=ib.byteLength+ipad;
-    if(ipad>0) chunks.push(Buffer.alloc(ipad));
+    // Use pos.byteLength (not pos.buffer.byteLength) — the buffer may be larger if
+    // the TypedArray is a slice/view. Same for idx.
+    const posBuf = Buffer.from(pos.buffer, pos.byteOffset, pos.byteLength);
+    const idxBuf = Buffer.from(idx.buffer, idx.byteOffset, idx.byteLength);
+    const ipad   = idx.byteLength % 4 === 0 ? 0 : 4 - (idx.byteLength % 4);
 
-    let mn=[Infinity,Infinity,Infinity],mx=[-Infinity,-Infinity,-Infinity];
-    for(let i=0;i<pos.length;i+=3){mn[0]=Math.min(mn[0],pos[i]);mx[0]=Math.max(mx[0],pos[i]);mn[1]=Math.min(mn[1],pos[i+1]);mx[1]=Math.max(mx[1],pos[i+1]);mn[2]=Math.min(mn[2],pos[i+2]);mx[2]=Math.max(mx[2],pos[i+2]);}
+    // bufferView index for positions = current bufferViews.length BEFORE push
+    const bvPos = bufferViews.length;
+    chunks.push(posBuf);
+    bufferViews.push({buffer:0, byteOffset:offset, byteLength:pos.byteLength, target:34962});
+    offset += pos.byteLength;
 
-    const ap=accessors.length; accessors.push({bufferView:ap*2,componentType:5126,count:pos.length/3,type:'VEC3',min:mn,max:mx});
-    const ai=accessors.length; accessors.push({bufferView:ai*2-1,componentType:5123,count:idx.length,type:'SCALAR'});
+    // bufferView index for indices = current bufferViews.length BEFORE push
+    const bvIdx = bufferViews.length;
+    chunks.push(idxBuf);
+    bufferViews.push({buffer:0, byteOffset:offset, byteLength:idx.byteLength, target:34963});
+    offset += idx.byteLength + ipad;
+    if (ipad > 0) chunks.push(Buffer.alloc(ipad));
+
+    // Compute bounding box
+    let mn=[Infinity,Infinity,Infinity], mx=[-Infinity,-Infinity,-Infinity];
+    for(let i=0;i<pos.length;i+=3){
+      mn[0]=Math.min(mn[0],pos[i]);   mx[0]=Math.max(mx[0],pos[i]);
+      mn[1]=Math.min(mn[1],pos[i+1]); mx[1]=Math.max(mx[1],pos[i+1]);
+      mn[2]=Math.min(mn[2],pos[i+2]); mx[2]=Math.max(mx[2],pos[i+2]);
+    }
+
+    // Accessor indices = current accessors.length BEFORE each push
+    const accPos = accessors.length;
+    accessors.push({bufferView:bvPos, componentType:5126, count:pos.length/3, type:'VEC3', min:mn, max:mx});
+    const accIdx = accessors.length;
+    accessors.push({bufferView:bvIdx, componentType:5123, count:idx.length, type:'SCALAR'});
+
     materials.push({pbrMetallicRoughness:{baseColorFactor:[r,g,b,1],metallicFactor:0.1,roughnessFactor:0.6},doubleSided:true});
-    meshDefs.push({primitives:[{attributes:{POSITION:ap},indices:ai,material:mi}]});
+    meshDefs.push({primitives:[{attributes:{POSITION:accPos}, indices:accIdx, material:mi}]});
     nodes.push({mesh:mi});
   });
 
