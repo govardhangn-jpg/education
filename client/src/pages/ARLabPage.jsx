@@ -65,10 +65,11 @@ const MODELS = {
 
 // ══════════════════════════════════════════════════════════════════════════
 //  MINIMAL GLB WRITER
-//  Produces a valid GLB binary from an array of mesh descriptors.
+//  Returns a base64 data: URI — iOS Quick Look REQUIRES this format.
+//  blob: URLs are blocked by Apple's AR Quick Look security policy.
 //  Each mesh: { positions: Float32Array, indices: Uint16Array, color: [r,g,b] }
 // ══════════════════════════════════════════════════════════════════════════
-function buildGLB(meshes) {
+function buildGLBDataURI(meshes) {
   // We'll create one node per mesh, each with its own material
   const accessors = [], bufferViews = [], meshDefs = [], materials = [], nodes = [];
   const buffers = [];
@@ -167,12 +168,15 @@ function buildGLB(meshes) {
   write(header); write(jsonChunkHeader); write(jsonBuf);
   write(binChunkHeader); write(binBuf); write(binPadBuf);
 
-  return new Blob([out], { type:'model/gltf-binary' });
+  // Convert to base64 data URI — iOS Quick Look requires this, not blob: URLs
+  let binary = '';
+  for (let i = 0; i < out.length; i++) binary += String.fromCharCode(out[i]);
+  return 'data:model/gltf-binary;base64,' + btoa(binary);
 }
 
 // ══════════════════════════════════════════════════════════════════════════
 //  3D MODEL GENERATORS
-//  Each returns an array of mesh descriptors for buildGLB()
+//  Each returns an array of mesh descriptors for buildGLBDataURI()
 // ══════════════════════════════════════════════════════════════════════════
 
 function makeSphere(cx=0,cy=0,cz=0, r=0.04, rows=12, cols=12) {
@@ -511,44 +515,122 @@ const MODEL_GENERATORS = {
 //  AR VIEWER COMPONENT
 // ══════════════════════════════════════════════════════════════════════════
 function ARViewer({ model, subjectColor, onBack }) {
-  const [glbUrl, setGlbUrl] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState(null);
+  const [glbDataUri, setGlbDataUri] = useState(null);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState(null);
   const [arSupported, setArSupported] = useState(null);
-  const urlRef = useRef(null);
+  const containerRef = useRef(null);
+  const mvRef        = useRef(null); // holds the <model-viewer> DOM element
 
-  // Generate GLB from mesh generator
+  // ── Generate GLB as base64 data URI ─────────────────────────────────
   useEffect(() => {
     setLoading(true); setError(null);
-    try {
-      const gen = MODEL_GENERATORS[model.id];
-      if (!gen) throw new Error(`No generator for ${model.id}`);
-      const meshes = gen();
-      const blob = buildGLB(meshes);
-      const url = URL.createObjectURL(blob);
-      urlRef.current = url;
-      setGlbUrl(url);
-      setLoading(false);
-    } catch(e) {
-      console.error('GLB generation failed:', e);
-      setError(e.message);
-      setLoading(false);
-    }
-    return () => { if(urlRef.current) URL.revokeObjectURL(urlRef.current); };
+    // Small timeout so React renders the loading spinner first
+    const t = setTimeout(() => {
+      try {
+        const gen = MODEL_GENERATORS[model.id];
+        if (!gen) throw new Error(`No generator for ${model.id}`);
+        const meshes = gen();
+        const dataUri = buildGLBDataURI(meshes);
+        setGlbDataUri(dataUri);
+        setLoading(false);
+      } catch(e) {
+        console.error('GLB generation failed:', e);
+        setError(e.message);
+        setLoading(false);
+      }
+    }, 50);
+    return () => clearTimeout(t);
   }, [model.id]);
 
-  // Check AR support
+  // ── Detect AR support ────────────────────────────────────────────────
   useEffect(() => {
-    if(navigator.xr) {
-      navigator.xr.isSessionSupported('immersive-ar').then(supported => setArSupported(supported)).catch(()=>setArSupported(false));
+    const ua = navigator.userAgent;
+    const isIOS     = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    const isAndroid = /Android/.test(ua);
+    if (isIOS) {
+      setArSupported('ios');
+    } else if (isAndroid && navigator.xr) {
+      navigator.xr.isSessionSupported('immersive-ar')
+        .then(ok => setArSupported(ok ? 'android' : false))
+        .catch(()  => setArSupported(false));
     } else {
-      // iOS: model-viewer handles AR via Quick Look — detect iOS
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      setArSupported(isIOS ? 'ios' : false);
+      setArSupported(false);
     }
   }, []);
 
-  const mvRef = useRef(null);
+  // ── Mount <model-viewer> via DOM once dataUri is ready ───────────────
+  // We MUST use DOM APIs here — not dangerouslySetInnerHTML — because
+  // model-viewer's custom element needs to be properly registered before
+  // the element is created, and slots (ar-button) must be real DOM nodes.
+  useEffect(() => {
+    if (!glbDataUri || !containerRef.current) return;
+
+    // Remove any previous instance
+    if (mvRef.current) {
+      try { containerRef.current.removeChild(mvRef.current); } catch(_) {}
+    }
+
+    const mv = document.createElement('model-viewer');
+    mvRef.current = mv;
+
+    // Core attributes
+    mv.setAttribute('src', glbDataUri);
+    mv.setAttribute('alt', `${model.label} 3D model for AR`);
+    mv.setAttribute('ar', '');
+    // iOS Quick Look needs 'quick-look' first in the list
+    mv.setAttribute('ar-modes', 'quick-look webxr scene-viewer');
+    mv.setAttribute('ar-scale', 'auto');
+    mv.setAttribute('camera-controls', '');
+    mv.setAttribute('auto-rotate', '');
+    mv.setAttribute('auto-rotate-delay', '1000');
+    mv.setAttribute('rotation-per-second', '20deg');
+    mv.setAttribute('shadow-intensity', '1');
+    mv.setAttribute('exposure', '1.1');
+    mv.setAttribute('shadow-softness', '0.8');
+    mv.setAttribute('environment-image', 'neutral');
+    mv.style.cssText = `width:100%;height:460px;background:linear-gradient(135deg,#050510,#0a0a1f);--progress-bar-color:${subjectColor};`;
+
+    // ── AR button (slot="ar-button") ─────────────────────────────────
+    // This is the button iOS taps to enter AR — must be a REAL child node
+    const arBtn = document.createElement('button');
+    arBtn.setAttribute('slot', 'ar-button');
+    arBtn.style.cssText = [
+      'position:absolute', 'bottom:16px', 'right:16px',
+      `background:${subjectColor}`, 'border:none', 'border-radius:14px',
+      'padding:12px 22px', 'color:white', 'font-size:14px', 'font-weight:800',
+      'cursor:pointer', 'font-family:Nunito,sans-serif',
+      'box-shadow:0 4px 20px rgba(0,0,0,0.5)',
+      'display:flex', 'align-items:center', 'gap:8px',
+      'z-index:10',
+    ].join(';');
+    arBtn.innerHTML = '🌍&nbsp; View in AR';
+    mv.appendChild(arBtn);
+
+    // ── Annotation hotspots ───────────────────────────────────────────
+    model.hotspots?.forEach(h => {
+      const btn = document.createElement('button');
+      btn.setAttribute('slot', `hotspot-${h.label.replace(/\s+/g,'-')}`);
+      btn.setAttribute('data-position', h.pos);
+      btn.setAttribute('data-normal', h.normal);
+      btn.style.cssText = [
+        `background:${subjectColor}dd`, 'border:none', 'border-radius:20px',
+        'padding:4px 10px', 'color:white', 'font-size:11px', 'font-weight:700',
+        'cursor:default', 'font-family:Nunito,sans-serif', 'white-space:nowrap',
+        'box-shadow:0 2px 8px rgba(0,0,0,0.4)',
+      ].join(';');
+      btn.textContent = h.label;
+      mv.appendChild(btn);
+    });
+
+    containerRef.current.appendChild(mv);
+
+    return () => {
+      if (mvRef.current && containerRef.current?.contains(mvRef.current)) {
+        containerRef.current.removeChild(mvRef.current);
+      }
+    };
+  }, [glbDataUri, model, subjectColor]);
 
   return (
     <div style={{ position:'relative', width:'100%' }}>
@@ -564,74 +646,67 @@ function ARViewer({ model, subjectColor, onBack }) {
           <div style={{ color:'rgba(255,255,255,0.5)', fontSize:12 }}>{model.desc}</div>
         </div>
         {/* AR status badge */}
-        <div style={{ marginLeft:'auto', padding:'6px 12px', borderRadius:10, border:`1px solid ${arSupported ? '#27ae60' : 'rgba(255,255,255,0.1)'}55`, background:arSupported ? 'rgba(39,174,96,0.12)' : 'rgba(255,255,255,0.04)', color:arSupported ? '#27ae60' : 'rgba(255,255,255,0.35)', fontSize:11, fontWeight:700 }}>
-          {arSupported === 'ios' ? '📱 iOS AR Ready' : arSupported ? '📱 AR Ready' : arSupported === false ? '🖥️ 3D View Only' : '⏳ Checking...'}
+        <div style={{ marginLeft:'auto', padding:'6px 12px', borderRadius:10,
+          border:`1px solid ${arSupported ? '#27ae60' : 'rgba(255,255,255,0.1)'}55`,
+          background:arSupported ? 'rgba(39,174,96,0.12)' : 'rgba(255,255,255,0.04)',
+          color:arSupported ? '#27ae60' : 'rgba(255,255,255,0.35)', fontSize:11, fontWeight:700 }}>
+          {arSupported === 'ios'     ? '📱 iOS AR Ready'
+           : arSupported === 'android' ? '📱 Android AR Ready'
+           : arSupported === false    ? '🖥️ 3D View Only'
+           : '⏳ Checking...'}
         </div>
       </div>
 
+      {/* Loading state */}
       {loading && (
         <div style={{ height:400, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,0.02)', borderRadius:16, border:`1.5px solid ${subjectColor}25` }}>
           <div style={{ textAlign:'center' }}>
             <div style={{ fontSize:40, marginBottom:12, animation:'spin 1.5s linear infinite', display:'inline-block' }}>⚙️</div>
             <div style={{ color:'rgba(255,255,255,0.6)', fontSize:13 }}>Building 3D model...</div>
+            <div style={{ color:'rgba(255,255,255,0.3)', fontSize:11, marginTop:6 }}>Generating geometry in browser</div>
           </div>
         </div>
       )}
 
+      {/* Error state */}
       {error && (
         <div style={{ padding:20, background:'rgba(231,76,60,0.1)', border:'1px solid rgba(231,76,60,0.3)', borderRadius:12, color:'#e74c3c' }}>
           Failed to generate model: {error}
         </div>
       )}
 
-      {!loading && !error && glbUrl && (
-        <div style={{ position:'relative', borderRadius:16, overflow:'hidden', border:`1.5px solid ${subjectColor}30`, background:'#050510' }}>
-          {/* model-viewer renders as a custom element */}
-          <div ref={mvRef} style={{ width:'100%', minHeight:420 }}
-            dangerouslySetInnerHTML={{ __html: `
-              <model-viewer
-                src="${glbUrl}"
-                alt="${model.label} 3D model"
-                ar
-                ar-modes="webxr scene-viewer quick-look"
-                ar-scale="auto"
-                camera-controls
-                auto-rotate
-                auto-rotate-delay="1000"
-                rotation-per-second="20deg"
-                shadow-intensity="1"
-                exposure="1.1"
-                shadow-softness="0.8"
-                environment-image="neutral"
-                style="width:100%;height:460px;background:linear-gradient(135deg,#050510,#0a0a1f);--progress-bar-color:${subjectColor};--progress-mask:none;"
-                poster=""
-              >
-                ${model.hotspots?.map(h => `
-                  <button class="ar-hotspot" slot="hotspot-${h.label.replace(/\s/g,'-')}"
-                    data-position="${h.pos}" data-normal="${h.normal}"
-                    style="background:${subjectColor}dd;border:none;border-radius:20px;padding:4px 10px;color:white;font-size:11px;font-weight:700;cursor:default;font-family:sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.4);">
-                    ${h.label}
-                  </button>
-                `).join('') || ''}
-                <div slot="ar-button" style="position:absolute;bottom:16px;right:16px;">
-                  <button style="background:${subjectColor};border:none;border-radius:12px;padding:10px 20px;color:white;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:7px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,0.4);">
-                    🌍 View in AR
-                  </button>
-                </div>
-              </model-viewer>
-            `}}
-          />
+      {/* model-viewer container — NO overflow:hidden (clips the AR button on iOS) */}
+      {!loading && !error && (
+        <div style={{ position:'relative', borderRadius:16, border:`1.5px solid ${subjectColor}30`, background:'#050510' }}>
+          <div ref={containerRef} style={{ width:'100%', minHeight:460 }} />
         </div>
       )}
 
-      {/* Instructions */}
+      {/* iOS-specific tip */}
+      {arSupported === 'ios' && !loading && !error && (
+        <div style={{ marginTop:12, padding:'10px 14px', background:'rgba(52,152,219,0.08)', border:'1px solid rgba(52,152,219,0.25)', borderRadius:10, display:'flex', gap:10, alignItems:'flex-start' }}>
+          <span style={{ fontSize:20 }}>💡</span>
+          <div>
+            <div style={{ color:'#3498db', fontSize:12, fontWeight:700, marginBottom:3 }}>iPhone / iPad — How to place in AR</div>
+            <div style={{ color:'rgba(255,255,255,0.6)', fontSize:12, lineHeight:1.6 }}>
+              1. Tap the <strong style={{color:'white'}}>🌍 View in AR</strong> button inside the viewer above<br/>
+              2. Your camera opens — point at a flat surface (desk, floor, book)<br/>
+              3. A white dot/circle appears on the surface<br/>
+              4. Tap the surface to place the 3D model<br/>
+              5. Walk around it — it stays anchored in real space
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Instructions grid */}
       {!loading && !error && (
-        <div style={{ marginTop:16, display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))', gap:10 }}>
+        <div style={{ marginTop:12, display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:10 }}>
           {[
-            { icon:'🖱️', title:'Rotate', desc:'Drag to spin the model' },
-            { icon:'🔍', title:'Zoom', desc:'Pinch or scroll to zoom' },
-            { icon:'🌍', title:'Place in AR', desc:'Tap "View in AR" button' },
-            { icon:'📍', title:'Labels', desc:'Tap hotspot dots for info' },
+            { icon:'👆', title:'Rotate', desc:'Drag / swipe the model' },
+            { icon:'🤏', title:'Zoom', desc:'Pinch or scroll' },
+            { icon:'🌍', title:'AR',   desc:'Tap "View in AR" inside viewer' },
+            { icon:'📍', title:'Labels', desc:'Tap the dot markers' },
           ].map(tip=>(
             <div key={tip.title} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:'10px 12px', display:'flex', gap:10, alignItems:'flex-start' }}>
               <span style={{ fontSize:18 }}>{tip.icon}</span>
@@ -644,19 +719,19 @@ function ARViewer({ model, subjectColor, onBack }) {
         </div>
       )}
 
-      {/* AR Support info */}
+      {/* Platform info */}
       <div style={{ marginTop:12, padding:'10px 14px', background:'rgba(255,255,255,0.02)', borderRadius:10, border:'1px solid rgba(255,255,255,0.06)', display:'flex', gap:16, flexWrap:'wrap', alignItems:'center' }}>
         <div style={{ color:'rgba(255,255,255,0.35)', fontSize:11, fontWeight:700 }}>AR SUPPORT</div>
         {[
-          { device:'Android Chrome', status:'✅ Full AR', note:'WebXR / Scene Viewer' },
-          { device:'iOS Safari',     status:'✅ AR via Quick Look', note:'Native Apple AR' },
-          { device:'Desktop',        status:'🖥️ 3D View',    note:'Full model interaction' },
+          { d:'Android Chrome', s:'✅ Full AR',          n:'WebXR / Scene Viewer' },
+          { d:'iOS Safari',     s:'✅ AR via Quick Look', n:'ARKit — no install needed' },
+          { d:'Desktop',        s:'🖥️ 3D only',           n:'No camera available' },
         ].map(d=>(
-          <div key={d.device} style={{ display:'flex', gap:5, alignItems:'center' }}>
-            <span style={{ color:'rgba(255,255,255,0.6)', fontSize:11 }}>{d.device}</span>
-            <span style={{ color:'rgba(255,255,255,0.35)', fontSize:10 }}>—</span>
-            <span style={{ fontSize:11, fontWeight:700, color:d.status.includes('✅')?'#27ae60':'rgba(255,255,255,0.4)' }}>{d.status}</span>
-            <span style={{ color:'rgba(255,255,255,0.25)', fontSize:10 }}>({d.note})</span>
+          <div key={d.d} style={{ display:'flex', gap:5, alignItems:'center', flexWrap:'wrap' }}>
+            <span style={{ color:'rgba(255,255,255,0.5)', fontSize:11 }}>{d.d}</span>
+            <span style={{ color:'rgba(255,255,255,0.25)', fontSize:10 }}>—</span>
+            <span style={{ fontSize:11, fontWeight:700, color:d.s.includes('✅')?'#27ae60':'rgba(255,255,255,0.4)' }}>{d.s}</span>
+            <span style={{ color:'rgba(255,255,255,0.25)', fontSize:10 }}>({d.n})</span>
           </div>
         ))}
       </div>
