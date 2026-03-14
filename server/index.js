@@ -36,7 +36,32 @@ import arRoutes from './routes/ar.js';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(helmet());
+// Trust Render's reverse proxy so req.protocol returns 'https' correctly
+app.set('trust proxy', 1);
+
+// Helmet with CSP configured to allow model-viewer CDN on AR pages
+// The /ar/* routes serve HTML pages that load the model-viewer script from Google CDN
+app.use((req, res, next) => {
+  if (req.path.startsWith('/ar/')) {
+    // AR HTML pages need external scripts and are not API routes
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc:  ["'self'", 'https://ajax.googleapis.com', "'unsafe-inline'"],
+          styleSrc:   ["'self'", "'unsafe-inline'"],
+          imgSrc:     ["'self'", 'data:', 'blob:'],
+          connectSrc: ["'self'", 'https:'],
+          workerSrc:  ["'self'", 'blob:'],
+          frameSrc:   ["'none'"],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+    })(req, res, next);
+  } else {
+    helmet()(req, res, next);
+  }
+});
 
 const corsOptions = process.env.NODE_ENV === 'production'
   ? { origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true }
