@@ -10,6 +10,10 @@
     body { margin: 0; background: #0d0d1a; }
     #root { min-height: 100vh; }
   </style>
+  <!-- model-viewer: loaded here so the custom element is defined BEFORE React boots.
+       Dynamic injection after hydration causes the custom element to be unregistered
+       when createElement('model-viewer') is called, breaking AR on iOS Safari. -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 </head>
 <body>
   <div id="root"></div>
