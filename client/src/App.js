@@ -8,6 +8,7 @@ import QuizPage from './pages/QuizPage';
 import ProgressPage from './pages/ProgressPage';
 import AdminPage from './pages/AdminPage';
 import VisualLabPage from './pages/VisualLabPage';
+import ARLabPage from './pages/ARLabPage';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -38,6 +39,7 @@ function App() {
             <Route path="progress" element={<ProgressPage />} />
             <Route path="admin" element={<AdminPage />} />
             <Route path="visual-lab" element={<VisualLabPage />} />
+            <Route path="ar-lab" element={<ARLabPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

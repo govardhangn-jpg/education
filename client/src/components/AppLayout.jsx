@@ -14,6 +14,7 @@ export default function AppLayout() {
     { to:'/chat',       icon:'💬', label:'Chat' },
     { to:'/quiz',       icon:'📝', label:'Quiz' },
     { to:'/visual-lab', icon:'🔬', label:'Lab' },
+    { to:'/ar-lab',     icon:'🌍', label:'AR' },
     { to:'/progress',   icon:'📊', label:'Progress' },
     ...(user?.role==='admin'||user?.role==='teacher' ? [{ to:'/admin', icon:'🛡️', label:'Admin' }] : []),
   ];
