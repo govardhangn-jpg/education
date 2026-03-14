@@ -273,7 +273,7 @@ const MODEL_GENERATORS = {
     const nucleolus = makeSphere(0.01,0.01,0, 0.012, 8,8);
     meshes.push({ ...nucleolus, color:[0.6,0.1,0.1] });
     // Mitochondria (oval spheres)
-    [[0.055,0.03,0.02],[−0.055,-0.04,0.01],[-0.04,0.05,-0.02]].forEach(([x,y,z])=>{
+    [[0.055,0.03,0.02],[-0.055,-0.04,0.01],[-0.04,0.05,-0.02]].forEach(([x,y,z])=>{
       const m = makeSphere(x||0,y,z, 0.018, 8,8);
       meshes.push({ ...m, color:[0.95,0.6,0.1] });
     });
