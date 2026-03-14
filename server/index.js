@@ -31,6 +31,7 @@ import chatRoutes from './routes/chat.js';
 import quizRoutes from './routes/quiz.js';
 import curriculumRoutes from './routes/curriculum.js';
 import adminRoutes from './routes/admin.js';
+import arRoutes from './routes/ar.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -66,6 +67,8 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/curriculum', curriculumRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/tts', ttsRoutes);
+app.use('/api/ar', arRoutes);
+app.use('/ar', arRoutes);
 
 app.get('/health', (req, res) => res.json({
   status: 'ok',

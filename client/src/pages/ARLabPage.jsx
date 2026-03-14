@@ -506,139 +506,21 @@ const MODEL_GENERATORS = {
   },
 };
 
+// ── Backend URL ───────────────────────────────────────────────────────────
+const BACKEND = process.env.REACT_APP_API_URL
+  ? process.env.REACT_APP_API_URL.replace(/\/api$/, '')
+  : 'http://localhost:5000';
+
 // ══════════════════════════════════════════════════════════════════════════
 //  AR VIEWER COMPONENT
+//  Opens a standalone HTML page served by Express — completely outside React.
+//  This is the only architecture that works reliably on iOS Safari because:
+//  1. The GLB is a real HTTPS URL (required for USDZ generation)
+//  2. model-viewer lives in its own HTML document (no React re-renders)
+//  3. No custom element registration race conditions
 // ══════════════════════════════════════════════════════════════════════════
 function ARViewer({ model, subjectColor, onBack }) {
-  const [glbDataUri,  setGlbDataUri]  = useState(null);
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState(null);
-  const [arSupported, setArSupported] = useState(null);
-  const [mvReady,     setMvReady]     = useState(false); // model-viewer custom element defined?
-  const containerRef = useRef(null);
-  const mvRef        = useRef(null);
-
-  // ── Wait for model-viewer custom element to be defined ───────────────
-  // This is the key fix: even though the script is in index.html,
-  // we must wait for the custom element to be defined before calling
-  // document.createElement('model-viewer') or we get a plain HTMLElement.
-  useEffect(() => {
-    if (customElements.get('model-viewer')) {
-      setMvReady(true);
-    } else {
-      customElements.whenDefined('model-viewer').then(() => setMvReady(true));
-    }
-  }, []);
-
-  // ── Generate GLB as base64 data URI ─────────────────────────────────
-  useEffect(() => {
-    setLoading(true); setError(null);
-    const t = setTimeout(() => {
-      try {
-        const gen = MODEL_GENERATORS[model.id];
-        if (!gen) throw new Error(`No generator for ${model.id}`);
-        const dataUri = buildGLBDataURI(gen());
-        setGlbDataUri(dataUri);
-        setLoading(false);
-      } catch(e) {
-        console.error('[AR] GLB build failed:', e);
-        setError(e.message);
-        setLoading(false);
-      }
-    }, 50);
-    return () => clearTimeout(t);
-  }, [model.id]);
-
-  // ── Detect AR support ────────────────────────────────────────────────
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    const isIOS     = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-    const isAndroid = /Android/.test(ua);
-    if (isIOS) {
-      setArSupported('ios');
-    } else if (isAndroid && navigator.xr) {
-      navigator.xr.isSessionSupported('immersive-ar')
-        .then(ok => setArSupported(ok ? 'android' : false))
-        .catch(()  => setArSupported(false));
-    } else {
-      setArSupported(false);
-    }
-  }, []);
-
-  // ── Mount <model-viewer> once both GLB and custom element are ready ──
-  // Both mvReady AND glbDataUri must be true before we can mount.
-  // containerRef div is always in the DOM (display:none when loading)
-  // so containerRef.current is never null here.
-  useEffect(() => {
-    if (!mvReady || !glbDataUri || !containerRef.current) return;
-
-    // Remove previous instance
-    if (mvRef.current) {
-      try { containerRef.current.removeChild(mvRef.current); } catch(_) {}
-      mvRef.current = null;
-    }
-
-    // Now safe to create — customElements.get('model-viewer') is defined
-    const mv = document.createElement('model-viewer');
-    mvRef.current = mv;
-
-    mv.setAttribute('src', glbDataUri);
-    mv.setAttribute('alt', `${model.label} 3D model for AR`);
-    mv.setAttribute('ar', '');
-    mv.setAttribute('ar-modes', 'quick-look webxr scene-viewer');
-    mv.setAttribute('ar-scale', 'auto');
-    mv.setAttribute('camera-controls', '');
-    mv.setAttribute('auto-rotate', '');
-    mv.setAttribute('auto-rotate-delay', '1000');
-    mv.setAttribute('rotation-per-second', '20deg');
-    mv.setAttribute('shadow-intensity', '1');
-    mv.setAttribute('exposure', '1.1');
-    mv.setAttribute('shadow-softness', '0.8');
-    mv.setAttribute('environment-image', 'neutral');
-    mv.style.cssText = `width:100%;height:460px;background:linear-gradient(135deg,#050510,#0a0a1f);--progress-bar-color:${subjectColor};`;
-
-    // AR button — slot="ar-button" is processed by model-viewer's shadow DOM
-    const arBtn = document.createElement('button');
-    arBtn.setAttribute('slot', 'ar-button');
-    arBtn.style.cssText = [
-      'position:absolute', 'bottom:20px', 'right:20px',
-      `background:${subjectColor}`, 'border:none', 'border-radius:14px',
-      'padding:13px 24px', 'color:white', 'font-size:15px', 'font-weight:800',
-      'cursor:pointer', 'font-family:Nunito,sans-serif',
-      'box-shadow:0 4px 20px rgba(0,0,0,0.5)',
-      'display:inline-flex', 'align-items:center', 'gap:8px',
-      'z-index:100', 'letter-spacing:0.3px',
-    ].join(';');
-    arBtn.textContent = '🌍  View in AR';
-    mv.appendChild(arBtn);
-
-    // Hotspot annotation labels
-    model.hotspots?.forEach(h => {
-      const btn = document.createElement('button');
-      btn.setAttribute('slot', `hotspot-${h.label.replace(/\s+/g,'-')}`);
-      btn.setAttribute('data-position', h.pos);
-      btn.setAttribute('data-normal', h.normal);
-      btn.style.cssText = [
-        `background:${subjectColor}dd`, 'border:none', 'border-radius:20px',
-        'padding:4px 10px', 'color:white', 'font-size:11px', 'font-weight:700',
-        'cursor:default', 'font-family:Nunito,sans-serif', 'white-space:nowrap',
-        'box-shadow:0 2px 8px rgba(0,0,0,0.4)',
-      ].join(';');
-      btn.textContent = h.label;
-      mv.appendChild(btn);
-    });
-
-    containerRef.current.appendChild(mv);
-
-    return () => {
-      if (mvRef.current && containerRef.current?.contains(mvRef.current)) {
-        try { containerRef.current.removeChild(mvRef.current); } catch(_) {}
-        mvRef.current = null;
-      }
-    };
-  }, [mvReady, glbDataUri, model, subjectColor]);
-
-  const isReady = mvReady && !loading && !error;
+  const arPageUrl = `${BACKEND}/ar/view/${model.id}`;
 
   return (
     <div style={{ position:'relative', width:'100%' }}>
@@ -653,75 +535,59 @@ function ARViewer({ model, subjectColor, onBack }) {
           <div style={{ color:'white', fontSize:18, fontWeight:800, lineHeight:1.1 }}>{model.label}</div>
           <div style={{ color:'rgba(255,255,255,0.5)', fontSize:12 }}>{model.desc}</div>
         </div>
-        <div style={{ marginLeft:'auto', padding:'6px 12px', borderRadius:10,
-          border:`1px solid ${arSupported ? '#27ae60' : 'rgba(255,255,255,0.1)'}55`,
-          background:arSupported ? 'rgba(39,174,96,0.12)' : 'rgba(255,255,255,0.04)',
-          color:arSupported ? '#27ae60' : 'rgba(255,255,255,0.35)', fontSize:11, fontWeight:700 }}>
-          {arSupported === 'ios'     ? '📱 iOS AR Ready'
-           : arSupported === 'android' ? '📱 Android AR Ready'
-           : arSupported === false    ? '🖥️ 3D View Only'
-           : '⏳ Checking...'}
+      </div>
+
+      {/* Open AR page button */}
+      <div style={{ background:'rgba(255,255,255,0.02)', border:`1.5px solid ${subjectColor}30`, borderRadius:18, padding:28, textAlign:'center', marginBottom:16 }}>
+        <div style={{ fontSize:64, marginBottom:16 }}>{model.icon}</div>
+        <div style={{ color:'white', fontSize:18, fontWeight:800, marginBottom:8 }}>{model.label}</div>
+        <div style={{ color:'rgba(255,255,255,0.5)', fontSize:13, marginBottom:24, lineHeight:1.6 }}>
+          Opens a full-screen AR viewer.<br/>
+          On iPhone/iPad, tap <strong style={{color:'white'}}>🌍 View in AR</strong> inside to place it in your room.
+        </div>
+
+        <a href={arPageUrl} target="_blank" rel="noopener noreferrer"
+          style={{ display:'inline-flex', alignItems:'center', gap:10, background:subjectColor, border:'none', borderRadius:14, padding:'14px 32px', color:'white', fontSize:16, fontWeight:800, textDecoration:'none', boxShadow:`0 6px 24px ${subjectColor}66`, letterSpacing:'0.3px' }}>
+          🌍&nbsp; Open AR Viewer
+        </a>
+
+        <div style={{ color:'rgba(255,255,255,0.3)', fontSize:11, marginTop:14 }}>
+          Opens in a new tab • Use Safari on iPhone for AR
         </div>
       </div>
 
-      {/* Loading / building */}
-      {(loading || !mvReady) && (
-        <div style={{ height:400, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,0.02)', borderRadius:16, border:`1.5px solid ${subjectColor}25` }}>
-          <div style={{ textAlign:'center' }}>
-            <div style={{ fontSize:40, marginBottom:12, animation:'spin 1.5s linear infinite', display:'inline-block' }}>⚙️</div>
-            <div style={{ color:'rgba(255,255,255,0.6)', fontSize:13 }}>{loading ? 'Building 3D model...' : 'Initialising AR viewer...'}</div>
+      {/* iOS tip */}
+      <div style={{ padding:'12px 16px', background:'rgba(52,152,219,0.08)', border:'1px solid rgba(52,152,219,0.3)', borderRadius:12, display:'flex', gap:10 }}>
+        <span style={{ fontSize:20, flexShrink:0 }}>💡</span>
+        <div>
+          <div style={{ color:'#3498db', fontSize:13, fontWeight:700, marginBottom:4 }}>iPhone 16 Pro — Steps</div>
+          <div style={{ color:'rgba(255,255,255,0.65)', fontSize:12, lineHeight:1.8 }}>
+            1. Tap <strong style={{color:'white'}}>Open AR Viewer</strong> above<br/>
+            2. The 3D model appears in a new tab<br/>
+            3. Tap <strong style={{color:'white'}}>🌍 View in AR</strong> button (bottom-right)<br/>
+            4. Point camera at a flat surface<br/>
+            5. Tap the surface to place the model<br/>
+            6. Walk around it — LiDAR holds it in place
           </div>
         </div>
-      )}
-
-      {error && (
-        <div style={{ padding:20, background:'rgba(231,76,60,0.1)', border:'1px solid rgba(231,76,60,0.3)', borderRadius:12, color:'#e74c3c' }}>
-          Failed: {error}
-        </div>
-      )}
-
-      {/* model-viewer container — ALWAYS in DOM, hidden via display:none while loading.
-          This guarantees containerRef.current is never null when the useEffect fires. */}
-      <div style={{ display: isReady ? 'block' : 'none', position:'relative', borderRadius:16, border:`1.5px solid ${subjectColor}30`, background:'#050510' }}>
-        <div ref={containerRef} style={{ width:'100%', minHeight:460 }} />
       </div>
 
-      {/* iOS Quick Look instructions */}
-      {arSupported === 'ios' && isReady && (
-        <div style={{ marginTop:12, padding:'12px 16px', background:'rgba(52,152,219,0.08)', border:'1px solid rgba(52,152,219,0.3)', borderRadius:12, display:'flex', gap:10 }}>
-          <span style={{ fontSize:22, flexShrink:0 }}>💡</span>
-          <div>
-            <div style={{ color:'#3498db', fontSize:13, fontWeight:700, marginBottom:5 }}>How to place in AR on your iPhone</div>
-            <div style={{ color:'rgba(255,255,255,0.65)', fontSize:12, lineHeight:1.8 }}>
-              1. Tap <strong style={{color:'white'}}>🌍 View in AR</strong> inside the 3D viewer above<br/>
-              2. Camera opens → point at a flat surface (desk, floor, book)<br/>
-              3. White circle appears on the surface<br/>
-              4. Tap the circle to place the 3D model<br/>
-              5. Walk around it — LiDAR keeps it locked in place
+      {/* Platform badges */}
+      <div style={{ marginTop:12, display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:8 }}>
+        {[
+          { icon:'🍎', label:'iOS Safari',     note:'Full AR via Quick Look', ok:true },
+          { icon:'🤖', label:'Android Chrome', note:'Full AR via WebXR',      ok:true },
+          { icon:'🖥️', label:'Desktop',        note:'3D view only',           ok:false },
+        ].map(p=>(
+          <div key={p.label} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:'10px 12px', display:'flex', gap:8 }}>
+            <span style={{ fontSize:20 }}>{p.icon}</span>
+            <div>
+              <div style={{ color:p.ok?'#27ae60':'rgba(255,255,255,0.4)', fontSize:12, fontWeight:700 }}>{p.label} {p.ok?'✅':''}</div>
+              <div style={{ color:'rgba(255,255,255,0.4)', fontSize:10, marginTop:1 }}>{p.note}</div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Tips */}
-      {isReady && (
-        <div style={{ marginTop:10, display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))', gap:8 }}>
-          {[
-            { icon:'👆', title:'Rotate',  desc:'Drag / swipe the model' },
-            { icon:'🤏', title:'Zoom',    desc:'Pinch to scale' },
-            { icon:'🌍', title:'AR',      desc:'Tap "View in AR" button' },
-            { icon:'📍', title:'Labels',  desc:'Tap the dot markers' },
-          ].map(tip=>(
-            <div key={tip.title} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:'10px 12px', display:'flex', gap:8 }}>
-              <span>{tip.icon}</span>
-              <div>
-                <div style={{ color:'white', fontSize:12, fontWeight:700 }}>{tip.title}</div>
-                <div style={{ color:'rgba(255,255,255,0.4)', fontSize:11, marginTop:1 }}>{tip.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 }
