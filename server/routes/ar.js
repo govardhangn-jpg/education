@@ -305,12 +305,16 @@ router.get('/view/:id', (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
+  // Put data URI directly in the src attribute — no JS blob creation, no timing issues.
+  // model-viewer reads the src attribute during HTML parsing, before any JS runs.
+  const dataUri = 'data:model/gltf-binary;base64,' + glbBase64;
+
   res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>${meta.label} — AR</title>
+  <title>${meta.label} \u2014 AR</title>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
@@ -323,38 +327,41 @@ router.get('/view/:id', (req, res) => {
   </style>
 </head>
 <body>
-  <a href="${backUrl}" id="back">← Back</a>
+  <a href="${backUrl}" id="back">\u2190 Back</a>
   <div id="lbl">${meta.label}</div>
-  <div id="st">Decoding 3D model…</div>
-  <model-viewer id="mv" alt="${meta.label}" ar ar-modes="quick-look webxr scene-viewer" ar-scale="auto" camera-controls auto-rotate auto-rotate-delay="1500" rotation-per-second="15deg" shadow-intensity="1" exposure="1.1" environment-image="neutral">
-    <button slot="ar-button" id="ar-btn">🌍&nbsp; View in AR</button>
+  <div id="st">Loading 3D model\u2026</div>
+  <model-viewer
+    id="mv"
+    src="${dataUri}"
+    alt="${meta.label}"
+    ar
+    ar-modes="quick-look webxr scene-viewer"
+    ar-scale="auto"
+    camera-controls
+    auto-rotate
+    auto-rotate-delay="1500"
+    rotation-per-second="15deg"
+    shadow-intensity="1"
+    exposure="1.1"
+    environment-image="neutral"
+  >
+    <button slot="ar-button" id="ar-btn">&#127758;&nbsp; View in AR</button>
   </model-viewer>
   <script>
-    const GLB = "${glbBase64}";
     const mv = document.getElementById('mv');
     const st = document.getElementById('st');
-    customElements.whenDefined('model-viewer').then(() => {
-      st.textContent = 'Loading 3D model…';
-      try {
-        const bin = atob(GLB);
-        const buf = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-        const blobUrl = URL.createObjectURL(new Blob([buf], {type:'model/gltf-binary'}));
-        mv.src = blobUrl;
-      } catch(e) { st.textContent = 'Decode error: ' + e.message; }
-    });
     mv.addEventListener('load', () => {
-      st.textContent = mv.canActivateAR ? 'Tap "View in AR" to place in your room ↗' : '3D model ready — drag to rotate';
+      st.textContent = mv.canActivateAR ? 'Tap View in AR to place in your room' : '3D model ready';
     });
     mv.addEventListener('error', e => {
       const msg = e.detail?.sourceError?.message || e.detail?.message || 'unknown';
-      st.textContent = 'Load error: ' + msg;
+      st.textContent = 'Error: ' + msg;
       console.error('[AR]', e.detail);
     });
-    mv.addEventListener('ar-status', e => { console.log('[AR]', e.detail.status); });
+    mv.addEventListener('ar-status', e => console.log('[AR]', e.detail.status));
   </script>
 </body>
-</html>`);
+</html>\`);
 });
 
 export default router;
