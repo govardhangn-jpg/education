@@ -309,59 +309,34 @@ router.get('/view/:id', (req, res) => {
   // model-viewer reads the src attribute during HTML parsing, before any JS runs.
   const dataUri = 'data:model/gltf-binary;base64,' + glbBase64;
 
-  res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>${meta.label} \u2014 AR</title>
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    html,body{width:100%;height:100%;overflow:hidden;background:#050510}
-    model-viewer{width:100%;height:100svh;background:linear-gradient(135deg,#050510,#0a0a1f);--poster-color:transparent}
-    #ar-btn{background:${color};border:none;border-radius:16px;padding:14px 28px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,0.5);display:inline-flex;align-items:center;gap:10px}
-    #back{position:fixed;top:max(env(safe-area-inset-top,0px),16px);left:16px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:10px 18px;color:#fff;font-size:14px;font-weight:700;text-decoration:none;z-index:200;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-    #lbl{position:fixed;top:max(env(safe-area-inset-top,0px),16px);left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:8px 20px;color:#fff;font-size:14px;font-weight:700;white-space:nowrap;z-index:200;pointer-events:none;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-    #st{position:fixed;bottom:110px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.55);font-size:13px;pointer-events:none;z-index:100}
-  </style>
-</head>
-<body>
-  <a href="${backUrl}" id="back">\u2190 Back</a>
-  <div id="lbl">${meta.label}</div>
-  <div id="st">Loading 3D model\u2026</div>
-  <model-viewer
-    id="mv"
-    src="${dataUri}"
-    alt="${meta.label}"
-    ar
-    ar-modes="quick-look webxr scene-viewer"
-    ar-scale="auto"
-    camera-controls
-    auto-rotate
-    auto-rotate-delay="1500"
-    rotation-per-second="15deg"
-    shadow-intensity="1"
-    exposure="1.1"
-    environment-image="neutral"
-  >
-    <button slot="ar-button" id="ar-btn">&#127758;&nbsp; View in AR</button>
-  </model-viewer>
-  <script>
-    const mv = document.getElementById('mv');
-    const st = document.getElementById('st');
-    mv.addEventListener('load', () => {
-      st.textContent = mv.canActivateAR ? 'Tap View in AR to place in your room' : '3D model ready';
-    });
-    mv.addEventListener('error', e => {
-      const msg = e.detail?.sourceError?.message || e.detail?.message || 'unknown';
-      st.textContent = 'Error: ' + msg;
-      console.error('[AR]', e.detail);
-    });
-    mv.addEventListener('ar-status', e => console.log('[AR]', e.detail.status));
-  </script>
-</body>
-</html>\`);
+  res.send('<!DOCTYPE html>' +
+    '<html lang="en"><head>' +
+    '<meta charset="utf-8"/>' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>' +
+    '<title>' + meta.label + ' - AR</title>' +
+    '<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"><\/script>' +
+    '<style>' +
+    '*{margin:0;padding:0;box-sizing:border-box}' +
+    'html,body{width:100%;height:100%;overflow:hidden;background:#050510}' +
+    'model-viewer{width:100%;height:100svh;background:linear-gradient(135deg,#050510,#0a0a1f);--poster-color:transparent}' +
+    '#ar-btn{background:' + color + ';border:none;border-radius:16px;padding:14px 28px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.5);display:inline-flex;align-items:center;gap:10px}' +
+    '#back{position:fixed;top:max(env(safe-area-inset-top,0px),16px);left:16px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:10px 18px;color:#fff;font-size:14px;font-weight:700;text-decoration:none;z-index:200;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}' +
+    '#lbl{position:fixed;top:max(env(safe-area-inset-top,0px),16px);left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:8px 20px;color:#fff;font-size:14px;font-weight:700;white-space:nowrap;z-index:200;pointer-events:none;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}' +
+    '#st{position:fixed;bottom:110px;left:0;right:0;text-align:center;color:rgba(255,255,255,.55);font-size:13px;pointer-events:none;z-index:100}' +
+    '</style></head><body>' +
+    '<a href="' + backUrl + '" id="back">Back</a>' +
+    '<div id="lbl">' + meta.label + '</div>' +
+    '<div id="st">Loading 3D model...</div>' +
+    '<model-viewer id="mv" src="' + dataUri + '" alt="' + meta.label + '" ar ar-modes="quick-look webxr scene-viewer" ar-scale="auto" camera-controls auto-rotate auto-rotate-delay="1500" rotation-per-second="15deg" shadow-intensity="1" exposure="1.1" environment-image="neutral">' +
+    '<button slot="ar-button" id="ar-btn">View in AR</button>' +
+    '</model-viewer>' +
+    '<script>' +
+    'var mv=document.getElementById("mv"),st=document.getElementById("st");' +
+    'mv.addEventListener("load",function(){st.textContent=mv.canActivateAR?"Tap View in AR to place in your room":"3D model ready";});' +
+    'mv.addEventListener("error",function(e){st.textContent="Error: "+(e.detail&&e.detail.message||"unknown");console.error("[AR]",e.detail);});' +
+    'mv.addEventListener("ar-status",function(e){console.log("[AR]",e.detail.status);});' +
+    '<\/script>' +
+    '</body></html>');
 });
 
 export default router;
