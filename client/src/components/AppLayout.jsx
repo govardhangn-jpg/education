@@ -10,10 +10,11 @@ export default function AppLayout() {
   const handleLogout = () => { logoutUser(); navigate('/login'); };
 
   const navItems = [
-    { to:'/dashboard', icon:'🏠', label:'Home' },
-    { to:'/chat',      icon:'💬', label:'Chat' },
-    { to:'/quiz',      icon:'📝', label:'Quiz' },
-    { to:'/progress',  icon:'📊', label:'Progress' },
+    { to:'/dashboard',  icon:'🏠', label:'Home' },
+    { to:'/chat',       icon:'💬', label:'Chat' },
+    { to:'/quiz',       icon:'📝', label:'Quiz' },
+    { to:'/visual-lab', icon:'🔬', label:'Lab' },
+    { to:'/progress',   icon:'📊', label:'Progress' },
     ...(user?.role==='admin'||user?.role==='teacher' ? [{ to:'/admin', icon:'🛡️', label:'Admin' }] : []),
   ];
 
