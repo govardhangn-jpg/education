@@ -9,6 +9,7 @@ import ProgressPage from './pages/ProgressPage';
 import AdminPage from './pages/AdminPage';
 import VisualLabPage from './pages/VisualLabPage';
 import ARLabPage from './pages/ARLabPage';
+import LifeSkillsPage from './pages/LifeSkillsPage';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -40,6 +41,7 @@ function App() {
             <Route path="admin" element={<AdminPage />} />
             <Route path="visual-lab" element={<VisualLabPage />} />
             <Route path="ar-lab" element={<ARLabPage />} />
+            <Route path="life-skills" element={<LifeSkillsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
