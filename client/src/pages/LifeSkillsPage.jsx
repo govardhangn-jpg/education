@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useLifeProgress } from '../hooks/useLifeProgress';
 
 // ── Colour system ──────────────────────────────────────────────────────────
 const MODULES = {
@@ -677,44 +678,42 @@ function RelationshipsModule({ accent, accentDim, accentBorder }) {
 }
 
 // ── Daily Check-in ─────────────────────────────────────────────────────────
-function DailyCheckin({ moduleId, accent, accentDim, accentBorder }) {
-  const key = `lifeskills_checkin_${moduleId}_${new Date().toDateString()}`;
-  const [checked, setChecked] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; }
-  });
-
-  const toggle = id => {
-    const next = checked.includes(id) ? checked.filter(x=>x!==id) : [...checked, id];
-    setChecked(next);
-    localStorage.setItem(key, JSON.stringify(next));
-  };
-
-  const habits = HABITS[moduleId];
-  const pct = Math.round((checked.length / habits.length) * 100);
+function DailyCheckin({ moduleId, accent, accentDim, accentBorder, todayChecked, onToggle, streak }) {
+  const habits = HABITS[moduleId] || [];
+  const checked = todayChecked || [];
+  const pct = habits.length ? Math.round((checked.length / habits.length) * 100) : 0;
 
   return (
     <div style={{ padding:20, background:'rgba(255,255,255,0.02)', border:`1.5px solid ${accentBorder}`, borderRadius:16 }}>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14, flexWrap:'wrap', gap:8 }}>
         <div style={{ color:accent, fontSize:13, fontWeight:800 }}>Today's Practice</div>
-        <div style={{ color:'rgba(255,255,255,0.35)', fontSize:11, fontWeight:700 }}>{checked.length}/{habits.length} done</div>
+        <div style={{ display:'flex', gap:12, alignItems:'center' }}>
+          {streak > 0 && (
+            <div style={{ display:'flex', alignItems:'center', gap:5, background:accentDim, border:`1px solid ${accentBorder}`, borderRadius:20, padding:'4px 10px' }}>
+              <span style={{ fontSize:14 }}>🔥</span>
+              <span style={{ color:accent, fontSize:12, fontWeight:800 }}>{streak} day streak</span>
+            </div>
+          )}
+          <div style={{ color:'rgba(255,255,255,0.35)', fontSize:11, fontWeight:700 }}>{checked.length}/{habits.length} done</div>
+        </div>
       </div>
       <div style={{ height:4, background:'rgba(255,255,255,0.07)', borderRadius:4, marginBottom:16, overflow:'hidden' }}>
         <div style={{ height:'100%', width:`${pct}%`, background:accent, borderRadius:4, transition:'width 0.5s' }} />
       </div>
       {habits.map(h => (
-        <div key={h.id} onClick={() => toggle(h.id)}
+        <div key={h.id} onClick={() => onToggle(h.id)}
           style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderBottom:'1px solid rgba(255,255,255,0.05)', cursor:'pointer' }}>
-          <div style={{ width:22, height:22, borderRadius:6, border:`2px solid ${checked.includes(h.id) ? accent : 'rgba(255,255,255,0.2)'}`, background: checked.includes(h.id) ? accentDim : 'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.2s' }}>
+          <div style={{ width:22, height:22, borderRadius:6, border:`2px solid ${checked.includes(h.id) ? accent : 'rgba(255,255,255,0.2)'}`, background:checked.includes(h.id) ? accentDim : 'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.2s' }}>
             {checked.includes(h.id) && <span style={{ color:accent, fontSize:13, fontWeight:900 }}>✓</span>}
           </div>
-          <span style={{ color: checked.includes(h.id) ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.5, textDecoration: checked.includes(h.id) ? 'line-through' : 'none', transition:'all 0.2s' }}>
+          <span style={{ color:checked.includes(h.id) ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.5, textDecoration:checked.includes(h.id) ? 'line-through' : 'none', transition:'all 0.2s' }}>
             {h.text}
           </span>
         </div>
       ))}
       {pct === 100 && (
         <div style={{ marginTop:14, textAlign:'center', color:accent, fontSize:14, fontWeight:800 }}>
-          🌟 You showed up fully today. That's how change happens.
+          🌟 You showed up fully today. That is how change happens.
         </div>
       )}
     </div>
@@ -736,31 +735,29 @@ function QuoteCard({ moduleId, accent, accentDim, accentBorder }) {
 }
 
 // ── Reflection Journal ─────────────────────────────────────────────────────
-function ReflectionJournal({ moduleId, accent, accentDim, accentBorder }) {
-  const prompts = REFLECTIONS[moduleId];
+function ReflectionJournal({ moduleId, accent, accentDim, accentBorder, getJournal, saveJournal }) {
+  const prompts = REFLECTIONS[moduleId] || [];
   const [idx, setIdx] = useState(0);
-  const key = `lifeskills_journal_${moduleId}_${idx}`;
-  const [text, setText] = useState(() => localStorage.getItem(key) || '');
-  const save = (val) => { setText(val); localStorage.setItem(key, val); };
+  const text = getJournal(moduleId, idx);
 
   return (
     <div style={{ padding:20, background:'rgba(255,255,255,0.02)', border:`1.5px solid ${accentBorder}`, borderRadius:16 }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-        <div style={{ color:accent, fontSize:13, fontWeight:800 }}>Reflection</div>
+        <div style={{ color:accent, fontSize:13, fontWeight:800 }}>Reflection Journal</div>
         <div style={{ display:'flex', gap:6 }}>
-          <button onClick={() => { setIdx(i => (i-1+prompts.length)%prompts.length); setText(localStorage.getItem(`lifeskills_journal_${moduleId}_${(idx-1+prompts.length)%prompts.length}`) || ''); }}
+          <button onClick={() => setIdx(i => (i-1+prompts.length)%prompts.length)}
             style={{ background:'rgba(255,255,255,0.06)', border:'none', borderRadius:8, padding:'4px 10px', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:13 }}>←</button>
           <span style={{ color:'rgba(255,255,255,0.3)', fontSize:11, fontWeight:700, alignSelf:'center' }}>{idx+1}/{prompts.length}</span>
-          <button onClick={() => { setIdx(i => (i+1)%prompts.length); setText(localStorage.getItem(`lifeskills_journal_${moduleId}_${(idx+1)%prompts.length}`) || ''); }}
+          <button onClick={() => setIdx(i => (i+1)%prompts.length)}
             style={{ background:'rgba(255,255,255,0.06)', border:'none', borderRadius:8, padding:'4px 10px', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:13 }}>→</button>
         </div>
       </div>
       <div style={{ color:'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.7, marginBottom:14, fontStyle:'italic' }}>{prompts[idx]}</div>
-      <textarea value={text} onChange={e => save(e.target.value)}
-        placeholder="Write your thoughts here. Nobody else will see this."
+      <textarea value={text} onChange={e => saveJournal(moduleId, idx, e.target.value)}
+        placeholder="Write your thoughts here. Only you can see this."
         rows={5}
         style={{ width:'100%', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'12px 14px', color:'white', fontSize:13, fontFamily:'inherit', outline:'none', resize:'vertical', lineHeight:1.7 }} />
-      {text && <div style={{ color:'rgba(255,255,255,0.25)', fontSize:11, marginTop:6, textAlign:'right' }}>Auto-saved ✓</div>}
+      {text && <div style={{ color:'rgba(255,255,255,0.25)', fontSize:11, marginTop:6, textAlign:'right' }}>Saved to your account ✓</div>}
     </div>
   );
 }
@@ -1228,48 +1225,159 @@ function EtiquetteModule({ accent, accentDim, accentBorder, userProfile }) {
 }
 
 // ── Main Page ──────────────────────────────────────────────────────────────
-export default function LifeSkillsPage() {
-  const [activeModule, setActive] = useState('finance');
-  const [userProfile, setProfile] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('lifeskills_profile') || '{}'); } catch { return {}; }
-  });
-  const mod = MODULES[activeModule];
+// ── Milestone Toast ────────────────────────────────────────────────────────
+function MilestoneToast({ milestones, onDismiss }) {
+  if (!milestones?.length) return null;
+  return (
+    <div style={{ position:'fixed', bottom:80, left:'50%', transform:'translateX(-50%)', zIndex:1000, display:'flex', flexDirection:'column', gap:8, maxWidth:340, width:'90%' }}>
+      {milestones.map(m => (
+        <div key={m.id} style={{ background:'linear-gradient(135deg,#1a1a2e,#16213e)', border:'1.5px solid rgba(255,215,0,0.4)', borderRadius:16, padding:'14px 18px', display:'flex', gap:12, alignItems:'center', boxShadow:'0 8px 32px rgba(0,0,0,0.5)', animation:'slidein 0.4s ease' }}>
+          <span style={{ fontSize:28 }}>{m.icon}</span>
+          <div>
+            <div style={{ color:'#ffd700', fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:2 }}>Achievement Unlocked</div>
+            <div style={{ color:'white', fontSize:13, fontWeight:700 }}>{m.label}</div>
+          </div>
+          <button onClick={onDismiss} style={{ marginLeft:'auto', background:'none', border:'none', color:'rgba(255,255,255,0.4)', cursor:'pointer', fontSize:16, padding:'0 4px' }}>✕</button>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-  const saveProfile = (p) => {
-    setProfile(p);
-    localStorage.setItem('lifeskills_profile', JSON.stringify(p));
+// ── Wellness Score Ring ────────────────────────────────────────────────────
+function WellnessRing({ score }) {
+  const r = 22, circ = 2 * Math.PI * r;
+  const filled = circ * (score / 100);
+  const color = score >= 75 ? '#52b788' : score >= 50 ? '#f4a261' : score >= 25 ? '#ffd166' : '#4cc9f0';
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+      <svg width={52} height={52} style={{ transform:'rotate(-90deg)' }}>
+        <circle cx={26} cy={26} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={5} />
+        <circle cx={26} cy={26} r={r} fill="none" stroke={color} strokeWidth={5} strokeDasharray={`${filled} ${circ-filled}`} strokeLinecap="round" style={{ transition:'stroke-dasharray 1s ease' }} />
+      </svg>
+      <div>
+        <div style={{ color:'white', fontSize:20, fontWeight:900, lineHeight:1 }}>{score}</div>
+        <div style={{ color:'rgba(255,255,255,0.4)', fontSize:10, fontWeight:700 }}>Wellness Score</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page ──────────────────────────────────────────────────────────────
+export default function LifeSkillsPage() {
+  const lp = useLifeProgress();
+  const [activeModule, setActive] = useState(() => lp.lastModule || 'finance');
+
+  // Sync active module to hook when it loads
+  useEffect(() => {
+    if (!lp.loading && lp.lastModule && lp.lastModule !== activeModule) {
+      setActive(lp.lastModule);
+    }
+  }, [lp.loading]); // eslint-disable-line
+
+  const mod = MODULES[activeModule] || MODULES.finance;
+
+  const handleSetModule = (id) => {
+    setActive(id);
+    lp.setLastModule(id);
   };
+
+  const handleToggleCheckin = (habitId) => {
+    const current = lp.getTodayCheckin(activeModule);
+    const next = current.includes(habitId) ? current.filter(x => x !== habitId) : [...current, habitId];
+    lp.saveCheckin(activeModule, next);
+  };
+
+  const handleProfileChange = (p) => {
+    lp.updateProfile(p);
+  };
+
+  const moduleProps = { accent: mod.accent, accentDim: mod.accentDim, accentBorder: mod.accentBorder };
+
+  // Welcome back message
+  const isReturning = lp.totalDaysActive > 1;
+  const topStreak   = Object.values(lp.streaks).reduce((a, v) => Math.max(a, v), 0);
+
+  if (lp.loading) {
+    return (
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'60vh', flexDirection:'column', gap:16 }}>
+        <div style={{ fontSize:40, animation:'spin 1.5s linear infinite', display:'inline-block' }}>🧭</div>
+        <div style={{ color:'rgba(255,255,255,0.5)', fontSize:14 }}>Loading your journey...</div>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding:'16px', maxWidth:900, margin:'0 auto', fontFamily:"'Nunito',sans-serif", minHeight:'100vh' }}>
       <style>{`
         @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
         @keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+        @keyframes slidein{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+        @keyframes spin{to{transform:rotate(360deg)}}
         .ls-card{animation:fadein 0.35s ease forwards}
         textarea::placeholder,input::placeholder{color:rgba(255,255,255,0.25)!important}
         details summary::-webkit-details-marker{display:none}
       `}</style>
 
-      {/* Header */}
-      <div style={{ marginBottom:20 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
+      {/* Milestone toasts */}
+      <MilestoneToast milestones={lp.newMilestones} onDismiss={lp.dismissMilestones} />
+
+      {/* Header with wellness score */}
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:16, gap:12 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <span style={{ fontSize:28 }}>🧭</span>
           <div>
             <div style={{ color:'white', fontSize:22, fontWeight:900, lineHeight:1.1 }}>Life Skills</div>
-            <div style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>Become a better version of yourself — one day at a time</div>
+            <div style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>
+              {isReturning ? `Day ${lp.totalDaysActive} of your journey` : 'Begin your journey today'}
+            </div>
           </div>
         </div>
+        <WellnessRing score={lp.wellnessScore} />
       </div>
 
-      {/* Module tabs — 7 modules in a responsive grid */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))', gap:8, marginBottom:20 }}>
-        {Object.values(MODULES).map(m => (
-          <button key={m.id} onClick={() => setActive(m.id)}
-            style={{ padding:'12px 8px', borderRadius:14, border:`1.5px solid ${activeModule===m.id ? m.accent : 'rgba(255,255,255,0.07)'}`, background:activeModule===m.id ? m.accentDim : 'rgba(255,255,255,0.02)', color:activeModule===m.id ? m.accent : 'rgba(255,255,255,0.45)', fontFamily:'inherit', fontSize:11, fontWeight:800, cursor:'pointer', textAlign:'center', transition:'all 0.2s', lineHeight:1.4 }}>
-            <div style={{ fontSize:20, marginBottom:4 }}>{m.icon}</div>
-            <div>{m.label}</div>
-          </button>
-        ))}
+      {/* Welcome back / streak banner */}
+      {isReturning && (
+        <div style={{ marginBottom:16, padding:'12px 16px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, display:'flex', gap:16, flexWrap:'wrap', alignItems:'center' }}>
+          <div style={{ color:'rgba(255,255,255,0.6)', fontSize:12 }}>
+            Welcome back! You were last working on <strong style={{color:'white'}}>{MODULES[lp.lastModule || 'finance']?.label}</strong>.
+          </div>
+          <div style={{ display:'flex', gap:10, marginLeft:'auto', flexWrap:'wrap' }}>
+            {topStreak > 0 && (
+              <div style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(255,165,0,0.12)', border:'1px solid rgba(255,165,0,0.3)', borderRadius:20, padding:'4px 12px' }}>
+                <span>🔥</span><span style={{ color:'#f4a261', fontSize:12, fontWeight:800 }}>Best streak: {topStreak} days</span>
+              </div>
+            )}
+            {lp.milestones?.length > 0 && (
+              <div style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(255,215,0,0.1)', border:'1px solid rgba(255,215,0,0.25)', borderRadius:20, padding:'4px 12px' }}>
+                <span>🏆</span><span style={{ color:'#ffd700', fontSize:12, fontWeight:800 }}>{lp.milestones.length} achievement{lp.milestones.length !== 1 ? 's' : ''}</span>
+              </div>
+            )}
+            {!lp.serverOnline && (
+              <div style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(231,76,60,0.1)', border:'1px solid rgba(231,76,60,0.2)', borderRadius:20, padding:'4px 12px' }}>
+                <span style={{ color:'#e74c3c', fontSize:11, fontWeight:700 }}>📵 Offline — saving locally</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Module tabs — 7 modules */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))', gap:8, marginBottom:16 }}>
+        {Object.values(MODULES).map(m => {
+          const mStreak = lp.getStreak(m.id);
+          return (
+            <button key={m.id} onClick={() => handleSetModule(m.id)}
+              style={{ padding:'12px 8px', borderRadius:14, border:`1.5px solid ${activeModule===m.id ? m.accent : 'rgba(255,255,255,0.07)'}`, background:activeModule===m.id ? m.accentDim : 'rgba(255,255,255,0.02)', color:activeModule===m.id ? m.accent : 'rgba(255,255,255,0.45)', fontFamily:'inherit', fontSize:11, fontWeight:800, cursor:'pointer', textAlign:'center', transition:'all 0.2s', lineHeight:1.4, position:'relative' }}>
+              <div style={{ fontSize:20, marginBottom:4 }}>{m.icon}</div>
+              <div>{m.label}</div>
+              {mStreak > 0 && (
+                <div style={{ position:'absolute', top:-6, right:-6, background:'#f4a261', borderRadius:'50%', width:18, height:18, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:900, color:'#0d0d0d' }}>{mStreak}</div>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Tagline */}
@@ -1280,28 +1388,54 @@ export default function LifeSkillsPage() {
       {/* Main content */}
       <div className="ls-card" key={activeModule} style={{ display:'flex', flexDirection:'column', gap:16 }}>
 
-        {/* User profile — shown for context-dependent modules */}
+        {/* User profile for context-sensitive modules */}
         {['fitness','grooming','lifestyle','etiquette'].includes(activeModule) && (
-          <UserProfileSetup profile={userProfile} onChange={saveProfile} accent={mod.accent} accentDim={mod.accentDim} accentBorder={mod.accentBorder} />
+          <UserProfileSetup profile={lp.profile} onChange={handleProfileChange} {...moduleProps} />
         )}
 
         {/* Quote */}
-        <QuoteCard moduleId={activeModule} accent={mod.accent} accentDim={mod.accentDim} accentBorder={mod.accentBorder} />
+        <QuoteCard moduleId={activeModule} {...moduleProps} />
 
-        {/* Module-specific content */}
-        {activeModule === 'finance'       && <FinanceModule       accent={mod.accent} accentDim={mod.accentDim} accentBorder={mod.accentBorder} />}
-        {activeModule === 'ethics'        && <EthicsModule        accent={mod.accent} accentDim={mod.accentDim} accentBorder={mod.accentBorder} />}
-        {activeModule === 'relationships' && <RelationshipsModule accent={mod.accent} accentDim={mod.accentDim} accentBorder={mod.accentBorder} />}
-        {activeModule === 'fitness'       && <FitnessModule       accent={mod.accent} accentDim={mod.accentDim} accentBorder={mod.accentBorder} userProfile={userProfile} />}
-        {activeModule === 'grooming'      && <GroomingModule      accent={mod.accent} accentDim={mod.accentDim} accentBorder={mod.accentBorder} userProfile={userProfile} />}
-        {activeModule === 'lifestyle'     && <LifestyleModule     accent={mod.accent} accentDim={mod.accentDim} accentBorder={mod.accentBorder} userProfile={userProfile} />}
-        {activeModule === 'etiquette'     && <EtiquetteModule     accent={mod.accent} accentDim={mod.accentDim} accentBorder={mod.accentBorder} userProfile={userProfile} />}
+        {/* Module content */}
+        {activeModule === 'finance'       && <FinanceModule       {...moduleProps} />}
+        {activeModule === 'ethics'        && <EthicsModule        {...moduleProps} />}
+        {activeModule === 'relationships' && <RelationshipsModule {...moduleProps} />}
+        {activeModule === 'fitness'       && <FitnessModule       {...moduleProps} userProfile={lp.profile} />}
+        {activeModule === 'grooming'      && <GroomingModule      {...moduleProps} userProfile={lp.profile} />}
+        {activeModule === 'lifestyle'     && <LifestyleModule     {...moduleProps} userProfile={lp.profile} />}
+        {activeModule === 'etiquette'     && <EtiquetteModule     {...moduleProps} userProfile={lp.profile} />}
 
-        {/* Daily check-in */}
-        <DailyCheckin moduleId={activeModule} accent={mod.accent} accentDim={mod.accentDim} accentBorder={mod.accentBorder} />
+        {/* Daily check-in — wired to server via hook */}
+        <DailyCheckin
+          moduleId={activeModule}
+          {...moduleProps}
+          todayChecked={lp.getTodayCheckin(activeModule)}
+          onToggle={handleToggleCheckin}
+          streak={lp.getStreak(activeModule)}
+        />
 
-        {/* Reflection journal */}
-        <ReflectionJournal moduleId={activeModule} accent={mod.accent} accentDim={mod.accentDim} accentBorder={mod.accentBorder} />
+        {/* Reflection journal — wired to server via hook */}
+        <ReflectionJournal
+          moduleId={activeModule}
+          {...moduleProps}
+          getJournal={lp.getJournal}
+          saveJournal={lp.saveJournal}
+        />
+
+        {/* Milestones earned so far */}
+        {lp.milestones?.length > 0 && (
+          <div style={{ padding:'16px 18px', background:'rgba(255,215,0,0.04)', border:'1px solid rgba(255,215,0,0.15)', borderRadius:16 }}>
+            <div style={{ color:'#ffd700', fontSize:12, fontWeight:800, marginBottom:12, textTransform:'uppercase', letterSpacing:'0.8px' }}>Your Achievements</div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+              {lp.milestones.map(m => (
+                <div key={m.id} title={m.label} style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,215,0,0.08)', border:'1px solid rgba(255,215,0,0.2)', borderRadius:20, padding:'5px 12px' }}>
+                  <span style={{ fontSize:16 }}>{m.icon}</span>
+                  <span style={{ color:'rgba(255,255,255,0.7)', fontSize:11, fontWeight:700 }}>{m.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

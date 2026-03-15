@@ -32,6 +32,7 @@ import quizRoutes from './routes/quiz.js';
 import curriculumRoutes from './routes/curriculum.js';
 import adminRoutes from './routes/admin.js';
 import arRoutes from './routes/ar.js';
+import lifeskillsRoutes from './routes/lifeskills.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -96,6 +97,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/tts', ttsRoutes);
 app.use('/api/ar', arRoutes);
 app.use('/ar', arRoutes);
+app.use('/api/lifeskills', lifeskillsRoutes);
 
 app.get('/health', (req, res) => res.json({
   status: 'ok',

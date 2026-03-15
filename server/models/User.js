@@ -56,6 +56,11 @@ const userSchema = new mongoose.Schema({
   streakDays:        { type:Number, default:0 },
   lastActiveDate:    { type:Date },
   achievements:      [{ name:String, icon:String, earnedAt:Date }],
+  // Life Skills journey — persisted across sessions
+  lifeProgress: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {},
+  },
 }, { timestamps:true });
 
 userSchema.pre('save', async function(next) {
