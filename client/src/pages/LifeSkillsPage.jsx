@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLifeProgress } from '../hooks/useLifeProgress';
+import { useSensors } from '../hooks/useSensors';
+import { VoiceButton, SedentaryBanner, FitnessStats, ScreenTimeWidget, NotificationSettings, FoodCamera } from '../components/SensorsPanel';
+import SensorsPanel from '../components/SensorsPanel';
 
 // ── Colour system ──────────────────────────────────────────────────────────
 const MODULES = {
@@ -240,7 +243,7 @@ const COACH_PROMPTS = {
   etiquette: `You are a gracious etiquette and social intelligence coach. You teach practical social skills — dining etiquette, professional conduct, digital etiquette, conversation skills, body language, cultural sensitivity, and how to make people feel at ease. You are warm, not stuffy. Give specific, actionable tips. Ask one question at the end.`,
 };
 
-function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile }) {
+function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, sensors }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput]       = useState('');
   const [loading, setLoading]   = useState(false);
@@ -337,7 +340,14 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile }) {
         )}
         <div ref={endRef} />
       </div>
-      <div style={{ display:'flex', gap:8, paddingTop:12, borderTop:'1px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ display:'flex', gap:8, paddingTop:12, borderTop:'1px solid rgba(255,255,255,0.07)', alignItems:'center' }}>
+        {sensors && (
+          <div style={{ position:'relative', flexShrink:0 }}>
+            <VoiceButton sensors={sensors} accent={accent} size={40}
+              onText={(text) => setInput(prev => prev ? prev + ' ' + text : text)}
+              onPartial={(text) => setInput(text)} />
+          </div>
+        )}
         <input value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key==='Enter' && !e.shiftKey && send()}
           placeholder={`Ask your ${mod.label.toLowerCase()} coach...`}
@@ -735,7 +745,7 @@ function QuoteCard({ moduleId, accent, accentDim, accentBorder }) {
 }
 
 // ── Reflection Journal ─────────────────────────────────────────────────────
-function ReflectionJournal({ moduleId, accent, accentDim, accentBorder, getJournal, saveJournal }) {
+function ReflectionJournal({ moduleId, accent, accentDim, accentBorder, getJournal, saveJournal, sensors }) {
   const prompts = REFLECTIONS[moduleId] || [];
   const [idx, setIdx] = useState(0);
   const text = getJournal(moduleId, idx);
@@ -753,10 +763,18 @@ function ReflectionJournal({ moduleId, accent, accentDim, accentBorder, getJourn
         </div>
       </div>
       <div style={{ color:'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.7, marginBottom:14, fontStyle:'italic' }}>{prompts[idx]}</div>
-      <textarea value={text} onChange={e => saveJournal(moduleId, idx, e.target.value)}
-        placeholder="Write your thoughts here. Only you can see this."
-        rows={5}
-        style={{ width:'100%', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'12px 14px', color:'white', fontSize:13, fontFamily:'inherit', outline:'none', resize:'vertical', lineHeight:1.7 }} />
+      <div style={{ position:'relative' }}>
+        <textarea value={text} onChange={e => saveJournal(moduleId, idx, e.target.value)}
+          placeholder="Write your thoughts here — or tap the mic to speak them."
+          rows={5}
+          style={{ width:'100%', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'12px 48px 12px 14px', color:'white', fontSize:13, fontFamily:'inherit', outline:'none', resize:'vertical', lineHeight:1.7 }} />
+        {sensors && (
+          <div style={{ position:'absolute', bottom:10, right:10 }}>
+            <VoiceButton sensors={sensors} accent={accent} size={32}
+              onText={(t) => saveJournal(moduleId, idx, text ? text + ' ' + t : t)} />
+          </div>
+        )}
+      </div>
       {text && <div style={{ color:'rgba(255,255,255,0.25)', fontSize:11, marginTop:6, textAlign:'right' }}>Saved to your account ✓</div>}
     </div>
   );
@@ -805,7 +823,7 @@ function UserProfileSetup({ profile, onChange, accent, accentDim, accentBorder }
 }
 
 // ── Fitness Module ─────────────────────────────────────────────────────────
-function FitnessModule({ accent, accentDim, accentBorder, userProfile }) {
+function FitnessModule({ accent, accentDim, accentBorder, userProfile, sensors }) {
   const [tab, setTab] = useState('coach');
   const [bmi, setBmi] = useState({ weight:'', height:'' });
 
@@ -822,7 +840,7 @@ function FitnessModule({ accent, accentDim, accentBorder, userProfile }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
       <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-        {[['coach','🤖 AI Coach'],['pillars','🏛️ Four Pillars'],['bmi','⚖️ BMI Check']].map(([id,label]) => (
+        {[['coach','🤖 AI Coach'],['tracker','📊 Activity'],['food','📷 Food'],['pillars','🏛️ Pillars'],['bmi','⚖️ BMI']].map(([id,label]) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id ? accent : 'rgba(255,255,255,0.1)'}`, background:tab===id ? accentDim : 'transparent', color:tab===id ? accent : 'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer', minHeight:36 }}>
             {label}
@@ -832,8 +850,16 @@ function FitnessModule({ accent, accentDim, accentBorder, userProfile }) {
 
       {tab === 'coach' && (
         <div style={{ height:460, display:'flex', flexDirection:'column' }}>
-          <AICoach moduleId="fitness" accent={accent} accentDim={accentDim} accentBorder={accentBorder} userProfile={userProfile} />
+          <AICoach moduleId="fitness" accent={accent} accentDim={accentDim} accentBorder={accentBorder} userProfile={userProfile} sensors={sensors} />
         </div>
+      )}
+
+      {tab === 'tracker' && sensors && (
+        <FitnessStats sensors={sensors} accent={accent} accentDim={accentDim} accentBorder={accentBorder} />
+      )}
+
+      {tab === 'food' && sensors && (
+        <FoodCamera sensors={sensors} accent={accent} accentDim={accentDim} accentBorder={accentBorder} />
       )}
 
       {tab === 'pillars' && (
@@ -970,7 +996,7 @@ function GroomingModule({ accent, accentDim, accentBorder, userProfile }) {
 }
 
 // ── Lifestyle Module ───────────────────────────────────────────────────────
-function LifestyleModule({ accent, accentDim, accentBorder, userProfile }) {
+function LifestyleModule({ accent, accentDim, accentBorder, userProfile, sensors }) {
   const [tab, setTab] = useState('coach');
   const [wakeTime, setWakeTime] = useState('06:00');
 
@@ -1003,7 +1029,7 @@ function LifestyleModule({ accent, accentDim, accentBorder, userProfile }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
       <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-        {[['coach','🤖 AI Coach'],['morning','🌅 Morning Routine'],['pillars','🏛️ Life Pillars']].map(([id,label]) => (
+        {[['coach','🤖 AI Coach'],['screen','🖥️ Screen Time'],['morning','🌅 Morning Routine'],['pillars','🏛️ Life Pillars']].map(([id,label]) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id ? accent : 'rgba(255,255,255,0.1)'}`, background:tab===id ? accentDim : 'transparent', color:tab===id ? accent : 'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer', minHeight:36 }}>
             {label}
@@ -1013,8 +1039,12 @@ function LifestyleModule({ accent, accentDim, accentBorder, userProfile }) {
 
       {tab === 'coach' && (
         <div style={{ height:460, display:'flex', flexDirection:'column' }}>
-          <AICoach moduleId="lifestyle" accent={accent} accentDim={accentDim} accentBorder={accentBorder} userProfile={userProfile} />
+          <AICoach moduleId="lifestyle" accent={accent} accentDim={accentDim} accentBorder={accentBorder} userProfile={userProfile} sensors={sensors} />
         </div>
+      )}
+
+      {tab === 'screen' && sensors && (
+        <ScreenTimeWidget sensors={sensors} accent={accent} accentDim={accentDim} accentBorder={accentBorder} />
       )}
 
       {tab === 'morning' && (
@@ -1265,48 +1295,47 @@ function WellnessRing({ score }) {
 
 // ── Main Page ──────────────────────────────────────────────────────────────
 export default function LifeSkillsPage() {
-  const lp = useLifeProgress();
+  const lp      = useLifeProgress();
+  const sensors = useSensors();
   const [activeModule, setActive] = useState(() => lp.lastModule || 'finance');
+  const [showSensors, setShowSensors] = useState(false);
 
-  // Sync active module to hook when it loads
   useEffect(() => {
     if (!lp.loading && lp.lastModule && lp.lastModule !== activeModule) {
       setActive(lp.lastModule);
     }
   }, [lp.loading]); // eslint-disable-line
 
+  // Auto-complete step-based fitness check-in
+  useEffect(() => {
+    if (sensors.steps >= 5000) {
+      const current = lp.getTodayCheckin('fitness');
+      if (!current.includes('fit1')) lp.saveCheckin('fitness', [...current, 'fit1']);
+    }
+    if (sensors.steps >= 8000) {
+      const current = lp.getTodayCheckin('fitness');
+      if (!current.includes('fit5')) lp.saveCheckin('fitness', [...current, 'fit5']);
+    }
+  }, [sensors.steps]); // eslint-disable-line
+
   const mod = MODULES[activeModule] || MODULES.finance;
-
-  const handleSetModule = (id) => {
-    setActive(id);
-    lp.setLastModule(id);
-  };
-
+  const handleSetModule = (id) => { setActive(id); lp.setLastModule(id); setShowSensors(false); };
   const handleToggleCheckin = (habitId) => {
     const current = lp.getTodayCheckin(activeModule);
     const next = current.includes(habitId) ? current.filter(x => x !== habitId) : [...current, habitId];
     lp.saveCheckin(activeModule, next);
   };
-
-  const handleProfileChange = (p) => {
-    lp.updateProfile(p);
-  };
-
   const moduleProps = { accent: mod.accent, accentDim: mod.accentDim, accentBorder: mod.accentBorder };
-
-  // Welcome back message
   const isReturning = lp.totalDaysActive > 1;
   const topStreak   = Object.values(lp.streaks).reduce((a, v) => Math.max(a, v), 0);
 
-  if (lp.loading) {
-    return (
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'60vh', flexDirection:'column', gap:16 }}>
-        <div style={{ fontSize:40, animation:'spin 1.5s linear infinite', display:'inline-block' }}>🧭</div>
-        <div style={{ color:'rgba(255,255,255,0.5)', fontSize:14 }}>Loading your journey...</div>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      </div>
-    );
-  }
+  if (lp.loading) return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'60vh', flexDirection:'column', gap:16 }}>
+      <div style={{ fontSize:40, animation:'spin 1.5s linear infinite', display:'inline-block' }}>🧭</div>
+      <div style={{ color:'rgba(255,255,255,0.5)', fontSize:14 }}>Loading your journey...</div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
 
   return (
     <div style={{ padding:'16px', maxWidth:900, margin:'0 auto', fontFamily:"'Nunito',sans-serif", minHeight:'100vh' }}>
@@ -1314,57 +1343,57 @@ export default function LifeSkillsPage() {
         @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
         @keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
         @keyframes slidein{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.7;transform:scale(1.1)}}
         @keyframes spin{to{transform:rotate(360deg)}}
         .ls-card{animation:fadein 0.35s ease forwards}
         textarea::placeholder,input::placeholder{color:rgba(255,255,255,0.25)!important}
         details summary::-webkit-details-marker{display:none}
       `}</style>
 
-      {/* Milestone toasts */}
       <MilestoneToast milestones={lp.newMilestones} onDismiss={lp.dismissMilestones} />
+      <SedentaryBanner sensors={sensors} />
 
-      {/* Header with wellness score */}
-      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:16, gap:12 }}>
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:14, gap:12 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <span style={{ fontSize:28 }}>🧭</span>
           <div>
             <div style={{ color:'white', fontSize:22, fontWeight:900, lineHeight:1.1 }}>Life Skills</div>
-            <div style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>
-              {isReturning ? `Day ${lp.totalDaysActive} of your journey` : 'Begin your journey today'}
-            </div>
+            <div style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>{isReturning ? `Day ${lp.totalDaysActive} of your journey` : 'Begin your journey today'}</div>
           </div>
         </div>
-        <WellnessRing score={lp.wellnessScore} />
+        <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+          <WellnessRing score={lp.wellnessScore} />
+          <button onClick={() => setShowSensors(s => !s)} title="Sensors"
+            style={{ background:showSensors ? 'rgba(76,201,240,0.15)' : 'rgba(255,255,255,0.05)', border:`1.5px solid ${showSensors ? 'rgba(76,201,240,0.5)' : 'rgba(255,255,255,0.1)'}`, borderRadius:12, padding:'8px 12px', color:showSensors ? '#4cc9f0' : 'rgba(255,255,255,0.5)', fontSize:18, cursor:'pointer', lineHeight:1 }}>
+            📡
+          </button>
+        </div>
       </div>
 
-      {/* Welcome back / streak banner */}
+      {/* Welcome back */}
       {isReturning && (
-        <div style={{ marginBottom:16, padding:'12px 16px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, display:'flex', gap:16, flexWrap:'wrap', alignItems:'center' }}>
+        <div style={{ marginBottom:14, padding:'11px 14px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
           <div style={{ color:'rgba(255,255,255,0.6)', fontSize:12 }}>
-            Welcome back! You were last working on <strong style={{color:'white'}}>{MODULES[lp.lastModule || 'finance']?.label}</strong>.
+            Welcome back! Last in <strong style={{color:'white'}}>{MODULES[lp.lastModule || 'finance']?.label}</strong>.
           </div>
-          <div style={{ display:'flex', gap:10, marginLeft:'auto', flexWrap:'wrap' }}>
-            {topStreak > 0 && (
-              <div style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(255,165,0,0.12)', border:'1px solid rgba(255,165,0,0.3)', borderRadius:20, padding:'4px 12px' }}>
-                <span>🔥</span><span style={{ color:'#f4a261', fontSize:12, fontWeight:800 }}>Best streak: {topStreak} days</span>
-              </div>
-            )}
-            {lp.milestones?.length > 0 && (
-              <div style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(255,215,0,0.1)', border:'1px solid rgba(255,215,0,0.25)', borderRadius:20, padding:'4px 12px' }}>
-                <span>🏆</span><span style={{ color:'#ffd700', fontSize:12, fontWeight:800 }}>{lp.milestones.length} achievement{lp.milestones.length !== 1 ? 's' : ''}</span>
-              </div>
-            )}
-            {!lp.serverOnline && (
-              <div style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(231,76,60,0.1)', border:'1px solid rgba(231,76,60,0.2)', borderRadius:20, padding:'4px 12px' }}>
-                <span style={{ color:'#e74c3c', fontSize:11, fontWeight:700 }}>📵 Offline — saving locally</span>
-              </div>
-            )}
+          <div style={{ display:'flex', gap:8, marginLeft:'auto', flexWrap:'wrap' }}>
+            {topStreak > 0 && <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,165,0,0.1)', border:'1px solid rgba(255,165,0,0.25)', borderRadius:20, padding:'4px 10px' }}><span>🔥</span><span style={{ color:'#f4a261', fontSize:11, fontWeight:800 }}>{topStreak}d streak</span></div>}
+            {sensors.steps > 0 && <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(76,201,240,0.1)', border:'1px solid rgba(76,201,240,0.25)', borderRadius:20, padding:'4px 10px' }}><span>🦶</span><span style={{ color:'#4cc9f0', fontSize:11, fontWeight:800 }}>{sensors.steps.toLocaleString()} steps</span></div>}
+            {!lp.serverOnline && <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(231,76,60,0.1)', border:'1px solid rgba(231,76,60,0.2)', borderRadius:20, padding:'4px 10px' }}><span style={{ color:'#e74c3c', fontSize:11, fontWeight:700 }}>📵 Offline</span></div>}
           </div>
         </div>
       )}
 
-      {/* Module tabs — 7 modules */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))', gap:8, marginBottom:16 }}>
+      {/* Sensors panel */}
+      {showSensors && (
+        <div style={{ marginBottom:16, animation:'fadein 0.3s ease' }}>
+          <SensorsPanel sensors={sensors} modules={Object.values(MODULES)} accent="#4cc9f0" accentDim="rgba(76,201,240,0.12)" accentBorder="rgba(76,201,240,0.3)" />
+        </div>
+      )}
+
+      {/* Module tabs */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))', gap:8, marginBottom:14 }}>
         {Object.values(MODULES).map(m => {
           const mStreak = lp.getStreak(m.id);
           return (
@@ -1372,63 +1401,35 @@ export default function LifeSkillsPage() {
               style={{ padding:'12px 8px', borderRadius:14, border:`1.5px solid ${activeModule===m.id ? m.accent : 'rgba(255,255,255,0.07)'}`, background:activeModule===m.id ? m.accentDim : 'rgba(255,255,255,0.02)', color:activeModule===m.id ? m.accent : 'rgba(255,255,255,0.45)', fontFamily:'inherit', fontSize:11, fontWeight:800, cursor:'pointer', textAlign:'center', transition:'all 0.2s', lineHeight:1.4, position:'relative' }}>
               <div style={{ fontSize:20, marginBottom:4 }}>{m.icon}</div>
               <div>{m.label}</div>
-              {mStreak > 0 && (
-                <div style={{ position:'absolute', top:-6, right:-6, background:'#f4a261', borderRadius:'50%', width:18, height:18, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:900, color:'#0d0d0d' }}>{mStreak}</div>
-              )}
+              {mStreak > 0 && <div style={{ position:'absolute', top:-6, right:-6, background:'#f4a261', borderRadius:'50%', width:18, height:18, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:900, color:'#0d0d0d' }}>{mStreak}</div>}
             </button>
           );
         })}
       </div>
 
-      {/* Tagline */}
-      <div style={{ marginBottom:16, padding:'11px 16px', background:mod.accentDim, border:`1px solid ${mod.accentBorder}`, borderRadius:12, color:mod.accent, fontSize:13, fontStyle:'italic', fontWeight:700 }}>
-        "{mod.tagline}"
-      </div>
+      <div style={{ marginBottom:14, padding:'11px 16px', background:mod.accentDim, border:`1px solid ${mod.accentBorder}`, borderRadius:12, color:mod.accent, fontSize:13, fontStyle:'italic', fontWeight:700 }}>"{mod.tagline}"</div>
 
-      {/* Main content */}
       <div className="ls-card" key={activeModule} style={{ display:'flex', flexDirection:'column', gap:16 }}>
-
-        {/* User profile for context-sensitive modules */}
         {['fitness','grooming','lifestyle','etiquette'].includes(activeModule) && (
-          <UserProfileSetup profile={lp.profile} onChange={handleProfileChange} {...moduleProps} />
+          <UserProfileSetup profile={lp.profile} onChange={lp.updateProfile} {...moduleProps} />
         )}
-
-        {/* Quote */}
         <QuoteCard moduleId={activeModule} {...moduleProps} />
-
-        {/* Module content */}
         {activeModule === 'finance'       && <FinanceModule       {...moduleProps} />}
         {activeModule === 'ethics'        && <EthicsModule        {...moduleProps} />}
         {activeModule === 'relationships' && <RelationshipsModule {...moduleProps} />}
-        {activeModule === 'fitness'       && <FitnessModule       {...moduleProps} userProfile={lp.profile} />}
+        {activeModule === 'fitness'       && <FitnessModule       {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
         {activeModule === 'grooming'      && <GroomingModule      {...moduleProps} userProfile={lp.profile} />}
-        {activeModule === 'lifestyle'     && <LifestyleModule     {...moduleProps} userProfile={lp.profile} />}
+        {activeModule === 'lifestyle'     && <LifestyleModule     {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
         {activeModule === 'etiquette'     && <EtiquetteModule     {...moduleProps} userProfile={lp.profile} />}
-
-        {/* Daily check-in — wired to server via hook */}
-        <DailyCheckin
-          moduleId={activeModule}
-          {...moduleProps}
-          todayChecked={lp.getTodayCheckin(activeModule)}
-          onToggle={handleToggleCheckin}
-          streak={lp.getStreak(activeModule)}
-        />
-
-        {/* Reflection journal — wired to server via hook */}
-        <ReflectionJournal
-          moduleId={activeModule}
-          {...moduleProps}
-          getJournal={lp.getJournal}
-          saveJournal={lp.saveJournal}
-        />
-
-        {/* Milestones earned so far */}
+        <DailyCheckin moduleId={activeModule} {...moduleProps} todayChecked={lp.getTodayCheckin(activeModule)} onToggle={handleToggleCheckin} streak={lp.getStreak(activeModule)} />
+        <ReflectionJournal moduleId={activeModule} {...moduleProps} getJournal={lp.getJournal} saveJournal={lp.saveJournal} sensors={sensors} />
+        <NotificationSettings sensors={sensors} modules={Object.values(MODULES)} {...moduleProps} />
         {lp.milestones?.length > 0 && (
           <div style={{ padding:'16px 18px', background:'rgba(255,215,0,0.04)', border:'1px solid rgba(255,215,0,0.15)', borderRadius:16 }}>
-            <div style={{ color:'#ffd700', fontSize:12, fontWeight:800, marginBottom:12, textTransform:'uppercase', letterSpacing:'0.8px' }}>Your Achievements</div>
+            <div style={{ color:'#ffd700', fontSize:12, fontWeight:800, marginBottom:12 }}>Your Achievements</div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
               {lp.milestones.map(m => (
-                <div key={m.id} title={m.label} style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,215,0,0.08)', border:'1px solid rgba(255,215,0,0.2)', borderRadius:20, padding:'5px 12px' }}>
+                <div key={m.id} style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,215,0,0.08)', border:'1px solid rgba(255,215,0,0.2)', borderRadius:20, padding:'5px 12px' }}>
                   <span style={{ fontSize:16 }}>{m.icon}</span>
                   <span style={{ color:'rgba(255,255,255,0.7)', fontSize:11, fontWeight:700 }}>{m.label}</span>
                 </div>
