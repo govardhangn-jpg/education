@@ -247,8 +247,37 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
   const [messages, setMessages] = useState([]);
   const [input, setInput]       = useState('');
   const [loading, setLoading]   = useState(false);
+  const [speakingIdx, setSpeakingIdx] = useState(null);
   const endRef = useRef(null);
   const mod = MODULES[moduleId];
+
+  // ElevenLabs TTS for coach responses
+  const BACKEND_TTS = process.env.REACT_APP_API_URL
+    ? process.env.REACT_APP_API_URL.replace(/\/api$/, '')
+    : 'http://localhost:5000';
+
+  const speakMessage = async (text, idx) => {
+    if (speakingIdx === idx) { setSpeakingIdx(null); return; } // toggle off
+    setSpeakingIdx(idx);
+    try {
+      const token = localStorage.getItem('samarthaa_token');
+      const r = await fetch(`${BACKEND_TTS}/api/tts/speak`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', ...(token ? { Authorization:`Bearer ${token}` } : {}) },
+        body: JSON.stringify({ text: text.slice(0, 1000), language: 'English' }),
+      });
+      if (!r.ok) throw new Error('TTS failed');
+      const buf = await r.arrayBuffer();
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      await ctx.resume();
+      const decoded = await ctx.decodeAudioData(buf.slice(0));
+      const src = ctx.createBufferSource();
+      src.buffer = decoded;
+      src.connect(ctx.destination);
+      src.onended = () => setSpeakingIdx(null);
+      src.start(0);
+    } catch { setSpeakingIdx(null); }
+  };
 
   const starterQuestions = {
     finance:       ['How do I start investing with a small salary?', "I can't stop impulse spending — help", 'How much emergency fund do I need?'],
@@ -264,8 +293,7 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // Reset messages when module changes
-  useEffect(() => { setMessages([]); }, [moduleId]);
+  useEffect(() => { setMessages([]); setSpeakingIdx(null); }, [moduleId]);
 
   const buildSystemPrompt = () => {
     let base = COACH_PROMPTS[moduleId];
@@ -273,39 +301,59 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
       const parts = [];
       if (userProfile.gender) parts.push(`Gender: ${userProfile.gender}`);
       if (userProfile.age)    parts.push(`Age: ${userProfile.age}`);
-      if (userProfile.income) parts.push(`Monthly income: ₹${userProfile.income}`);
-      if (userProfile.city)   parts.push(`City: ${userProfile.city}`);
+      if (userProfile.income) parts.push(`Monthly income: ${userProfile.income}`);
+      if (userProfile.city)   parts.push(`City/location type: ${userProfile.city}`);
       if (userProfile.goals)  parts.push(`Goals: ${userProfile.goals}`);
-      if (parts.length > 0)   base += `\n\nUser profile: ${parts.join(', ')}. Tailor all advice specifically to this profile.`;
+      base += `\n\nUser profile: ${parts.join(', ')}. Tailor all advice to this person specifically.`;
     }
     return base;
   };
 
   const send = async (text) => {
     const q = (text || input).trim();
-    if (!q) return;
+    if (!q || loading) return;
     setInput('');
     const newMessages = [...messages, { role:'user', content:q }];
     setMessages(newMessages);
     setLoading(true);
 
     try {
-      const res = await fetch(`${BACKEND}/api/chat`, {
+      // ✅ FIX 1: correct token key  ✅ FIX 2: correct endpoint  ✅ FIX 3: correct response field
+      const token = localStorage.getItem('samarthaa_token');
+      const res = await fetch(`${BACKEND}/api/chat/message`, {
         method: 'POST',
-        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('token')}` },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
-          message: q,
-          history: newMessages.slice(-10),
-          systemPrompt: buildSystemPrompt(),
-          subject: mod.label,
-          grade: 'Life Skills',
-          syllabus: 'General',
+          message:      q,
+          subject:      mod.label,
+          grade:        'Life Skills',
+          syllabus:     'General',
+          language:     'English',
+          systemPrompt: buildSystemPrompt(), // passed but server uses its own buildSystemPrompt
         }),
       });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+
       const data = await res.json();
-      setMessages(m => [...m, { role:'assistant', content: data.reply || data.message || "I'm here. Tell me more." }]);
-    } catch {
-      setMessages(m => [...m, { role:'assistant', content:'Something went wrong. Try again.' }]);
+      // ✅ FIX 3: server returns 'reply', not 'message'
+      const reply = data.reply || data.message || 'Could not get a response. Please try again.';
+      const newIdx = newMessages.length; // index in updated messages array
+      setMessages(m => [...m, { role:'assistant', content: reply }]);
+
+      // Auto-speak the reply using ElevenLabs if TTS is available
+      // Small delay so state settles
+      setTimeout(() => speakMessage(reply, newIdx), 200);
+
+    } catch (e) {
+      console.error('[AICoach] error:', e.message);
+      setMessages(m => [...m, { role:'assistant', content:`Error: ${e.message}. Check your connection and try again.` }]);
     }
     setLoading(false);
   };
@@ -325,10 +373,18 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
           </div>
         </div>
       )}
+
       <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column', gap:12, minHeight:0, paddingRight:4 }}>
         {messages.map((m, i) => (
-          <div key={i} style={{ display:'flex', justifyContent: m.role==='user' ? 'flex-end' : 'flex-start' }}>
-            <div style={{ maxWidth:'85%', padding:'12px 16px', borderRadius: m.role==='user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px', background: m.role==='user' ? accent : 'rgba(255,255,255,0.06)', color: m.role==='user' ? '#0d0d0d' : 'rgba(255,255,255,0.88)', fontSize:13, lineHeight:1.7, fontWeight: m.role==='user' ? 700 : 400, whiteSpace:'pre-wrap' }}>
+          <div key={i} style={{ display:'flex', justifyContent: m.role==='user' ? 'flex-end' : 'flex-start', gap:6, alignItems:'flex-end' }}>
+            {m.role === 'assistant' && (
+              <button onClick={() => speakMessage(m.content, i)}
+                title={speakingIdx === i ? 'Stop speaking' : 'Listen with ElevenLabs'}
+                style={{ flexShrink:0, width:28, height:28, borderRadius:'50%', background: speakingIdx===i ? `${accent}25` : 'rgba(255,255,255,0.06)', border:`1.5px solid ${speakingIdx===i ? accent : 'rgba(255,255,255,0.1)'}`, cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center', animation: speakingIdx===i ? 'pulse 1.2s infinite' : 'none', marginBottom:4 }}>
+                {speakingIdx === i ? '⏹' : '🔊'}
+              </button>
+            )}
+            <div style={{ maxWidth:'82%', padding:'12px 16px', borderRadius: m.role==='user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px', background: m.role==='user' ? accent : 'rgba(255,255,255,0.06)', color: m.role==='user' ? '#0d0d0d' : 'rgba(255,255,255,0.88)', fontSize:13, lineHeight:1.7, fontWeight: m.role==='user' ? 700 : 400, whiteSpace:'pre-wrap' }}>
               {m.content}
             </div>
           </div>
@@ -340,19 +396,23 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
         )}
         <div ref={endRef} />
       </div>
+
       <div style={{ display:'flex', gap:8, paddingTop:12, borderTop:'1px solid rgba(255,255,255,0.07)', alignItems:'center' }}>
         {sensors && (
           <div style={{ position:'relative', flexShrink:0 }}>
             <VoiceButton sensors={sensors} accent={accent} size={40}
-              onText={(text) => setInput(prev => prev ? prev + ' ' + text : text)}
+              onText={(text) => { setInput(''); send(text); }}
               onPartial={(text) => setInput(text)} />
           </div>
         )}
         <input value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key==='Enter' && !e.shiftKey && send()}
-          placeholder={`Ask your ${mod.label.toLowerCase()} coach...`}
+          placeholder={sensors ? 'Type or tap 🎤 to speak...' : `Ask your ${mod.label.toLowerCase()} coach...`}
           style={{ flex:1, background:'rgba(255,255,255,0.05)', border:`1px solid ${accentBorder}`, borderRadius:12, padding:'11px 16px', color:'white', fontSize:14, fontFamily:'inherit', outline:'none', minHeight:44 }} />
-        <button onClick={() => send()} style={{ background:accent, border:'none', borderRadius:12, padding:'0 18px', color:'#0d0d0d', fontWeight:800, fontSize:16, cursor:'pointer', minHeight:44, minWidth:44 }}>↑</button>
+        <button onClick={() => send()} disabled={loading}
+          style={{ background:loading ? 'rgba(255,255,255,0.1)' : accent, border:'none', borderRadius:12, padding:'0 18px', color: loading ? 'rgba(255,255,255,0.3)' : '#0d0d0d', fontWeight:800, fontSize:16, cursor:loading?'wait':'pointer', minHeight:44, minWidth:44 }}>
+          ↑
+        </button>
       </div>
     </div>
   );

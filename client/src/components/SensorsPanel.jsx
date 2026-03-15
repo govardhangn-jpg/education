@@ -324,14 +324,13 @@ export function FoodCamera({ sensors, accent, accentDim, accentBorder }) {
     try {
       const base64 = photo.split(',')[1];
       const token = localStorage.getItem('samarthaa_token');
-      const res = await fetch(`${BACKEND}/api/chat`, {
+      const res = await fetch(`${BACKEND}/api/chat/message`, {
         method: 'POST',
         headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
         body: JSON.stringify({
           message: 'Analyse this meal photo. Tell me: 1) What food items you can see 2) Estimated calories 3) Protein/carbs/fat estimate 4) Is this a healthy choice? 5) One specific improvement suggestion. Be concise and practical.',
           imageBase64: base64,
           imageMime: 'image/jpeg',
-          systemPrompt: 'You are a nutritionist analysing food photos for Indian users. Give practical, specific, non-judgmental advice. Use Indian food context (roti, dal, sabzi, rice, etc.). Keep response under 200 words.',
           subject: 'Nutrition',
           grade: 'Life Skills',
           syllabus: 'General',
