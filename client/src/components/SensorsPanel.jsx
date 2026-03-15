@@ -84,7 +84,7 @@ export function VoiceButton({ onText, onPartial, sensors, size = 36, accent = '#
         title={listening ? 'Tap to stop' : 'Tap to speak'}
         style={{
           width:size, height:size, borderRadius:'50%',
-          background: listening ? `rgba(231,76,60,0.2)` : `rgba(${accent.replace('#','')},0.15)`,
+          background: listening ? 'rgba(231,76,60,0.2)' : 'rgba(255,255,255,0.08)',
           border: `2px solid ${listening ? '#e74c3c' : accent}`,
           display:'flex', alignItems:'center', justifyContent:'center',
           cursor:'pointer', fontSize:size*0.45, flexShrink:0,

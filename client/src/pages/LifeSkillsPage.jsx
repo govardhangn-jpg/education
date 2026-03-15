@@ -419,7 +419,7 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
 }
 
 // ── Finance Module ─────────────────────────────────────────────────────────
-function FinanceModule({ accent, accentDim, accentBorder }) {
+function FinanceModule({ accent, accentDim, accentBorder, sensors }) {
   const [income, setIncome]   = useState('');
   const [spent, setSpent]     = useState({ needs:'', wants:'', savings:'' });
   const [tab, setTab]         = useState('budget');
@@ -514,7 +514,7 @@ function FinanceModule({ accent, accentDim, accentBorder }) {
 
       {tab === 'coach' && (
         <div style={{ height:440, display:'flex', flexDirection:'column' }}>
-          <AICoach moduleId="finance" accent={accent} accentDim={accentDim} accentBorder={accentBorder} />
+          <AICoach moduleId="finance" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} />
         </div>
       )}
     </div>
@@ -522,7 +522,7 @@ function FinanceModule({ accent, accentDim, accentBorder }) {
 }
 
 // ── Ethics Module ──────────────────────────────────────────────────────────
-function EthicsModule({ accent, accentDim, accentBorder }) {
+function EthicsModule({ accent, accentDim, accentBorder, sensors }) {
   const [tab, setTab]             = useState('compass');
   const [selectedValues, setSelected] = useState([]);
   const [scenario, setScenario]   = useState(0);
@@ -616,7 +616,7 @@ function EthicsModule({ accent, accentDim, accentBorder }) {
 
       {tab === 'coach' && (
         <div style={{ height:440, display:'flex', flexDirection:'column' }}>
-          <AICoach moduleId="ethics" accent={accent} accentDim={accentDim} accentBorder={accentBorder} />
+          <AICoach moduleId="ethics" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} />
         </div>
       )}
     </div>
@@ -624,7 +624,7 @@ function EthicsModule({ accent, accentDim, accentBorder }) {
 }
 
 // ── Relationships Module ───────────────────────────────────────────────────
-function RelationshipsModule({ accent, accentDim, accentBorder }) {
+function RelationshipsModule({ accent, accentDim, accentBorder, sensors }) {
   const [tab, setTab]               = useState('map');
   const [circleData, setCircleData] = useState({ inner:[], close:[], social:[] });
   const [newName, setNewName]       = useState({ inner:'', close:'', social:'' });
@@ -740,7 +740,7 @@ function RelationshipsModule({ accent, accentDim, accentBorder }) {
 
       {tab === 'coach' && (
         <div style={{ height:440, display:'flex', flexDirection:'column' }}>
-          <AICoach moduleId="relationships" accent={accent} accentDim={accentDim} accentBorder={accentBorder} />
+          <AICoach moduleId="relationships" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} />
         </div>
       )}
     </div>
@@ -973,7 +973,7 @@ function FitnessModule({ accent, accentDim, accentBorder, userProfile, sensors }
 }
 
 // ── Grooming Module ────────────────────────────────────────────────────────
-function GroomingModule({ accent, accentDim, accentBorder, userProfile }) {
+function GroomingModule({ accent, accentDim, accentBorder, userProfile, sensors }) {
   const [tab, setTab] = useState('coach');
   const gender = userProfile?.gender?.toLowerCase() || '';
   const isMale = gender.includes('male') && !gender.includes('fe');
@@ -1013,7 +1013,7 @@ function GroomingModule({ accent, accentDim, accentBorder, userProfile }) {
 
       {tab === 'coach' && (
         <div style={{ height:460, display:'flex', flexDirection:'column' }}>
-          <AICoach moduleId="grooming" accent={accent} accentDim={accentDim} accentBorder={accentBorder} userProfile={userProfile} />
+          <AICoach moduleId="grooming" accent={accent} accentDim={accentDim} accentBorder={accentBorder} userProfile={userProfile} sensors={sensors} />
         </div>
       )}
 
@@ -1157,7 +1157,7 @@ function LifestyleModule({ accent, accentDim, accentBorder, userProfile, sensors
 }
 
 // ── Etiquette Module ───────────────────────────────────────────────────────
-function EtiquetteModule({ accent, accentDim, accentBorder, userProfile }) {
+function EtiquetteModule({ accent, accentDim, accentBorder, userProfile, sensors }) {
   const [tab, setTab]     = useState('coach');
   const [scenario, setScenario] = useState(0);
 
@@ -1261,7 +1261,7 @@ function EtiquetteModule({ accent, accentDim, accentBorder, userProfile }) {
 
       {tab === 'coach' && (
         <div style={{ height:460, display:'flex', flexDirection:'column' }}>
-          <AICoach moduleId="etiquette" accent={accent} accentDim={accentDim} accentBorder={accentBorder} userProfile={userProfile} />
+          <AICoach moduleId="etiquette" accent={accent} accentDim={accentDim} accentBorder={accentBorder} userProfile={userProfile} sensors={sensors} />
         </div>
       )}
 
@@ -1474,13 +1474,13 @@ export default function LifeSkillsPage() {
           <UserProfileSetup profile={lp.profile} onChange={lp.updateProfile} {...moduleProps} />
         )}
         <QuoteCard moduleId={activeModule} {...moduleProps} />
-        {activeModule === 'finance'       && <FinanceModule       {...moduleProps} />}
-        {activeModule === 'ethics'        && <EthicsModule        {...moduleProps} />}
-        {activeModule === 'relationships' && <RelationshipsModule {...moduleProps} />}
+        {activeModule === 'finance'       && <FinanceModule       {...moduleProps} sensors={sensors} />}
+        {activeModule === 'ethics'        && <EthicsModule        {...moduleProps} sensors={sensors} />}
+        {activeModule === 'relationships' && <RelationshipsModule {...moduleProps} sensors={sensors} />}
         {activeModule === 'fitness'       && <FitnessModule       {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
-        {activeModule === 'grooming'      && <GroomingModule      {...moduleProps} userProfile={lp.profile} />}
+        {activeModule === 'grooming'      && <GroomingModule      {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
         {activeModule === 'lifestyle'     && <LifestyleModule     {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
-        {activeModule === 'etiquette'     && <EtiquetteModule     {...moduleProps} userProfile={lp.profile} />}
+        {activeModule === 'etiquette'     && <EtiquetteModule     {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
         <DailyCheckin moduleId={activeModule} {...moduleProps} todayChecked={lp.getTodayCheckin(activeModule)} onToggle={handleToggleCheckin} streak={lp.getStreak(activeModule)} />
         <ReflectionJournal moduleId={activeModule} {...moduleProps} getJournal={lp.getJournal} saveJournal={lp.saveJournal} sensors={sensors} />
         <NotificationSettings sensors={sensors} modules={Object.values(MODULES)} {...moduleProps} />
