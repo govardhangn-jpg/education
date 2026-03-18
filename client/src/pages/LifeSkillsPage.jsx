@@ -66,6 +66,26 @@ const MODULES = {
     accent: '#90e0ef', accentDim: 'rgba(144,224,239,0.12)', accentBorder: 'rgba(144,224,239,0.3)',
     tagline: 'In the first minutes of an emergency, you are the help until help arrives.',
   },
+  sleep: {
+    id: 'sleep', icon: '💤', label: 'Sleep Science',
+    accent: '#7b68ee', accentDim: 'rgba(123,104,238,0.12)', accentBorder: 'rgba(123,104,238,0.3)',
+    tagline: 'Sleep is the golden chain that ties health and our bodies together.',
+  },
+  cooking: {
+    id: 'cooking', icon: '🍳', label: 'Cooking & Nutrition',
+    accent: '#ff9f43', accentDim: 'rgba(255,159,67,0.12)', accentBorder: 'rgba(255,159,67,0.3)',
+    tagline: 'Let food be thy medicine and medicine be thy food.',
+  },
+  timemanagement: {
+    id: 'timemanagement', icon: '⏰', label: 'Time Management',
+    accent: '#26de81', accentDim: 'rgba(38,222,129,0.12)', accentBorder: 'rgba(38,222,129,0.3)',
+    tagline: 'It is not enough to be busy. The question is: what are we busy about?',
+  },
+  careerplanning: {
+    id: 'careerplanning', icon: '💼', label: 'Career Planning',
+    accent: '#fd9644', accentDim: 'rgba(253,150,68,0.12)', accentBorder: 'rgba(253,150,68,0.3)',
+    tagline: 'Choose a job you love and you will never have to work a day in your life.',
+  },
 };
 
 // ── Wisdom quotes ──────────────────────────────────────────────────────────
@@ -153,6 +173,34 @@ const QUOTES = {
     { text: 'Safety is not a gadget but a state of mind.', by: 'Eleanor Everet' },
     { text: 'First aid is not just about bandages. It is about being present when someone needs you most.', by: 'Unknown' },
     { text: 'The time to prepare is before the emergency, not during it.', by: 'Unknown' },
+  ],
+  sleep: [
+    { text: 'Sleep is the best meditation.', by: 'Dalai Lama' },
+    { text: 'A good laugh and a long sleep are the best cures in the doctor\'s book.', by: 'Irish Proverb' },
+    { text: 'The shorter you sleep, the shorter your life.', by: 'Matthew Walker' },
+    { text: 'Sleep is not a waste of time. It is the most productive thing you can do for tomorrow.', by: 'Unknown' },
+    { text: 'Each night, when I go to sleep, I die. And the next morning, when I wake up, I am reborn.', by: 'Mahatma Gandhi' },
+  ],
+  cooking: [
+    { text: 'Cooking is not just about food. It is about taking care of people.', by: 'Unknown' },
+    { text: 'The secret ingredient is always love. But a close second is butter.', by: 'Unknown' },
+    { text: 'Tell me what you eat, and I will tell you who you are.', by: 'Jean Anthelme Brillat-Savarin' },
+    { text: 'Cooking is like painting or writing a song — with practice and creativity, it becomes art.', by: 'Unknown' },
+    { text: 'You don\'t have to cook fancy or complicated masterpieces — just good food from fresh ingredients.', by: 'Julia Child' },
+  ],
+  timemanagement: [
+    { text: 'You cannot manage time. You can only manage yourself.', by: 'Peter Drucker' },
+    { text: 'The key is not to prioritise what is on your schedule, but to schedule your priorities.', by: 'Stephen Covey' },
+    { text: 'Either you run the day, or the day runs you.', by: 'Jim Rohn' },
+    { text: 'Lack of time is actually lack of priorities.', by: 'Tim Ferriss' },
+    { text: 'Busy is a decision. So is rest. So is depth.', by: 'Debbie Millman' },
+  ],
+  careerplanning: [
+    { text: 'The only way to do great work is to love what you do.', by: 'Steve Jobs' },
+    { text: 'Your career is a garden — you reap exactly what you plant and tend.', by: 'Unknown' },
+    { text: 'Do not follow your passion. Follow your contribution.', by: 'Mike Rowe' },
+    { text: 'Success usually comes to those who are too busy to be looking for it.', by: 'Henry David Thoreau' },
+    { text: 'Opportunities are not offered. They are seized, created, and worked for.', by: 'Sheryl Sandberg' },
   ],
 };
 
@@ -254,6 +302,38 @@ const HABITS = {
     { id:'fa5', text:'I identified one safety risk at home and addressed it' },
     { id:'fa6', text:'I shared an emergency skill or safety tip with someone today' },
   ],
+  sleep: [
+    { id:'sl1', text:'Was in bed by a consistent time (within 30 min of usual)' },
+    { id:'sl2', text:'No screens for 30 minutes before bed' },
+    { id:'sl3', text:'Kept the room cool, dark, and quiet for sleep' },
+    { id:'sl4', text:'Got 7–9 hours of sleep last night' },
+    { id:'sl5', text:'Woke up without an alarm or with only one alarm' },
+    { id:'sl6', text:'No caffeine after 2 PM today' },
+  ],
+  cooking: [
+    { id:'ck1', text:'Cooked at least one meal from scratch today' },
+    { id:'ck2', text:'Ate at least one serving of vegetables with a meal' },
+    { id:'ck3', text:'Drank at least 8 glasses of water' },
+    { id:'ck4', text:'Avoided ultra-processed food for at least one meal' },
+    { id:'ck5', text:'Read the nutrition label of something I bought or ate' },
+    { id:'ck6', text:'Planned or prepped food for tomorrow' },
+  ],
+  timemanagement: [
+    { id:'tm1', text:'Identified my single most important task before starting the day' },
+    { id:'tm2', text:'Completed at least one deep work block without interruption' },
+    { id:'tm3', text:'Said no to or deferred one low-priority request' },
+    { id:'tm4', text:'Did not check phone or social media in the first hour of my day' },
+    { id:'tm5', text:'Planned tomorrow\'s schedule before ending today' },
+    { id:'tm6', text:'Finished what I started before moving to the next task' },
+  ],
+  careerplanning: [
+    { id:'cp1', text:'Took one concrete step toward a career goal today' },
+    { id:'cp2', text:'Learned one new skill or piece of knowledge relevant to my field' },
+    { id:'cp3', text:'Connected with or followed up with someone in my professional network' },
+    { id:'cp4', text:'Updated or reflected on my career goals and direction' },
+    { id:'cp5', text:'Did something that built my portfolio, reputation, or visibility' },
+    { id:'cp6', text:'Read or listened to something about my industry or area of interest' },
+  ],
 };
 
 // ── Reflection prompts ─────────────────────────────────────────────────────
@@ -342,6 +422,34 @@ const REFLECTIONS = {
     'Who in your life is most vulnerable — elderly parent, young sibling — and are you prepared to help them?',
     'What is one first aid skill you have always meant to learn but never prioritised?',
   ],
+  sleep: [
+    'What does your sleep actually look like right now — and how is it affecting your days?',
+    'What are the three biggest things stealing your sleep, and which one could you fix tonight?',
+    'Have you ever experienced what it felt like to be fully rested? When was that, and what was different?',
+    'How do you use your phone at night — and if you are honest, is it helping or hurting you?',
+    'If better sleep gave you one extra hour of peak productivity daily, what would you do with it?',
+  ],
+  cooking: [
+    'What is your relationship with food — is it mostly fuel, comfort, social, or something else?',
+    'When did you last cook something from scratch, and how did it feel compared to ordering in?',
+    'What is one food habit you know is bad for you that you keep returning to — and why?',
+    'If you had to eat only home-cooked food for one month, how would your life change?',
+    'What did food mean in your family growing up — and how does that show up in your eating now?',
+  ],
+  timemanagement: [
+    'If you had to honestly account for where every hour of yesterday went, what would the breakdown look like?',
+    'What is the one thing that, if you did it consistently, would have the biggest impact on your life?',
+    'When do you feel most alive and focused — and are you scheduling enough of that time deliberately?',
+    'What is something important to you that you keep saying you will do "when you have time"?',
+    'What would you do differently if you genuinely believed you had exactly enough time for what matters?',
+  ],
+  careerplanning: [
+    'In five years, what does success look like for you — specifically, not vaguely?',
+    'What skill gap is most holding you back right now, and what is your plan to close it?',
+    'If money and approval were not factors, what work would you choose to do?',
+    'Who is one person doing work you admire, and what specifically can you learn from their path?',
+    'What story are you telling yourself about why your ideal career is not possible — and is that story true?',
+  ],
 };
 
 // ── Budget tool data ───────────────────────────────────────────────────────
@@ -381,6 +489,10 @@ const COACH_PROMPTS = {
   legalliteracy: `You are a plain-language legal educator focused on Indian law and everyday legal literacy. You explain legal concepts clearly — consumer rights, tenant rights, employment law, FIR procedures, contracts, digital rights, and more — without jargon. You are not a practising lawyer and always clarify that for specific legal problems they should consult one. Focus on empowering people to understand their rights and protect themselves. Ask one question at the end.`,
   emotionalintelligence: `You are a warm, psychologically-informed emotional intelligence coach. You help people understand and regulate their emotions, build empathy, improve self-awareness, and develop healthier emotional responses. You draw on evidence-based approaches (CBT, ACT, attachment theory, neuroscience) but explain everything in plain language. You are compassionate and never judgmental. Indian cultural context (joint family dynamics, academic pressure, gender expectations) is important. Ask one reflective question at the end.`,
   firstaid: `You are a certified first aid trainer and safety educator. You teach practical, life-saving skills — CPR, choking response, burns, bleeding, fractures, anaphylaxis, stroke recognition, and emergency preparedness — in clear, step-by-step language anyone can follow. You always emphasise calling emergency services (112 in India) as a priority. You are calm, clear, and never alarmist. Adapt advice to Indian home and workplace settings. Ask one practical question at the end.`,
+  sleep: `You are a sleep science coach grounded in the research of Matthew Walker, Huberman Lab, and sleep medicine. You help people understand the science of sleep, identify what is destroying their sleep quality, and build sustainable sleep habits. You are practical and specific — no vague advice. Indian context matters: exam stress, late-night WhatsApp, chai culture, share accommodation. Give one concrete change they can make tonight. Ask one question at the end.`,
+  cooking: `You are a friendly nutrition educator and home cooking coach with a deep understanding of Indian food. You help people learn to cook simple, healthy meals; understand nutrition without calorie obsession; eat better on a budget; and develop a healthier relationship with food. You reference Indian ingredients, cooking methods, and dietary patterns. You are encouraging and never judgmental about eating habits. Ask one practical question at the end.`,
+  timemanagement: `You are a productivity and time management coach who cuts through the noise. You draw on Cal Newport (Deep Work), James Clear (Atomic Habits), and David Allen (GTD) but translate everything into specific, actionable advice. You help people identify their highest-leverage activities, eliminate time waste, build focus habits, and protect energy. Indian workplace and study context is important — exams, joint family distractions, boss culture, WhatsApp overload. Ask one question at the end.`,
+  careerplanning: `You are a career strategist and mentor who has helped people across education, technology, healthcare, law, government, and entrepreneurship. You help people think clearly about what they want from a career, how to build skills deliberately, how to navigate the Indian job market, and how to make bold career moves with confidence. You are honest about hard realities while being genuinely encouraging. Ask one probing question at the end.`,
 };
 
 function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, sensors }) {
@@ -432,6 +544,10 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     legalliteracy:    ['What are my rights if police stop me?', 'How do I file a consumer complaint in India?', 'What should I check before signing a rental agreement?'],
     emotionalintelligence: ['How do I stop reacting and start responding?', 'Why do I get so triggered by certain people?', 'How do I deal with anger without suppressing it?'],
     firstaid:         ['What do I do if someone is choking?', 'How do I perform CPR correctly?', 'What are the signs of a heart attack?'],
+    sleep:            ['How do I fix my sleep schedule quickly?', 'Why am I tired even after 8 hours?', 'How do I stop using my phone before bed?'],
+    cooking:          ['What are 5 basic dishes every Indian should know?', 'How do I eat healthy on ₹200 a day?', 'What is the easiest high-protein Indian meal?'],
+    timemanagement:   ['How do I stop procrastinating on important work?', 'How do I do deep work when I have constant interruptions?', 'How do I plan my week effectively?'],
+    careerplanning:   ['How do I figure out what career is right for me?', 'When is the right time to change jobs?', 'How do I get a mentor in my field?'],
   };
 
   useEffect(() => {
@@ -1768,6 +1884,313 @@ function FirstAidModule({ accent, accentDim, accentBorder, sensors }) {
   );
 }
 
+// ── Sleep Science Module ───────────────────────────────────────────────────
+function SleepModule({ accent, accentDim, accentBorder, sensors }) {
+  const [tab, setTab] = useState('coach');
+  const [log, setLog] = useState({ bed:'', wake:'', quality:'' });
+
+  const calcSleep = () => {
+    if (!log.bed || !log.wake) return null;
+    const [bh,bm] = log.bed.split(':').map(Number);
+    const [wh,wm] = log.wake.split(':').map(Number);
+    let mins = (wh*60+wm) - (bh*60+bm);
+    if (mins < 0) mins += 1440;
+    return (mins/60).toFixed(1);
+  };
+  const hrs = calcSleep();
+  const sleepColor = hrs ? hrs>=7&&hrs<=9 ? '#52b788' : hrs>=6 ? '#ffd166' : '#e74c3c' : null;
+
+  const hygiene = [
+    { icon:'🌡️', rule:'Keep bedroom cool (18–20°C)', why:'Core body temp must drop 1°C to initiate sleep' },
+    { icon:'🌑', rule:'Total darkness — blackout curtains or eye mask', why:'Even dim light suppresses melatonin by 50%' },
+    { icon:'📵', rule:'No screens 30–60 min before bed', why:'Blue light delays melatonin onset by 2–3 hours' },
+    { icon:'☕', rule:'No caffeine after 2 PM', why:'Caffeine half-life is 5–7 hours — still half active at midnight' },
+    { icon:'⏰', rule:'Same wake time every day — including weekends', why:'The most powerful circadian anchor. Consistent beats duration.' },
+    { icon:'🧘', rule:'Wind-down routine: 20–30 min of calm before bed', why:'The brain needs a transition — it cannot switch off instantly' },
+    { icon:'🏋️', rule:'Exercise — but not within 2 hours of bedtime', why:'Exercise raises core temp and cortisol, delaying sleep onset' },
+    { icon:'🍽️', rule:'No heavy meals within 3 hours of sleep', why:'Digestion raises metabolism and disrupts sleep stages' },
+  ];
+
+  const stages = [
+    { stage:'Stage 1 (N1)', pct:5, color:'#a8dadc', desc:'Light sleep. Easy to wake. Muscle twitches common.' },
+    { stage:'Stage 2 (N2)', pct:45, color:'#7b68ee', desc:'True sleep begins. Heart rate slows. Memory consolidation starts.' },
+    { stage:'Stage 3 (N3)', pct:25, color:'#5c4db1', desc:'Deep sleep. Hardest to wake. Physical repair, immune function, growth hormone.' },
+    { stage:'REM Sleep', pct:25, color:'#f72585', desc:'Emotional processing, creativity, memory integration. Most dreaming occurs here.' },
+  ];
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {[['coach','🤖 AI Coach'],['hygiene','🛏️ Sleep Hygiene'],['stages','🧬 Sleep Stages'],['tracker','📊 Sleep Log']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background:tab===id?accentDim:'transparent', color:tab===id?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+      {tab==='coach' && <div style={{ height:460, display:'flex', flexDirection:'column' }}><AICoach moduleId="sleep" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} /></div>}
+      {tab==='hygiene' && (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:12 }}>
+          {hygiene.map(h => (
+            <div key={h.rule} style={{ padding:'16px', background:'rgba(255,255,255,0.03)', border:`1px solid ${accentBorder}`, borderRadius:14 }}>
+              <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:8 }}>
+                <span style={{ fontSize:22 }}>{h.icon}</span>
+                <span style={{ color:'white', fontSize:13, fontWeight:800 }}>{h.rule}</span>
+              </div>
+              <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12, lineHeight:1.6, fontStyle:'italic' }}>{h.why}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {tab==='stages' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <div style={{ display:'flex', height:32, borderRadius:8, overflow:'hidden', gap:2 }}>
+            {stages.map(s => <div key={s.stage} style={{ flex:s.pct, background:s.color, display:'flex', alignItems:'center', justifyContent:'center' }}><span style={{ fontSize:10, fontWeight:800, color:'white' }}>{s.pct}%</span></div>)}
+          </div>
+          {stages.map(s => (
+            <div key={s.stage} style={{ padding:'14px 16px', background:'rgba(255,255,255,0.03)', border:`1px solid rgba(255,255,255,0.08)`, borderRadius:12, display:'flex', gap:12 }}>
+              <div style={{ width:12, height:12, borderRadius:'50%', background:s.color, flexShrink:0, marginTop:3 }} />
+              <div>
+                <div style={{ color:'white', fontSize:13, fontWeight:800, marginBottom:4 }}>{s.stage} — {s.pct}% of night</div>
+                <div style={{ color:'rgba(255,255,255,0.65)', fontSize:13, lineHeight:1.6 }}>{s.desc}</div>
+              </div>
+            </div>
+          ))}
+          <div style={{ padding:'12px 16px', background:accentDim, border:`1px solid ${accentBorder}`, borderRadius:12, color:'rgba(255,255,255,0.7)', fontSize:13, lineHeight:1.7 }}>
+            <strong style={{ color:accent }}>Key insight:</strong> You cycle through all stages every 90 minutes. 7.5 or 9 hours (5 or 6 full cycles) leaves you waking at the end of a cycle — feeling far more rested than 8 hours cut mid-cycle.
+          </div>
+        </div>
+      )}
+      {tab==='tracker' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12 }}>
+            {[['bed','Bed time','HH:MM'],['wake','Wake time','HH:MM'],['quality','Quality (1–10)','e.g. 7']].map(([k,lbl,ph]) => (
+              <div key={k}>
+                <div style={{ color:'rgba(255,255,255,0.45)', fontSize:11, fontWeight:700, marginBottom:6, textTransform:'uppercase' }}>{lbl}</div>
+                <input type={k==='quality'?'number':'time'} value={log[k]} onChange={e => setLog(l=>({...l,[k]:e.target.value}))}
+                  placeholder={ph} min={k==='quality'?1:undefined} max={k==='quality'?10:undefined}
+                  style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:`1px solid ${accentBorder}`, borderRadius:10, padding:'10px 14px', color:'white', fontSize:14, fontFamily:'inherit', outline:'none' }} />
+              </div>
+            ))}
+          </div>
+          {hrs && (
+            <div style={{ padding:'20px', background:accentDim, border:`1.5px solid ${accentBorder}`, borderRadius:16, textAlign:'center' }}>
+              <div style={{ color:'rgba(255,255,255,0.5)', fontSize:12, fontWeight:700, marginBottom:8 }}>LAST NIGHT</div>
+              <div style={{ fontSize:52, fontWeight:900, color:sleepColor, marginBottom:8 }}>{hrs}h</div>
+              <div style={{ color:sleepColor, fontSize:16, fontWeight:800 }}>
+                {parseFloat(hrs)>=7&&parseFloat(hrs)<=9 ? 'Excellent — in the optimal range' : parseFloat(hrs)>=6 ? 'Borderline — aim for 7–9 hours' : 'Insufficient — this is affecting everything'}
+              </div>
+              {log.quality && <div style={{ color:'rgba(255,255,255,0.45)', fontSize:13, marginTop:8 }}>Subjective quality: {log.quality}/10</div>}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Cooking & Nutrition Module ─────────────────────────────────────────────
+function CookingModule({ accent, accentDim, accentBorder, sensors, userProfile }) {
+  const [tab, setTab] = useState('coach');
+
+  const dishes = [
+    { name:'Dal Tadka', time:'20 min', protein:'12g/serving', desc:'Soak toor dal 30 min. Pressure cook 3 whistles. Temper with ghee, mustard, cumin, garlic, dried red chilli, tomato, and turmeric. The foundation of Indian eating.' },
+    { name:'Egg Bhurji', time:'10 min', protein:'14g/serving', desc:'Beat 2 eggs. Sauté onion, green chilli, tomato in oil. Add eggs, scramble on medium heat. Add salt, turmeric, coriander. Fastest high-protein meal possible.' },
+    { name:'Vegetable Pulao', time:'25 min', protein:'8g/serving', desc:'Fry whole spices in oil. Add onion, ginger-garlic paste. Add mixed vegetables. Add soaked rice and water (1:2 ratio). Cook covered on low until done.' },
+    { name:'Aloo Sabzi', time:'15 min', protein:'4g/serving', desc:'Boil and cube potatoes. Sauté cumin, onion, tomato, green chilli. Add potatoes, turmeric, cumin powder, coriander. The most adaptable Indian dish.' },
+    { name:'Curd Rice', time:'10 min', protein:'7g/serving', desc:'Mix cooked rice with thick curd (not watery). Temper mustard, curry leaves, green chilli, ginger. Add salt. Perfect meal when nothing else is ready.' },
+    { name:'Moong Dal Khichdi', time:'20 min', protein:'11g/serving', desc:'Pressure cook rice + moong dal (equal parts) with turmeric and salt, 4 whistles. Temper with ghee, cumin, asafoetida. The most complete, digestible Indian meal.' },
+  ];
+
+  const nutrition = [
+    { nutrient:'Protein', need:'1.0–1.6g per kg body weight/day', indian_sources:'Curd, paneer, dal, eggs, chicken, soya, sprouts, peanuts', gap:'Most Indians eat 40% less than needed' },
+    { nutrient:'Iron', need:'Men: 8mg/day | Women: 18mg/day', indian_sources:'Spinach (with Vitamin C), rajma, ragi, dates, jaggery, sesame', gap:'Anaemia affects 57% of Indian women' },
+    { nutrient:'Calcium', need:'1000mg/day for adults', indian_sources:'Ragi, sesame seeds, curd, milk, paneer, green leafy vegetables', gap:'Most Indians lack adequate dairy or substitutes' },
+    { nutrient:'Vitamin D', need:'600–800 IU/day', indian_sources:'Sun exposure (20 min, 11am–2pm), egg yolk, fatty fish, fortified milk', gap:'75% of urban Indians are deficient despite sunny climate' },
+    { nutrient:'Fibre', need:'25–35g/day', indian_sources:'Whole grains, rajma, chana, all sabzis, fruits with skin', gap:'White rice and maida dominate Indian diets, stripping fibre' },
+  ];
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {[['coach','🤖 AI Coach'],['dishes','🍽️ Essential Dishes'],['nutrition','🥗 Nutrition Guide']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background:tab===id?accentDim:'transparent', color:tab===id?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+      {tab==='coach' && <div style={{ height:460, display:'flex', flexDirection:'column' }}><AICoach moduleId="cooking" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} userProfile={userProfile} /></div>}
+      {tab==='dishes' && (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:14 }}>
+          {dishes.map(d => (
+            <div key={d.name} style={{ padding:'16px', background:'rgba(255,255,255,0.03)', border:`1px solid ${accentBorder}`, borderRadius:16 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+                <div style={{ color:accent, fontSize:15, fontWeight:800 }}>{d.name}</div>
+                <div style={{ display:'flex', gap:6 }}>
+                  <span style={{ padding:'2px 8px', background:accentDim, borderRadius:8, color:accent, fontSize:11, fontWeight:700 }}>⏱ {d.time}</span>
+                  <span style={{ padding:'2px 8px', background:'rgba(82,183,136,0.15)', borderRadius:8, color:'#52b788', fontSize:11, fontWeight:700 }}>💪 {d.protein}</span>
+                </div>
+              </div>
+              <div style={{ color:'rgba(255,255,255,0.65)', fontSize:13, lineHeight:1.7 }}>{d.desc}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {tab==='nutrition' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {nutrition.map(n => (
+            <details key={n.nutrient} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${accentBorder}`, borderRadius:14, overflow:'hidden' }}>
+              <summary style={{ padding:'14px 16px', cursor:'pointer', listStyle:'none', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span style={{ color:'white', fontSize:14, fontWeight:800 }}>{n.nutrient}</span>
+                <span style={{ color:accent, fontSize:11 }}>▼</span>
+              </summary>
+              <div style={{ padding:'0 16px 14px', display:'flex', flexDirection:'column', gap:8 }}>
+                {[['Daily need',n.need],['Indian sources',n.indian_sources],['The gap',n.gap]].map(([lbl,val]) => (
+                  <div key={lbl} style={{ display:'flex', gap:10 }}>
+                    <span style={{ color:accent, fontSize:12, fontWeight:800, minWidth:110, flexShrink:0 }}>{lbl}</span>
+                    <span style={{ color:'rgba(255,255,255,0.7)', fontSize:13, lineHeight:1.6 }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Time Management Module ─────────────────────────────────────────────────
+function TimeManagementModule({ accent, accentDim, accentBorder, sensors }) {
+  const [tab, setTab] = useState('coach');
+  const [tasks, setTasks] = useState([{text:'',quadrant:'do'}]);
+
+  const quadrants = [
+    { id:'do', label:'Do First', sub:'Urgent + Important', color:'#e74c3c', desc:'Deadlines, crises, genuine emergencies. These must be done today.' },
+    { id:'schedule', label:'Schedule', sub:'Not Urgent + Important', color:'#52b788', desc:'Planning, relationships, learning, exercise. This is where results live.' },
+    { id:'delegate', label:'Delegate', sub:'Urgent + Not Important', color:'#f4a261', desc:'Interruptions, some emails, some meetings. Do these quickly or delegate.' },
+    { id:'eliminate', label:'Eliminate', sub:'Not Urgent + Not Important', color:'rgba(255,255,255,0.3)', desc:'Mindless scrolling, trivial tasks, busywork. Cut ruthlessly.' },
+  ];
+
+  const techniques = [
+    { name:'Time Blocking', desc:'Assign every hour of your day a specific task — before the day begins. Defend these blocks like meetings.', when:'Sunday evening or the night before' },
+    { name:'Pomodoro (25/5)', desc:'Work for 25 minutes with full focus. Rest 5 minutes. After 4 rounds, take a 20-minute break.', when:'For tasks requiring deep concentration' },
+    { name:'Two-Minute Rule', desc:'If a task takes less than 2 minutes, do it immediately. Do not defer it to a list.', when:'For emails, small requests, quick decisions' },
+    { name:'MIT (Most Important Task)', desc:'Identify the single most important thing to do today. Do it first, before email or messages.', when:'Every morning before opening any app' },
+    { name:'Weekly Review', desc:'Every Sunday: review last week, clear open loops, plan the week ahead. 30 minutes. Non-negotiable.', when:'Every Sunday, same time, same place' },
+    { name:'Deep Work Blocks', desc:'Schedule 2–4 hours of uninterrupted work on your highest-value activity. Phone off. Notifications off.', when:'Your peak energy window (usually morning)' },
+  ];
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {[['coach','🤖 AI Coach'],['matrix','📊 Priority Matrix'],['techniques','⚡ Techniques']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background:tab===id?accentDim:'transparent', color:tab===id?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+      {tab==='coach' && <div style={{ height:460, display:'flex', flexDirection:'column' }}><AICoach moduleId="timemanagement" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} /></div>}
+      {tab==='matrix' && (
+        <div>
+          <div style={{ color:'rgba(255,255,255,0.55)', fontSize:13, marginBottom:16, lineHeight:1.7 }}>The Eisenhower Matrix — used by high performers to separate what matters from what feels urgent but doesn't.</div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            {quadrants.map(q => (
+              <div key={q.id} style={{ padding:'16px', background:'rgba(255,255,255,0.03)', border:`2px solid ${q.color}40`, borderRadius:16 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+                  <div style={{ color:q.color, fontSize:14, fontWeight:800 }}>{q.label}</div>
+                  <span style={{ fontSize:10, color:'rgba(255,255,255,0.3)', alignSelf:'center' }}>{q.sub}</span>
+                </div>
+                <div style={{ color:'rgba(255,255,255,0.65)', fontSize:12, lineHeight:1.6 }}>{q.desc}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop:14, padding:'12px 16px', background:accentDim, border:`1px solid ${accentBorder}`, borderRadius:12, color:'rgba(255,255,255,0.7)', fontSize:13, lineHeight:1.7 }}>
+            <strong style={{ color:accent }}>The insight:</strong> Most people spend their days in quadrants 1 and 3 — urgent things. But the life-changing work lives in quadrant 2. You have to schedule it deliberately or it will never happen.
+          </div>
+        </div>
+      )}
+      {tab==='techniques' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {techniques.map(t => (
+            <div key={t.name} style={{ padding:'16px 18px', background:'rgba(255,255,255,0.03)', border:`1px solid ${accentBorder}`, borderRadius:14 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+                <div style={{ color:accent, fontSize:14, fontWeight:800 }}>{t.name}</div>
+                <span style={{ padding:'2px 10px', background:accentDim, borderRadius:10, color:accent, fontSize:11, fontWeight:700, flexShrink:0, marginLeft:8 }}>{t.when}</span>
+              </div>
+              <div style={{ color:'rgba(255,255,255,0.7)', fontSize:13, lineHeight:1.7 }}>{t.desc}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Career Planning Module ─────────────────────────────────────────────────
+function CareerPlanningModule({ accent, accentDim, accentBorder, sensors, userProfile }) {
+  const [tab, setTab] = useState('coach');
+  const [ikigai, setIkigai] = useState({ love:'', good:'', paid:'', world:'' });
+
+  const stages = [
+    { stage:'Explore (18–24)', color:'#a8dadc', actions:['Try internships in 2–3 different fields','Talk to 10 people doing jobs you find interesting','Do not commit to a path based on salary alone','Build skills that transfer across industries'] },
+    { stage:'Build (24–30)', color:'#4cc9f0', actions:['Go deep on one skill until you are in the top 20%','Find your first mentor — someone 10 years ahead','Build a portfolio, not just a resume','Negotiate your first salary — most first offers are not final'] },
+    { stage:'Advance (30–40)', color:'#7b68ee', actions:['Develop leadership and management skills','Build a professional network with genuine relationships','Consider: is this path still aligned with your values?','Think about income diversification — freelance, investments'] },
+    { stage:'Master (40+)', color:'#f72585', actions:['Focus on contribution and legacy, not just advancement','Mentor others — it accelerates your own growth','Transition if needed — it is never too late','Balance ambition with sustainability and family'] },
+  ];
+
+  const ikigaiComplete = Object.values(ikigai).every(v => v.trim().length > 5);
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {[['coach','🤖 AI Coach'],['ikigai','🎯 Find Your Ikigai'],['stages','📈 Career Stages']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background:tab===id?accentDim:'transparent', color:tab===id?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+      {tab==='coach' && <div style={{ height:460, display:'flex', flexDirection:'column' }}><AICoach moduleId="careerplanning" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} userProfile={userProfile} /></div>}
+      {tab==='ikigai' && (
+        <div>
+          <div style={{ color:'rgba(255,255,255,0.6)', fontSize:13, lineHeight:1.7, marginBottom:16 }}>
+            Ikigai (生き甲斐) is the Japanese concept of your reason for being — the intersection of what you love, what you are good at, what the world needs, and what you can be paid for. Fill in all four to discover yours.
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:16 }}>
+            {[
+              ['love','❤️ What do I love doing?','Things that make you lose track of time',accent],
+              ['good','⭐ What am I good at?','Skills others notice and value','#52b788'],
+              ['paid','💰 What can I be paid for?','Problems people will pay you to solve','#f4a261'],
+              ['world','🌍 What does the world need?','What gap or problem genuinely matters to you','#a8dadc'],
+            ].map(([key,lbl,ph,col]) => (
+              <div key={key} style={{ padding:'14px', background:'rgba(255,255,255,0.03)', border:`1px solid rgba(255,255,255,0.08)`, borderRadius:14 }}>
+                <div style={{ color:col, fontSize:13, fontWeight:800, marginBottom:8 }}>{lbl}</div>
+                <textarea value={ikigai[key]} onChange={e => setIkigai(i=>({...i,[key]:e.target.value}))}
+                  placeholder={ph} rows={3}
+                  style={{ width:'100%', background:'rgba(255,255,255,0.06)', border:`1px solid rgba(255,255,255,0.1)`, borderRadius:8, padding:'8px 12px', color:'white', fontSize:13, fontFamily:'inherit', outline:'none', resize:'none' }} />
+              </div>
+            ))}
+          </div>
+          {ikigaiComplete && (
+            <div style={{ padding:'16px 18px', background:accentDim, border:`1.5px solid ${accentBorder}`, borderRadius:16 }}>
+              <div style={{ color:accent, fontSize:13, fontWeight:800, marginBottom:10 }}>Your Ikigai intersection:</div>
+              <div style={{ color:'rgba(255,255,255,0.8)', fontSize:13, lineHeight:1.8 }}>
+                You love <strong style={{color:'white'}}>{ikigai.love}</strong>, you are good at <strong style={{color:'white'}}>{ikigai.good}</strong>, the world needs <strong style={{color:'white'}}>{ikigai.world}</strong>, and you can be paid for <strong style={{color:'white'}}>{ikigai.paid}</strong>. Ask your AI coach to help you find the career paths that sit at this intersection.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      {tab==='stages' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {stages.map(s => (
+            <div key={s.stage} style={{ padding:'16px 18px', background:'rgba(255,255,255,0.03)', border:`1.5px solid ${s.color}40`, borderRadius:16 }}>
+              <div style={{ color:s.color, fontSize:14, fontWeight:800, marginBottom:10 }}>{s.stage}</div>
+              {s.actions.map((a,i) => (
+                <div key={i} style={{ display:'flex', gap:10, marginBottom:8 }}>
+                  <span style={{ color:s.color, fontSize:12, marginTop:2, flexShrink:0 }}>▸</span>
+                  <span style={{ color:'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.6 }}>{a}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Milestone Toast ────────────────────────────────────────────────────────
 function MilestoneToast({ milestones, onDismiss }) {
   if (!milestones?.length) return null;
@@ -1923,7 +2346,7 @@ export default function LifeSkillsPage() {
       <div style={{ marginBottom:14, padding:'11px 16px', background:mod.accentDim, border:`1px solid ${mod.accentBorder}`, borderRadius:12, color:mod.accent, fontSize:13, fontStyle:'italic', fontWeight:700 }}>"{mod.tagline}"</div>
 
       <div className="ls-card" key={activeModule} style={{ display:'flex', flexDirection:'column', gap:16 }}>
-        {['fitness','grooming','lifestyle','etiquette','criticalthinking','publicspeaking','legalliteracy','emotionalintelligence','firstaid'].includes(activeModule) && (
+        {['fitness','grooming','lifestyle','etiquette','criticalthinking','publicspeaking','legalliteracy','emotionalintelligence','firstaid','sleep','cooking','timemanagement','careerplanning'].includes(activeModule) && (
           <UserProfileSetup profile={lp.profile} onChange={lp.updateProfile} {...moduleProps} />
         )}
         <QuoteCard moduleId={activeModule} {...moduleProps} />
@@ -1939,6 +2362,10 @@ export default function LifeSkillsPage() {
         {activeModule === 'legalliteracy'         && <LegalLiteracyModule         {...moduleProps} sensors={sensors} />}
         {activeModule === 'emotionalintelligence' && <EmotionalIntelligenceModule {...moduleProps} sensors={sensors} />}
         {activeModule === 'firstaid'              && <FirstAidModule              {...moduleProps} sensors={sensors} />}
+        {activeModule === 'sleep'                 && <SleepModule                 {...moduleProps} sensors={sensors} />}
+        {activeModule === 'cooking'               && <CookingModule               {...moduleProps} sensors={sensors} userProfile={lp.profile} />}
+        {activeModule === 'timemanagement'        && <TimeManagementModule        {...moduleProps} sensors={sensors} />}
+        {activeModule === 'careerplanning'        && <CareerPlanningModule        {...moduleProps} sensors={sensors} userProfile={lp.profile} />}
         <DailyCheckin moduleId={activeModule} {...moduleProps} todayChecked={lp.getTodayCheckin(activeModule)} onToggle={handleToggleCheckin} streak={lp.getStreak(activeModule)} />
         <ReflectionJournal moduleId={activeModule} {...moduleProps} getJournal={lp.getJournal} saveJournal={lp.saveJournal} sensors={sensors} />
         <NotificationSettings sensors={sensors} modules={Object.values(MODULES)} {...moduleProps} />
