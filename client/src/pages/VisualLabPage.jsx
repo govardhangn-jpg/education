@@ -1044,7 +1044,7 @@ export default function VisualLabPage() {
   const mod   = mods.find(m => m.id === activeModule);
 
   return (
-    <div className="vlab-wrap" style={{ padding:'14px 16px', maxWidth:1100, margin:'0 auto', minHeight:'100vh' }}>
+    <div className="vlab-wrap" style={{ padding:'14px 16px', paddingBottom:'80px', maxWidth:1100, margin:'0 auto' }}>
       <style>{GLOBAL_CSS}</style>
 
       {/* Breadcrumb */}

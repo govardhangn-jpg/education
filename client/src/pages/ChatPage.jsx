@@ -169,11 +169,10 @@ export default function ChatPage() {
   );
 
   return (
-    <div style={{ display:'flex', height:'calc(100vh - 60px)', fontFamily:"'Nunito',sans-serif", position:'relative' }}>
+    <div style={{ display:'flex', height:'100%', fontFamily:"'Nunito',sans-serif", position:'relative' }}>
       <style>{`
         .chat-sidebar-item{padding:10px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);transition:all 0.15s;display:flex;align-items:center;gap:8px;min-height:40px;}
         .chat-sidebar-item:hover,.chat-sidebar-item:active{background:rgba(255,255,255,0.07);color:white;}
-        /* font-size:16px prevents iOS auto-zoom */
         .chat-input-field{flex:1;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:11px 14px;color:white;font-size:16px;font-family:'Nunito',sans-serif;outline:none;resize:none;line-height:1.5;min-height:44px;}
         .chat-input-field:focus{border-color:rgba(255,215,0,0.5);background:rgba(255,255,255,0.09);}
         .chat-input-field::placeholder{color:rgba(255,255,255,0.3);}
@@ -184,21 +183,19 @@ export default function ChatPage() {
         select{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:7px 8px;color:white;font-family:'Nunito',sans-serif;font-size:16px;outline:none;cursor:pointer;max-width:110px;-webkit-appearance:none;}
         select option{background:#1a1a2e;}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
-        /* Desktop sidebar */
         .chat-sidebar-desktop{width:210px;background:rgba(255,255,255,0.02);border-right:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
-        /* Mobile sidebar drawer — stops above bottom nav */
-        .chat-sidebar-mobile{display:none;position:fixed;top:60px;left:0;bottom:56px;width:min(280px,85vw);background:#12122a;z-index:120;flex-direction:column;overflow-y:auto;border-right:1px solid rgba(255,255,255,0.1);box-shadow:4px 0 20px rgba(0,0,0,0.5);}
+        .chat-sidebar-mobile{display:none;position:fixed;top:60px;left:0;bottom:calc(56px + env(safe-area-inset-bottom,0px));width:min(280px,85vw);background:#12122a;z-index:120;flex-direction:column;overflow-y:auto;border-right:1px solid rgba(255,255,255,0.1);box-shadow:4px 0 20px rgba(0,0,0,0.5);}
         .chat-sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:110;}
         .chat-header-selects{display:flex;gap:6px;align-items:center;}
         .chat-voice-badge{flex-shrink:0;}
         .chat-hint{color:rgba(255,255,255,0.2);font-size:10px;margin-top:4px;text-align:center;}
+        .chat-height{display:flex;flex-direction:column;flex:1;overflow:hidden;height:100%;}
         @media(max-width:768px){
           .chat-sidebar-desktop{display:none!important;}
           .chat-sidebar-mobile{display:flex!important;}
           .chat-sidebar-overlay{display:block!important;}
           .chat-header-selects{display:none!important;}
           .chat-voice-badge{display:none!important;}
-          .chat-height{height:calc(100vh - 60px - 56px)!important;}
           .chat-hint{display:none!important;}
         }
       `}</style>
@@ -217,7 +214,7 @@ export default function ChatPage() {
       </div>
 
       {/* CHAT MAIN */}
-      <div className="chat-height" style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', height:'calc(100vh - 60px)' }}>
+      <div className="chat-height" style={{ flex:1, overflow:'hidden' }}>
         {/* Header */}
         <div style={{ padding:'8px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', gap:8, flexShrink:0, minHeight:52 }}>
           {/* Mobile: hamburger to open sidebar */}

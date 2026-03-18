@@ -44,7 +44,7 @@ export default function DashboardPage() {
   const syllabusLabel = isExamMode ? examMeta?.badge : user?.syllabus;
 
   return (
-    <div style={{ padding:'16px', maxWidth:1100, margin:'0 auto', fontFamily:"'Nunito',sans-serif" }}>
+    <div style={{ padding:'16px', paddingBottom:'80px', maxWidth:1100, margin:'0 auto', fontFamily:"'Nunito',sans-serif" }}>
       <style>{`
         .dash-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
         .dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}

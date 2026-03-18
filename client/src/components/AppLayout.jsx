@@ -24,35 +24,35 @@ export default function AppLayout() {
   ];
 
   return (
-    <div style={{ minHeight:'100vh', background:'#0d0d1a', fontFamily:"'Nunito',sans-serif", color:'white', display:'flex', flexDirection:'column' }}>
+    <div style={{ height:'100dvh', background:'#0d0d1a', fontFamily:"'Nunito',sans-serif", color:'white', display:'flex', flexDirection:'column', overflow:'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@700;800&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
-        body{background:#0d0d1a;}
-        html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+        body{background:#0d0d1a;height:100dvh;overflow:hidden;}
+        html{-webkit-text-size-adjust:100%;text-size-adjust:100%;height:100dvh;}
         .nav-link{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;color:rgba(255,255,255,0.55);text-decoration:none;font-size:13px;font-weight:700;transition:all 0.2s;min-height:40px;}
         .nav-link:hover{background:rgba(255,255,255,0.07);color:white;}
         .nav-link.active{background:rgba(255,215,0,0.12);color:#ffd700;}
         .mob-nav-link{display:flex;align-items:center;gap:12px;padding:15px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:15px;font-weight:700;transition:all 0.2s;border-bottom:1px solid rgba(255,255,255,0.05);min-height:52px;}
         .mob-nav-link:hover,.mob-nav-link.active{background:rgba(255,215,0,0.08);color:#ffd700;}
         ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
-        /* Bottom nav — 56px fixed height + safe area */
         .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(13,13,26,0.97);border-top:1px solid rgba(255,255,255,0.08);z-index:200;padding:4px 0 env(safe-area-inset-bottom,4px);}
         .bottom-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 8px;color:rgba(255,255,255,0.4);text-decoration:none;font-size:10px;font-weight:700;flex:1;transition:all 0.2s;min-height:48px;}
         .bottom-nav-item.active{color:#ffd700;}
         .bottom-nav-item span.icon{font-size:20px;}
+        /* Main scroll container — this is the fix */
+        .main-content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;}
         @media(max-width:768px){
           .desktop-nav{display:none!important;}
           .desktop-user{display:none!important;}
           .bottom-nav{display:flex!important;}
-          .main-content{padding-bottom:56px!important;}
+          .main-content{padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))!important;}
           .hamburger{display:flex!important;}
         }
         @media(min-width:769px){
           .hamburger{display:none!important;}
           .mob-menu{display:none!important;}
         }
-        /* Tablet: show nav links but no bottom bar */
         @media(min-width:769px) and (max-width:1024px){
           .desktop-user .user-grade{display:none;}
         }
@@ -133,8 +133,8 @@ export default function AppLayout() {
         </div>
       )}
 
-      {/* Main content */}
-      <main className="main-content" style={{ flex:1, overflow:'auto' }}>
+      {/* Main content — scrollable */}
+      <main className="main-content">
         <Outlet />
       </main>
 

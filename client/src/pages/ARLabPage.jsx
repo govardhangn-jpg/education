@@ -606,7 +606,7 @@ export default function ARLabPage() {
   const model = mods.find(m => m.id === activeModel);
 
   return (
-    <div style={{ padding:'14px 16px', maxWidth:1100, margin:'0 auto', fontFamily:"'Nunito',sans-serif", minHeight:'100vh' }}>
+    <div style={{ padding:'14px 16px', paddingBottom:'80px', maxWidth:1100, margin:'0 auto', fontFamily:"'Nunito',sans-serif" }}>
       <style>{`
         @keyframes spin { to{ transform:rotate(360deg) } }
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.5} }

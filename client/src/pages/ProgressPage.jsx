@@ -55,7 +55,7 @@ export default function ProgressPage() {
     : 0;
 
   return (
-    <div style={{ padding:'14px', maxWidth:1000, margin:'0 auto', fontFamily:"'Nunito',sans-serif" }}>
+    <div style={{ padding:'14px', paddingBottom:'80px', maxWidth:1000, margin:'0 auto', fontFamily:"'Nunito',sans-serif" }}>
       <style>{`
         /* font-size:16px prevents iOS auto-zoom */
         select{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:9px 10px;color:white;font-family:'Nunito',sans-serif;font-size:16px;outline:none;-webkit-appearance:none;}

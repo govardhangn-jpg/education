@@ -40,7 +40,7 @@ export default function AdminPage() {
     return <div style={{ padding:40, color:'rgba(255,255,255,0.5)', textAlign:'center' }}>Access denied.</div>;
 
   return (
-    <div style={{ padding:'14px', maxWidth:1100, margin:'0 auto', fontFamily:"'Nunito',sans-serif" }}>
+    <div style={{ padding:'14px', paddingBottom:'80px', maxWidth:1100, margin:'0 auto', fontFamily:"'Nunito',sans-serif" }}>
       <style>{`
         .admin-tab{padding:10px 12px;background:transparent;border:none;color:rgba(255,255,255,0.5);font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;min-height:44px;}
         .admin-tab.active{color:#ffd700;border-bottom-color:#ffd700;}

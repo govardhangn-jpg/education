@@ -64,7 +64,7 @@ export default function LoginPage() {
   ];
 
   return (
-    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0f0c29 0%,#302b63 50%,#24243e 100%)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Nunito',sans-serif", padding:'16px' }}>
+    <div style={{ minHeight:'100dvh', background:'linear-gradient(135deg,#0f0c29 0%,#302b63 50%,#24243e 100%)', display:'flex', alignItems:'flex-start', justifyContent:'center', fontFamily:"'Nunito',sans-serif", padding:'16px', overflowY:'auto' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@700;800&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
@@ -100,7 +100,7 @@ export default function LoginPage() {
       <div style={{ position:'fixed',width:400,height:400,borderRadius:'50%',background:'#ffd700',filter:'blur(100px)',opacity:0.08,top:-100,right:-100,pointerEvents:'none' }}/>
       <div style={{ position:'fixed',width:300,height:300,borderRadius:'50%',background:'#4ecdc4',filter:'blur(80px)',opacity:0.08,bottom:-80,left:-80,pointerEvents:'none' }}/>
 
-      <div className="login-card" style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:28,padding:'28px 20px',width:'100%',maxWidth:480,boxShadow:'0 32px 80px rgba(0,0,0,0.5)',maxHeight:'95vh',overflowY:'auto' }}>
+      <div className="login-card" style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:28,padding:'28px 20px',width:'100%',maxWidth:480,boxShadow:'0 32px 80px rgba(0,0,0,0.5)',marginTop:'auto',marginBottom:'auto' }}>
 
         {/* Logo */}
         <div style={{ textAlign:'center', marginBottom:20 }}>

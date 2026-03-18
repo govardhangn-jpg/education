@@ -679,26 +679,37 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     ? process.env.REACT_APP_API_URL.replace(/\/api$/, '')
     : 'http://localhost:5000';
 
-  // ── Full-text TTS with sentence chunking ────────────────────────────────
-  // ElevenLabs has a ~2500 char practical limit per call.
-  // We split the response into sentence chunks and play them sequentially
-  // so the entire AI response is spoken, no matter how long.
+  // ── Full-text TTS — single AudioContext, sentence-chunked pipeline ──────
+  // Fixes:
+  // 1. One AudioContext for the whole session (browsers allow ~6 max)
+  // 2. Proper async/await chain so chunks never drop
+  // 3. Prefetch next chunk while current plays (eliminates gaps between sentences)
+  // 4. Clean stop on demand
 
-  const activeSources = useRef([]);   // keep AudioBufferSource refs so we can stop
-  const chunkQueue    = useRef([]);   // pending chunks still to be fetched/played
-  const isSpeaking    = useRef(false);
+  const audioCtxRef    = useRef(null);
+  const activeSources  = useRef([]);
+  const isSpeakingRef  = useRef(false);
+  const abortRef       = useRef(null);   // AbortController for in-flight fetch
+
+  // Lazily get/create a single shared AudioContext
+  const getAudioCtx = () => {
+    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtxRef.current;
+  };
 
   const stopAll = () => {
-    isSpeaking.current = false;
-    chunkQueue.current = [];
+    isSpeakingRef.current = false;
+    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
     activeSources.current.forEach(s => { try { s.stop(); } catch {} });
     activeSources.current = [];
     setSpeakingIdx(null);
   };
 
-  // Split text into chunks ≤ 2400 chars, breaking only on sentence boundaries
-  const chunkText = (text) => {
-    const clean = text
+  // Clean markdown so ElevenLabs reads natural prose
+  const chunkText = (raw) => {
+    const clean = raw
       .replace(/\*\*/g, '').replace(/\*/g, '')
       .replace(/#{1,6}\s/g, '')
       .replace(/`{1,3}[^`]*`{1,3}/g, '')
@@ -707,65 +718,95 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
       .replace(/\n/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-
     const MAX = 2400;
     if (clean.length <= MAX) return [clean];
-
-    // Split on sentence-ending punctuation
-    const sentences = clean.match(/[^.!?]+[.!?]+["']?|[^.!?]+$/g) || [clean];
+    const sentences = clean.match(/[^.!?]+[.!?]+["'\u2019]?\s*/g) || [clean];
     const chunks = [];
-    let current = '';
+    let cur = '';
     for (const s of sentences) {
-      if ((current + s).length > MAX) {
-        if (current.trim()) chunks.push(current.trim());
-        current = s;
-      } else {
-        current += s;
-      }
+      if (cur.length + s.length > MAX) {
+        if (cur.trim()) chunks.push(cur.trim());
+        cur = s;
+      } else { cur += s; }
     }
-    if (current.trim()) chunks.push(current.trim());
+    if (cur.trim()) chunks.push(cur.trim());
     return chunks.length ? chunks : [clean.slice(0, MAX)];
   };
 
-  const fetchAndPlayChunk = async (chunk, onDone) => {
-    if (!isSpeaking.current) return;
+  // Fetch one chunk → returns ArrayBuffer or null
+  const fetchChunk = async (text, signal) => {
     try {
       const token = localStorage.getItem('samarthaa_token');
       const r = await fetch(`${BACKEND_TTS}/api/tts/speak`, {
         method: 'POST',
+        signal,
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ text: chunk, language: langName }),
+        body: JSON.stringify({ text, language: langName }),
       });
-      if (!r.ok) throw new Error(`TTS HTTP ${r.status}`);
-      const buf = await r.arrayBuffer();
-      if (!isSpeaking.current) return;
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      await ctx.resume();
-      const decoded = await ctx.decodeAudioData(buf.slice(0));
-      if (!isSpeaking.current) return;
-      const src = ctx.createBufferSource();
-      src.buffer = decoded;
-      src.connect(ctx.destination);
-      activeSources.current.push(src);
-      src.onended = onDone;
-      src.start(0);
+      if (!r.ok) { console.warn('[TTS] HTTP', r.status); return null; }
+      return await r.arrayBuffer();
     } catch (e) {
-      console.warn('[TTS chunk error]', e.message);
-      onDone(); // skip failed chunk, continue with next
+      if (e.name !== 'AbortError') console.warn('[TTS fetch]', e.message);
+      return null;
     }
   };
 
-  const playQueue = () => {
-    if (!isSpeaking.current || chunkQueue.current.length === 0) {
-      isSpeaking.current = false;
-      setSpeakingIdx(null);
-      return;
+  // Play a decoded AudioBuffer, returns Promise that resolves when done
+  const playBuffer = (decoded) => new Promise((resolve) => {
+    const ctx = getAudioCtx();
+    const src = ctx.createBufferSource();
+    src.buffer = decoded;
+    src.connect(ctx.destination);
+    activeSources.current.push(src);
+    src.onended = resolve;
+    src.start(0);
+  });
+
+  // Main pipeline: fetch chunks sequentially, prefetch next while current plays
+  const runPipeline = async (chunks) => {
+    const abort = new AbortController();
+    abortRef.current = abort;
+    const ctx = getAudioCtx();
+    await ctx.resume();
+
+    let prefetchedBuffer = null;
+
+    for (let i = 0; i < chunks.length; i++) {
+      if (!isSpeakingRef.current) break;
+
+      // Use prefetched buffer if available, otherwise fetch now
+      let arrayBuf = prefetchedBuffer;
+      if (!arrayBuf) {
+        arrayBuf = await fetchChunk(chunks[i], abort.signal);
+      }
+      prefetchedBuffer = null;
+
+      if (!isSpeakingRef.current || !arrayBuf) break;
+
+      // Decode & start prefetch of next chunk in parallel
+      const [decoded] = await Promise.all([
+        ctx.decodeAudioData(arrayBuf.slice(0)),
+        // Prefetch next chunk while current decodes
+        (async () => {
+          if (i + 1 < chunks.length && isSpeakingRef.current) {
+            const next = await fetchChunk(chunks[i + 1], abort.signal);
+            if (next && isSpeakingRef.current) prefetchedBuffer = next;
+          }
+        })(),
+      ]);
+
+      if (!isSpeakingRef.current) break;
+
+      await playBuffer(decoded);  // wait for this chunk to finish playing
     }
-    const next = chunkQueue.current.shift();
-    fetchAndPlayChunk(next, playQueue);
+
+    if (isSpeakingRef.current) {
+      isSpeakingRef.current = false;
+      setSpeakingIdx(null);
+    }
   };
 
   const speakMessage = (text, idx) => {
@@ -773,10 +814,9 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     stopAll();
     const chunks = chunkText(text);
     if (!chunks.length) return;
-    isSpeaking.current = true;
-    chunkQueue.current = [...chunks];
+    isSpeakingRef.current = true;
     setSpeakingIdx(idx);
-    playQueue();
+    runPipeline(chunks);
   };
 
   const starterQuestions = {
@@ -808,7 +848,14 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  useEffect(() => { setMessages([]); setSpeakingIdx(null); stopAll(); }, [moduleId]); // eslint-disable-line
+  useEffect(() => {
+    isSpeakingRef.current = false;
+    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
+    activeSources.current.forEach(s => { try { s.stop(); } catch {} });
+    activeSources.current = [];
+    setMessages([]);
+    setSpeakingIdx(null);
+  }, [moduleId]); // eslint-disable-line
 
   const buildSystemPrompt = () => {
     let base = COACH_PROMPTS[moduleId];

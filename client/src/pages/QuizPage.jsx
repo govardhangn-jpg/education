@@ -110,7 +110,7 @@ export default function QuizPage() {
   const meta = SUBJECT_META[config.subject] || SUBJECT_META.Mathematics || Object.values(SUBJECT_META)[0];
 
   return (
-    <div style={{ padding: '14px', maxWidth: 900, margin: '0 auto', fontFamily: "'Nunito',sans-serif" }}>
+    <div style={{ padding: '14px', paddingBottom: '80px', maxWidth: 900, margin: '0 auto', fontFamily: "'Nunito',sans-serif" }}>
       <style>{`
         /* font-size:16px prevents iOS auto-zoom */
         select{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;color:white;font-family:'Nunito',sans-serif;font-size:16px;outline:none;cursor:pointer;width:100%;-webkit-appearance:none;}
