@@ -41,6 +41,31 @@ const MODULES = {
     accent: '#b5e48c', accentDim: 'rgba(181,228,140,0.12)', accentBorder: 'rgba(181,228,140,0.3)',
     tagline: 'Good manners cost nothing but open every door.',
   },
+  criticalthinking: {
+    id: 'criticalthinking', icon: '🧠', label: 'Critical Thinking',
+    accent: '#a8dadc', accentDim: 'rgba(168,218,220,0.12)', accentBorder: 'rgba(168,218,220,0.3)',
+    tagline: 'The mind is not a vessel to be filled, but a fire to be kindled.',
+  },
+  publicspeaking: {
+    id: 'publicspeaking', icon: '🎤', label: 'Public Speaking',
+    accent: '#ff6b6b', accentDim: 'rgba(255,107,107,0.12)', accentBorder: 'rgba(255,107,107,0.3)',
+    tagline: 'There are two types of speakers: those who are nervous and those who are liars.',
+  },
+  legalliteracy: {
+    id: 'legalliteracy', icon: '⚖️', label: 'Legal Literacy',
+    accent: '#f9c74f', accentDim: 'rgba(249,199,79,0.12)', accentBorder: 'rgba(249,199,79,0.3)',
+    tagline: 'Ignorance of the law is no excuse — and no protection.',
+  },
+  emotionalintelligence: {
+    id: 'emotionalintelligence', icon: '❤️', label: 'Emotional Intelligence',
+    accent: '#f72585', accentDim: 'rgba(247,37,133,0.12)', accentBorder: 'rgba(247,37,133,0.3)',
+    tagline: 'Anyone can be angry. But to be angry with the right person, to the right degree — that is not easy.',
+  },
+  firstaid: {
+    id: 'firstaid', icon: '🩺', label: 'First Aid & Safety',
+    accent: '#90e0ef', accentDim: 'rgba(144,224,239,0.12)', accentBorder: 'rgba(144,224,239,0.3)',
+    tagline: 'In the first minutes of an emergency, you are the help until help arrives.',
+  },
 };
 
 // ── Wisdom quotes ──────────────────────────────────────────────────────────
@@ -93,6 +118,41 @@ const QUOTES = {
     { text: 'The measure of a person\'s greatness is what it takes to upset them.', by: 'Unknown' },
     { text: 'A person who has good thoughts cannot ever be ugly.', by: 'Roald Dahl' },
     { text: 'Treat everyone with politeness, even those who are rude to you.', by: 'Unknown' },
+  ],
+  criticalthinking: [
+    { text: 'The first principle is that you must not fool yourself — and you are the easiest person to fool.', by: 'Richard Feynman' },
+    { text: 'It is the mark of an educated mind to be able to entertain a thought without accepting it.', by: 'Aristotle' },
+    { text: 'Question everything. Learn something. Answer nothing.', by: 'Euripides' },
+    { text: 'The trouble with the world is that the stupid are cocksure and the intelligent are full of doubt.', by: 'Bertrand Russell' },
+    { text: 'Think for yourself and let others enjoy the privilege of doing so too.', by: 'Voltaire' },
+  ],
+  publicspeaking: [
+    { text: 'All the great speakers were bad speakers at first.', by: 'Ralph Waldo Emerson' },
+    { text: 'Speak clearly, if you speak at all; carve every word before you let it fall.', by: 'Oliver Wendell Holmes' },
+    { text: 'It usually takes me more than three weeks to prepare a good impromptu speech.', by: 'Mark Twain' },
+    { text: 'The right word may be effective, but no word was ever as effective as a rightly timed pause.', by: 'Mark Twain' },
+    { text: 'If you cannot explain it simply, you do not understand it well enough.', by: 'Albert Einstein' },
+  ],
+  legalliteracy: [
+    { text: 'Knowledge of our rights is the first condition of our liberty.', by: 'Unknown' },
+    { text: 'Law is not justice, and a trial is not a scientific inquiry into truth.', by: 'Franz Kafka' },
+    { text: 'Where law ends, tyranny begins.', by: 'William Pitt' },
+    { text: 'An unjust law is no law at all.', by: 'St. Augustine' },
+    { text: 'The life of the law has not been logic; it has been experience.', by: 'Oliver Wendell Holmes Jr.' },
+  ],
+  emotionalintelligence: [
+    { text: 'Between stimulus and response there is a space. In that space is our power to choose.', by: 'Viktor Frankl' },
+    { text: 'Feelings are not supposed to be logical. Dangerous is the man who has rationalised his emotions.', by: 'David Borenstein' },
+    { text: 'The emotionally intelligent person is skilled in four areas: identifying emotions, using emotions, understanding emotions, and regulating emotions.', by: 'John Mayer' },
+    { text: 'Until you make the unconscious conscious, it will direct your life and you will call it fate.', by: 'Carl Jung' },
+    { text: 'You don\'t have to control your thoughts. You just have to stop letting them control you.', by: 'Dan Millman' },
+  ],
+  firstaid: [
+    { text: 'The best preparation for tomorrow is doing your best today.', by: 'H. Jackson Brown Jr.' },
+    { text: 'One person with the right knowledge at the right time can save a life.', by: 'Unknown' },
+    { text: 'Safety is not a gadget but a state of mind.', by: 'Eleanor Everet' },
+    { text: 'First aid is not just about bandages. It is about being present when someone needs you most.', by: 'Unknown' },
+    { text: 'The time to prepare is before the emergency, not during it.', by: 'Unknown' },
   ],
 };
 
@@ -154,6 +214,46 @@ const HABITS = {
     { id:'et5', text:'Listened without interrupting in conversations' },
     { id:'et6', text:'Replied to messages and emails within a reasonable time' },
   ],
+  criticalthinking: [
+    { id:'ct1', text:'Questioned at least one assumption I held today' },
+    { id:'ct2', text:'Verified a piece of news or information before sharing it' },
+    { id:'ct3', text:'Considered the opposite of my own view on something' },
+    { id:'ct4', text:'Identified one logical fallacy in something I read or heard' },
+    { id:'ct5', text:'Made a decision using evidence rather than gut feeling alone' },
+    { id:'ct6', text:'Asked "why?" or "how do we know?" at least once today' },
+  ],
+  publicspeaking: [
+    { id:'ps1', text:'Spoke clearly and confidently in at least one interaction' },
+    { id:'ps2', text:'Practised speaking for 5 minutes — aloud, not in my head' },
+    { id:'ps3', text:'Made eye contact instead of looking away when speaking' },
+    { id:'ps4', text:'Paused before answering instead of rushing my words' },
+    { id:'ps5', text:'Eliminated filler words (um, like, basically) in one conversation' },
+    { id:'ps6', text:'Volunteered to speak up in a group setting' },
+  ],
+  legalliteracy: [
+    { id:'ll1', text:'Read or learned something about my legal rights today' },
+    { id:'ll2', text:'Read a document or agreement before signing or accepting it' },
+    { id:'ll3', text:'Checked if a deal, offer, or situation seemed legally sound' },
+    { id:'ll4', text:'Kept a record or receipt of an important transaction' },
+    { id:'ll5', text:'Asked a question rather than assuming something was legal/okay' },
+    { id:'ll6', text:'Knew what to do or who to call if a legal issue arose' },
+  ],
+  emotionalintelligence: [
+    { id:'ei1', text:'Named the emotion I was feeling rather than just reacting to it' },
+    { id:'ei2', text:'Paused before responding when I felt triggered or upset' },
+    { id:'ei3', text:'Asked how someone else was feeling — and genuinely listened' },
+    { id:'ei4', text:'Noticed my body signals (tense jaw, tight chest) before they escalated' },
+    { id:'ei5', text:'Chose my response rather than just reacting automatically' },
+    { id:'ei6', text:'Practised self-compassion instead of harsh self-criticism' },
+  ],
+  firstaid: [
+    { id:'fa1', text:'I know where the first aid kit is at home and work' },
+    { id:'fa2', text:'I reviewed or practised one emergency skill today' },
+    { id:'fa3', text:'I know the emergency numbers for my city (112, fire, poison)' },
+    { id:'fa4', text:'I checked that someone around me knew basic CPR or first aid' },
+    { id:'fa5', text:'I identified one safety risk at home and addressed it' },
+    { id:'fa6', text:'I shared an emergency skill or safety tip with someone today' },
+  ],
 };
 
 // ── Reflection prompts ─────────────────────────────────────────────────────
@@ -207,6 +307,41 @@ const REFLECTIONS = {
     'What is one social habit of yours that you know puts people off, even slightly?',
     'How do you behave toward service staff — and what does that say about your character?',
   ],
+  criticalthinking: [
+    'What is a belief you hold strongly — and what would it take to change your mind?',
+    'When did you last realise you were completely wrong about something? What did that feel like?',
+    'What is one thing most people around you believe that you think might not be true?',
+    'How do you decide what sources to trust? Is your current method actually reliable?',
+    'What is a decision you made recently that you now question — and what would you do differently?',
+  ],
+  publicspeaking: [
+    'What specifically makes you nervous about speaking in front of others? Is that fear rational?',
+    'Think of the best speaker you have ever heard. What made them extraordinary?',
+    'When have you had something important to say but stayed silent? What held you back?',
+    'How do you come across when you speak — and does that match how you want to be perceived?',
+    'What is one conversation you keep having in your head but never out loud — and why?',
+  ],
+  legalliteracy: [
+    'Have you ever signed something without reading it fully? What were the consequences?',
+    'Do you know your rights if you are stopped by police in India? What would you do?',
+    'Is there a legal situation you are in right now that you do not fully understand?',
+    'What is one area of law that affects your daily life that you know almost nothing about?',
+    'Has anyone ever taken advantage of your legal ignorance? What did you learn?',
+  ],
+  emotionalintelligence: [
+    'What emotion do you find hardest to feel and sit with — and why do you think that is?',
+    'Think of your last significant argument. What were you actually feeling underneath the anger?',
+    'Whose emotional reactions trigger you the most — and what does that tell you about yourself?',
+    'When was the last time you felt genuine empathy for someone very different from you?',
+    'What does your body feel like when you are anxious versus when you are calm? Can you tell the difference early enough?',
+  ],
+  firstaid: [
+    'If someone near you collapsed right now, what would you actually do in the first 60 seconds?',
+    'What is the biggest safety risk in your home that you have been ignoring?',
+    'Have you ever been in an emergency and not known what to do? How did that feel?',
+    'Who in your life is most vulnerable — elderly parent, young sibling — and are you prepared to help them?',
+    'What is one first aid skill you have always meant to learn but never prioritised?',
+  ],
 };
 
 // ── Budget tool data ───────────────────────────────────────────────────────
@@ -241,6 +376,11 @@ const COACH_PROMPTS = {
   grooming: `You are a sophisticated personal style and grooming advisor. You give honest, practical advice on skincare, haircare, clothing, and personal presentation — always tailored to the user's gender, age, climate, and budget. You are direct and specific, never vague. You reference Indian climate, skin tones, and cultural context where relevant. Ask one question at the end to give better advice.`,
   lifestyle: `You are a thoughtful life design coach. You help people build intentional, balanced lifestyles — sleep, habits, routines, work-life balance, hobbies, environment, digital wellness. You consider the user's age, income, gender, and life stage. You give concrete recommendations, not platitudes. Draw on Indian urban/semi-urban context when relevant. Ask one clarifying question at the end.`,
   etiquette: `You are a gracious etiquette and social intelligence coach. You teach practical social skills — dining etiquette, professional conduct, digital etiquette, conversation skills, body language, cultural sensitivity, and how to make people feel at ease. You are warm, not stuffy. Give specific, actionable tips. Ask one question at the end.`,
+  criticalthinking: `You are a sharp, Socratic critical thinking coach. You help people think more clearly — identify logical fallacies, question assumptions, evaluate sources, make better decisions, and resist manipulation and misinformation. You are intellectually rigorous but never condescending. Use Indian examples where relevant (WhatsApp forwards, political rhetoric, exam myths). Ask one probing question at the end that challenges the user to think harder.`,
+  publicspeaking: `You are an experienced public speaking coach who has trained professionals, students, and leaders. You help people with structure, voice, confidence, body language, storytelling, and managing nerves. You are practical and encouraging — you know that great speakers are made, not born. Give specific exercises or techniques. Ask one question at the end to understand what they need most.`,
+  legalliteracy: `You are a plain-language legal educator focused on Indian law and everyday legal literacy. You explain legal concepts clearly — consumer rights, tenant rights, employment law, FIR procedures, contracts, digital rights, and more — without jargon. You are not a practising lawyer and always clarify that for specific legal problems they should consult one. Focus on empowering people to understand their rights and protect themselves. Ask one question at the end.`,
+  emotionalintelligence: `You are a warm, psychologically-informed emotional intelligence coach. You help people understand and regulate their emotions, build empathy, improve self-awareness, and develop healthier emotional responses. You draw on evidence-based approaches (CBT, ACT, attachment theory, neuroscience) but explain everything in plain language. You are compassionate and never judgmental. Indian cultural context (joint family dynamics, academic pressure, gender expectations) is important. Ask one reflective question at the end.`,
+  firstaid: `You are a certified first aid trainer and safety educator. You teach practical, life-saving skills — CPR, choking response, burns, bleeding, fractures, anaphylaxis, stroke recognition, and emergency preparedness — in clear, step-by-step language anyone can follow. You always emphasise calling emergency services (112 in India) as a priority. You are calm, clear, and never alarmist. Adapt advice to Indian home and workplace settings. Ask one practical question at the end.`,
 };
 
 function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, sensors }) {
@@ -287,6 +427,11 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     grooming:      ['What skincare routine should I follow?', 'How do I dress better on a budget?', 'My hair looks bad — what do I do?'],
     lifestyle:     ['How do I build a morning routine that actually works?', 'I feel like I have no time for myself — help', 'How do I reduce screen time?'],
     etiquette:     ['How should I behave at a formal dinner?', 'What are the rules for professional WhatsApp messages?', 'How do I introduce myself confidently?'],
+    criticalthinking: ['How do I know if news is fake or real?', 'What are the most common logical fallacies?', 'How do I make better decisions under pressure?'],
+    publicspeaking:   ['How do I stop being nervous before speaking?', 'How do I structure a 5-minute speech?', 'How do I speak more confidently in meetings?'],
+    legalliteracy:    ['What are my rights if police stop me?', 'How do I file a consumer complaint in India?', 'What should I check before signing a rental agreement?'],
+    emotionalintelligence: ['How do I stop reacting and start responding?', 'Why do I get so triggered by certain people?', 'How do I deal with anger without suppressing it?'],
+    firstaid:         ['What do I do if someone is choking?', 'How do I perform CPR correctly?', 'What are the signs of a heart attack?'],
   };
 
   useEffect(() => {
@@ -1315,6 +1460,314 @@ function EtiquetteModule({ accent, accentDim, accentBorder, userProfile, sensors
 }
 
 // ── Main Page ──────────────────────────────────────────────────────────────
+// ── Critical Thinking Module ───────────────────────────────────────────────
+function CriticalThinkingModule({ accent, accentDim, accentBorder, sensors }) {
+  const [tab, setTab] = useState('coach');
+  const fallacies = [
+    { name:'Ad Hominem', desc:'Attacking the person making the argument rather than the argument itself.', example:'"You cannot trust his opinion on climate — he failed science in school."' },
+    { name:'Straw Man', desc:'Misrepresenting someone\'s argument to make it easier to attack.', example:'"You want stricter gun laws? So you want to ban all self-defence?"' },
+    { name:'False Dilemma', desc:'Presenting only two options when more exist.', example:'"You are either with us or against us."' },
+    { name:'Appeal to Authority', desc:'Using someone\'s authority as evidence instead of actual reasoning.', example:'"This celebrity doctor recommends this supplement, so it must work."' },
+    { name:'Bandwagon', desc:'Assuming something is true or good because many people believe it.', example:'"Everyone is investing in crypto, so it must be safe."' },
+    { name:'Slippery Slope', desc:'Claiming one event will lead to extreme consequences without evidence.', example:'"If we allow this, next they will want to ban everything."' },
+    { name:'Confirmation Bias', desc:'Seeking only information that confirms what you already believe.', example:'Reading only news sources that match your political views.' },
+    { name:'Post Hoc', desc:'Assuming that because B followed A, A caused B.', example:'"I wore my lucky shirt and we won — the shirt caused the win."' },
+  ];
+  const checklist = [
+    'What is the claim being made?',
+    'Who is making it, and do they have something to gain?',
+    'What evidence supports it — and is that evidence reliable?',
+    'What evidence contradicts it?',
+    'Could there be another explanation?',
+    'Am I believing this because I want it to be true?',
+    'Would I accept this reasoning if the conclusion were different?',
+  ];
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {[['coach','🤖 AI Coach'],['fallacies','🚩 Logical Fallacies'],['checklist','✅ Thinking Checklist']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background:tab===id?accentDim:'transparent', color:tab===id?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+      {tab==='coach' && <div style={{ height:460, display:'flex', flexDirection:'column' }}><AICoach moduleId="criticalthinking" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} /></div>}
+      {tab==='fallacies' && (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:12 }}>
+          {fallacies.map(f => (
+            <div key={f.name} style={{ padding:'16px', background:'rgba(255,255,255,0.03)', border:`1px solid ${accentBorder}`, borderRadius:14 }}>
+              <div style={{ color:accent, fontSize:14, fontWeight:800, marginBottom:6 }}>{f.name}</div>
+              <div style={{ color:'rgba(255,255,255,0.7)', fontSize:13, lineHeight:1.6, marginBottom:10 }}>{f.desc}</div>
+              <div style={{ color:'rgba(255,255,255,0.45)', fontSize:12, fontStyle:'italic', lineHeight:1.5, borderLeft:`2px solid ${accentBorder}`, paddingLeft:10 }}>{f.example}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {tab==='checklist' && (
+        <div style={{ padding:'20px', background:'rgba(255,255,255,0.02)', border:`1.5px solid ${accentBorder}`, borderRadius:16 }}>
+          <div style={{ color:accent, fontSize:14, fontWeight:800, marginBottom:14 }}>Before you believe or share anything — ask these:</div>
+          {checklist.map((q,i) => (
+            <div key={i} style={{ display:'flex', gap:12, padding:'10px 0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ width:24, height:24, borderRadius:6, background:accentDim, border:`1px solid ${accentBorder}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, color:accent, fontSize:12, fontWeight:900 }}>{i+1}</div>
+              <span style={{ color:'rgba(255,255,255,0.8)', fontSize:13, lineHeight:1.6, paddingTop:2 }}>{q}</span>
+            </div>
+          ))}
+          <div style={{ marginTop:16, padding:'12px 14px', background:accentDim, borderRadius:10, color:accent, fontSize:13, fontWeight:700 }}>Apply this checklist to every WhatsApp forward, news headline, and product claim you encounter.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Public Speaking Module ─────────────────────────────────────────────────
+function PublicSpeakingModule({ accent, accentDim, accentBorder, sensors }) {
+  const [tab, setTab] = useState('coach');
+  const techniques = [
+    { icon:'⏸️', title:'The Power Pause', desc:'Pause for 2–3 seconds before important points. Silence signals confidence and gives your audience time to absorb what you said.' },
+    { icon:'👁️', title:'Eye Contact Triangle', desc:'Move your gaze between three points in the room in a triangle pattern — left, centre, right. Hold each for 3–5 seconds. Never scan.' },
+    { icon:'📐', title:'The Rule of Three', desc:'Structure any message in threes. People remember threes. "Tell them what you\'ll say, say it, tell them what you said."' },
+    { icon:'📖', title:'Open with a Story', desc:'The brain is wired for narrative. Begin with a specific moment — "Last Tuesday, I was sitting in a traffic jam when..." — not with context or agenda.' },
+    { icon:'🎯', title:'One Idea Per Talk', desc:'The best talks have one central idea. Everything else supports it. If you can\'t write your core message in one sentence, you are not ready.' },
+    { icon:'🫁', title:'Box Breathing', desc:'Before speaking: inhale 4 counts, hold 4, exhale 4, hold 4. Repeat 3x. Activates the parasympathetic system and reduces visible nervousness.' },
+  ];
+  const structures = [
+    { name:'PAS', desc:'Problem → Agitate → Solution. Name the problem, make it real, offer the fix. Best for persuasion.' },
+    { name:'STAR', desc:'Situation → Task → Action → Result. Ideal for answering "tell me about a time when..." in interviews.' },
+    { name:'What / So What / Now What', desc:'State the fact → explain why it matters → tell them what to do next. Clean and simple.' },
+    { name:'5-Minute Structure', desc:'Hook (30s) → Context (1m) → 3 key points (3m) → Call to action (30s).' },
+  ];
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {[['coach','🤖 AI Coach'],['techniques','🎯 Techniques'],['structure','📐 Structure']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background:tab===id?accentDim:'transparent', color:tab===id?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+      {tab==='coach' && <div style={{ height:460, display:'flex', flexDirection:'column' }}><AICoach moduleId="publicspeaking" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} /></div>}
+      {tab==='techniques' && (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(270px,1fr))', gap:14 }}>
+          {techniques.map(t => (
+            <div key={t.title} style={{ padding:'18px', background:'rgba(255,255,255,0.03)', border:`1px solid ${accentBorder}`, borderRadius:16 }}>
+              <div style={{ fontSize:28, marginBottom:10 }}>{t.icon}</div>
+              <div style={{ color:accent, fontSize:14, fontWeight:800, marginBottom:8 }}>{t.title}</div>
+              <div style={{ color:'rgba(255,255,255,0.7)', fontSize:13, lineHeight:1.7 }}>{t.desc}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {tab==='structure' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {structures.map(s => (
+            <div key={s.name} style={{ padding:'16px 18px', background:'rgba(255,255,255,0.03)', border:`1px solid ${accentBorder}`, borderRadius:14, display:'flex', gap:16, alignItems:'flex-start' }}>
+              <div style={{ minWidth:80, color:accent, fontSize:14, fontWeight:900, paddingTop:2 }}>{s.name}</div>
+              <div style={{ color:'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.7 }}>{s.desc}</div>
+            </div>
+          ))}
+          <div style={{ padding:'14px 16px', background:accentDim, border:`1px solid ${accentBorder}`, borderRadius:12, color:'rgba(255,255,255,0.7)', fontSize:13, lineHeight:1.7 }}>
+            <strong style={{ color:accent }}>Daily practice:</strong> Record yourself speaking for 2 minutes on any topic. Watch it back with the sound off first (body language), then with sound only (pace, filler words, clarity). Do this daily for 30 days.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Legal Literacy Module ──────────────────────────────────────────────────
+function LegalLiteracyModule({ accent, accentDim, accentBorder, sensors }) {
+  const [tab, setTab] = useState('coach');
+  const rights = [
+    { area:'🚔 Police & Arrest', items:['You have the right to know the reason for arrest (Article 22)', 'You cannot be detained for more than 24 hours without a magistrate\'s order', 'You have the right to legal representation immediately', 'You do not have to answer questions without a lawyer present', 'A woman cannot be arrested after sunset or before sunrise (Section 46 CrPC)', 'You can file an FIR — police cannot refuse to register it'] },
+    { area:'🏠 Tenant Rights', items:['Get every agreement in writing — verbal is unenforceable', 'Landlord must give 1 month notice before eviction in most states', 'Landlord cannot enter your home without prior notice', 'Security deposit must be returned within 30 days of vacating', 'Keep photos of the property condition on move-in', 'Rent cannot be increased mid-tenancy without written agreement'] },
+    { area:'🛒 Consumer Rights', items:['Right to safety, information, choice, and redressal (Consumer Protection Act 2019)', 'You can file a complaint online at consumerhelpline.gov.in', 'Companies must honour warranty and replacement commitments', 'E-commerce companies are liable for defective goods sold on their platform', 'You can demand a written receipt for any purchase above ₹200', 'Mental harassment by a company is a valid consumer complaint'] },
+    { area:'💼 Employment Rights', items:['Employer must provide an offer letter with all terms in writing', 'Notice period must be stated in your contract — both ways', 'Salary must be paid by the 7th of every month (Payment of Wages Act)', 'Sexual harassment complaints go to the Internal Complaints Committee (ICC)', 'You cannot be fired without due process — show cause notice is mandatory', 'PF deduction must be visible on your payslip'] },
+    { area:'📱 Digital Rights', items:['Your personal data is protected under IT Act 2000 and DPDP Act 2023', 'Companies must delete your data on request (Right to Erasure)', 'Cybercrime complaints: cybercrime.gov.in or call 1930', 'Screenshot of a private conversation shared without consent = criminal offence', 'Online fraud: file FIR immediately + report to bank within 3 days for reversal', 'You cannot be arrested for expressing opinion — only for incitement or defamation'] },
+  ];
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {[['coach','🤖 AI Coach'],['rights','⚖️ Your Rights']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background:tab===id?accentDim:'transparent', color:tab===id?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+      <div style={{ padding:'12px 14px', background:'rgba(249,199,79,0.08)', border:'1px solid rgba(249,199,79,0.2)', borderRadius:10, color:'rgba(249,199,79,0.9)', fontSize:12, lineHeight:1.6 }}>
+        ⚠️ This is general legal education, not legal advice. For specific legal problems, always consult a qualified lawyer.
+      </div>
+      {tab==='coach' && <div style={{ height:440, display:'flex', flexDirection:'column' }}><AICoach moduleId="legalliteracy" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} /></div>}
+      {tab==='rights' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          {rights.map(r => (
+            <details key={r.area} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${accentBorder}`, borderRadius:14, overflow:'hidden' }}>
+              <summary style={{ padding:'14px 16px', cursor:'pointer', color:'white', fontSize:14, fontWeight:800, display:'flex', alignItems:'center', justifyContent:'space-between', listStyle:'none' }}>
+                <span>{r.area}</span><span style={{ color:accent, fontSize:11 }}>▼</span>
+              </summary>
+              <div style={{ padding:'4px 16px 16px' }}>
+                {r.items.map((item,i) => (
+                  <div key={i} style={{ display:'flex', gap:10, padding:'8px 0', borderTop:'1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ color:accent, fontWeight:800, fontSize:12, flexShrink:0, marginTop:2 }}>•</span>
+                    <span style={{ color:'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.6 }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Emotional Intelligence Module ──────────────────────────────────────────
+function EmotionalIntelligenceModule({ accent, accentDim, accentBorder, sensors }) {
+  const [tab, setTab] = useState('coach');
+  const emotions = [
+    { name:'Anger', color:'#e74c3c', triggers:'Injustice, disrespect, unmet expectations', healthy:'Signal that a boundary has been crossed', unhealthy:'Lashing out, saying things you regret, physical aggression', tool:'Name it: "I feel angry because..." — naming reduces intensity by 50%' },
+    { name:'Anxiety', color:'#f39c12', triggers:'Uncertainty, loss of control, perceived threat', healthy:'Preparation and alertness signal', unhealthy:'Avoidance, catastrophising, physical symptoms', tool:'Box breathing: inhale 4, hold 4, exhale 4, hold 4. Repeat 4 times.' },
+    { name:'Sadness', color:'#3498db', triggers:'Loss, disappointment, loneliness, grief', healthy:'Processing signal — necessary for healing', unhealthy:'Isolation, numbing, prolonged despair', tool:'Name the loss specifically. Allow tears. Avoid isolation for more than 48 hours.' },
+    { name:'Shame', color:'#9b59b6', triggers:'Feeling fundamentally flawed or defective', healthy:'None — shame is rarely healthy', unhealthy:'Hiding, people-pleasing, perfectionism, aggression', tool:'Distinguish shame ("I am bad") from guilt ("I did something bad"). Talk to someone you trust.' },
+    { name:'Fear', color:'#1abc9c', triggers:'Real or perceived danger, uncertainty', healthy:'Protective signal in genuine danger', unhealthy:'Paralysis, avoidance of growth opportunities', tool:'Ask: is this danger real and present, or imagined and future? Act on real danger; examine imagined fear.' },
+  ];
+  const eq_skills = [
+    { skill:'Self-Awareness', desc:'Knowing what you are feeling and why. The foundation of all emotional intelligence.', practice:'Keep a 5-minute emotion journal every evening. Name 3 emotions you felt today and what triggered them.' },
+    { skill:'Self-Regulation', desc:'Managing your emotions rather than being managed by them. Space between trigger and response.', practice:'When triggered, wait 90 seconds before responding. The initial emotional surge physiologically lasts 90 seconds.' },
+    { skill:'Motivation', desc:'Using emotions as fuel for goals rather than obstacles to them.', practice:'Connect your daily tasks to your deeper values. Ask: why does this matter to me?' },
+    { skill:'Empathy', desc:'Understanding and sharing the feelings of another. The bridge to all relationships.', practice:'In every conversation, ask yourself: what is this person feeling right now? What do they need?' },
+    { skill:'Social Skills', desc:'Managing relationships, influencing others, and navigating conflict constructively.', practice:'In your next disagreement, state the other person\'s view accurately before stating your own.' },
+  ];
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {[['coach','🤖 AI Coach'],['emotions','💭 Emotion Guide'],['skills','🎯 EQ Skills']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background:tab===id?accentDim:'transparent', color:tab===id?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+      {tab==='coach' && <div style={{ height:460, display:'flex', flexDirection:'column' }}><AICoach moduleId="emotionalintelligence" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} /></div>}
+      {tab==='emotions' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {emotions.map(e => (
+            <details key={e.name} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid rgba(255,255,255,0.08)`, borderRadius:14, overflow:'hidden' }}>
+              <summary style={{ padding:'14px 16px', cursor:'pointer', listStyle:'none', display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ width:12, height:12, borderRadius:'50%', background:e.color, flexShrink:0 }} />
+                <span style={{ color:'white', fontSize:14, fontWeight:800, flex:1 }}>{e.name}</span>
+                <span style={{ color:'rgba(255,255,255,0.3)', fontSize:11 }}>▼</span>
+              </summary>
+              <div style={{ padding:'0 16px 16px', display:'flex', flexDirection:'column', gap:8 }}>
+                {[['🔥 Triggers', e.triggers],['✅ When healthy', e.healthy],['⚠️ When unhealthy', e.unhealthy],['🛠️ Tool', e.tool]].map(([lbl,val]) => (
+                  <div key={lbl} style={{ display:'flex', gap:10 }}>
+                    <span style={{ color:e.color, fontSize:12, fontWeight:800, minWidth:120, flexShrink:0 }}>{lbl}</span>
+                    <span style={{ color:'rgba(255,255,255,0.7)', fontSize:13, lineHeight:1.6 }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          ))}
+        </div>
+      )}
+      {tab==='skills' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          {eq_skills.map(s => (
+            <div key={s.skill} style={{ padding:'18px', background:'rgba(255,255,255,0.03)', border:`1px solid ${accentBorder}`, borderRadius:16 }}>
+              <div style={{ color:accent, fontSize:14, fontWeight:800, marginBottom:6 }}>{s.skill}</div>
+              <div style={{ color:'rgba(255,255,255,0.7)', fontSize:13, lineHeight:1.6, marginBottom:12 }}>{s.desc}</div>
+              <div style={{ padding:'10px 14px', background:accentDim, borderRadius:10 }}>
+                <span style={{ color:accent, fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.6px' }}>Practice: </span>
+                <span style={{ color:'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.6 }}>{s.practice}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── First Aid Module ───────────────────────────────────────────────────────
+function FirstAidModule({ accent, accentDim, accentBorder, sensors }) {
+  const [tab, setTab] = useState('coach');
+  const emergencies = [
+    {
+      icon:'❤️', title:'CPR (Adult)',
+      steps:['Call 112 immediately — do not delay','Place heel of hand on centre of chest','Lock fingers, arms straight, compress 5–6 cm deep','Rate: 100–120 compressions per minute (beat of "Stayin\' Alive")','If trained: give 2 rescue breaths after every 30 compressions','Continue until ambulance arrives or person revives'],
+      warning:'Do NOT stop CPR until professional help takes over — even if you are tired.'
+    },
+    {
+      icon:'🫁', title:'Choking (Adult)',
+      steps:['Ask "Are you choking?" — if they cannot speak or cough, act now','Stand behind them, lean them slightly forward','Give 5 firm back blows between shoulder blades','If still choking: give 5 abdominal thrusts (Heimlich manoeuvre)','Clasp fist above navel, pull sharply inward and upward','Alternate back blows and abdominal thrusts until clear or unconscious'],
+      warning:'If they lose consciousness, begin CPR and call 112.'
+    },
+    {
+      icon:'🩸', title:'Severe Bleeding',
+      steps:['Wear gloves if available — blood-borne disease risk','Apply firm direct pressure with clean cloth or bandage','Do NOT remove the cloth — add more on top if soaking through','Elevate the injured limb above heart level if possible','Apply pressure continuously for at least 10 minutes','For major artery bleed: use a tourniquet 5–7 cm above wound'],
+      warning:'Do not use a tourniquet except for life-threatening limb bleeding. Mark time applied.'
+    },
+    {
+      icon:'🔥', title:'Burns',
+      steps:['Stop the burning: remove from source, remove jewellery, clothing near area','Cool: run under cool (not cold/ice) water for 20 minutes','Do NOT use butter, toothpaste, or ice — these cause more damage','Cover loosely with clean non-fluffy material','Seek medical help for burns larger than your palm or on face/hands/joints','For chemical burns: brush off dry chemical first, then water 20 mins'],
+      warning:'Never pop burn blisters — they are a sterile barrier against infection.'
+    },
+    {
+      icon:'🧠', title:'Stroke (FAST)',
+      steps:['F — Face: ask them to smile. Does one side droop?','A — Arms: ask to raise both arms. Does one drift down?','S — Speech: ask to repeat a phrase. Is it slurred or strange?','T — Time: if any sign is present, call 112 immediately','Note the exact time symptoms started — critical for doctors','Keep them calm, do not give food or water'],
+      warning:'Every minute without treatment, 1.9 million brain cells die. Time is brain.'
+    },
+  ];
+  const kit = [
+    'Sterile gauze pads (multiple sizes)', 'Adhesive bandages (assorted)', 'Medical tape',
+    'Antiseptic solution (Betadine or Dettol)', 'Cotton wool', 'Scissors and tweezers',
+    'Digital thermometer', 'Disposable gloves (at least 2 pairs)', 'ORS sachets',
+    'Paracetamol (500mg)', 'Antacid', 'Antihistamine',
+    'Emergency contacts list (printed)', 'Torch / torch app on phone',
+  ];
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {[['coach','🤖 AI Coach'],['emergencies','🚨 Emergency Guide'],['kit','🎒 First Aid Kit']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background:tab===id?accentDim:'transparent', color:tab===id?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+      <div style={{ padding:'12px 14px', background:'rgba(231,76,60,0.1)', border:'1px solid rgba(231,76,60,0.3)', borderRadius:10, color:'rgba(255,160,160,0.9)', fontSize:13, fontWeight:700 }}>
+        🚨 India Emergency: Call <strong>112</strong> &nbsp;|&nbsp; Ambulance: <strong>108</strong> &nbsp;|&nbsp; Police: <strong>100</strong> &nbsp;|&nbsp; Fire: <strong>101</strong>
+      </div>
+      {tab==='coach' && <div style={{ height:440, display:'flex', flexDirection:'column' }}><AICoach moduleId="firstaid" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} /></div>}
+      {tab==='emergencies' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          {emergencies.map(e => (
+            <details key={e.title} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${accentBorder}`, borderRadius:14, overflow:'hidden' }}>
+              <summary style={{ padding:'14px 16px', cursor:'pointer', listStyle:'none', display:'flex', alignItems:'center', gap:10 }}>
+                <span style={{ fontSize:22 }}>{e.icon}</span>
+                <span style={{ color:'white', fontSize:14, fontWeight:800, flex:1 }}>{e.title}</span>
+                <span style={{ color:accent, fontSize:11 }}>▼ Show steps</span>
+              </summary>
+              <div style={{ padding:'0 16px 16px' }}>
+                {e.steps.map((s,i) => (
+                  <div key={i} style={{ display:'flex', gap:10, padding:'8px 0', borderTop:'1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ width:22, height:22, borderRadius:'50%', background:accentDim, border:`1px solid ${accentBorder}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, color:accent, fontSize:11, fontWeight:900 }}>{i+1}</div>
+                    <span style={{ color:'rgba(255,255,255,0.8)', fontSize:13, lineHeight:1.6, paddingTop:2 }}>{s}</span>
+                  </div>
+                ))}
+                <div style={{ marginTop:10, padding:'10px 12px', background:'rgba(231,76,60,0.1)', border:'1px solid rgba(231,76,60,0.2)', borderRadius:8, color:'rgba(255,160,160,0.9)', fontSize:12, lineHeight:1.5 }}>⚠️ {e.warning}</div>
+              </div>
+            </details>
+          ))}
+        </div>
+      )}
+      {tab==='kit' && (
+        <div style={{ padding:'20px', background:'rgba(255,255,255,0.02)', border:`1.5px solid ${accentBorder}`, borderRadius:16 }}>
+          <div style={{ color:accent, fontSize:14, fontWeight:800, marginBottom:14 }}>Essential Home First Aid Kit</div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))', gap:8 }}>
+            {kit.map((item,i) => (
+              <div key={i} style={{ display:'flex', gap:8, padding:'8px 10px', background:'rgba(255,255,255,0.03)', borderRadius:8 }}>
+                <span style={{ color:accent, fontSize:12, marginTop:2, flexShrink:0 }}>✓</span>
+                <span style={{ color:'rgba(255,255,255,0.75)', fontSize:13 }}>{item}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop:16, color:'rgba(255,255,255,0.5)', fontSize:12, lineHeight:1.7 }}>
+            Check expiry dates every 6 months. Keep the kit in a fixed, accessible location — tell everyone in the house where it is.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Milestone Toast ────────────────────────────────────────────────────────
 function MilestoneToast({ milestones, onDismiss }) {
   if (!milestones?.length) return null;
@@ -1470,17 +1923,22 @@ export default function LifeSkillsPage() {
       <div style={{ marginBottom:14, padding:'11px 16px', background:mod.accentDim, border:`1px solid ${mod.accentBorder}`, borderRadius:12, color:mod.accent, fontSize:13, fontStyle:'italic', fontWeight:700 }}>"{mod.tagline}"</div>
 
       <div className="ls-card" key={activeModule} style={{ display:'flex', flexDirection:'column', gap:16 }}>
-        {['fitness','grooming','lifestyle','etiquette'].includes(activeModule) && (
+        {['fitness','grooming','lifestyle','etiquette','criticalthinking','publicspeaking','legalliteracy','emotionalintelligence','firstaid'].includes(activeModule) && (
           <UserProfileSetup profile={lp.profile} onChange={lp.updateProfile} {...moduleProps} />
         )}
         <QuoteCard moduleId={activeModule} {...moduleProps} />
-        {activeModule === 'finance'       && <FinanceModule       {...moduleProps} sensors={sensors} />}
-        {activeModule === 'ethics'        && <EthicsModule        {...moduleProps} sensors={sensors} />}
-        {activeModule === 'relationships' && <RelationshipsModule {...moduleProps} sensors={sensors} />}
-        {activeModule === 'fitness'       && <FitnessModule       {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
-        {activeModule === 'grooming'      && <GroomingModule      {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
-        {activeModule === 'lifestyle'     && <LifestyleModule     {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
-        {activeModule === 'etiquette'     && <EtiquetteModule     {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
+        {activeModule === 'finance'               && <FinanceModule               {...moduleProps} sensors={sensors} />}
+        {activeModule === 'ethics'                && <EthicsModule                {...moduleProps} sensors={sensors} />}
+        {activeModule === 'relationships'         && <RelationshipsModule         {...moduleProps} sensors={sensors} />}
+        {activeModule === 'fitness'               && <FitnessModule               {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
+        {activeModule === 'grooming'              && <GroomingModule              {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
+        {activeModule === 'lifestyle'             && <LifestyleModule             {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
+        {activeModule === 'etiquette'             && <EtiquetteModule             {...moduleProps} userProfile={lp.profile} sensors={sensors} />}
+        {activeModule === 'criticalthinking'      && <CriticalThinkingModule      {...moduleProps} sensors={sensors} />}
+        {activeModule === 'publicspeaking'        && <PublicSpeakingModule        {...moduleProps} sensors={sensors} />}
+        {activeModule === 'legalliteracy'         && <LegalLiteracyModule         {...moduleProps} sensors={sensors} />}
+        {activeModule === 'emotionalintelligence' && <EmotionalIntelligenceModule {...moduleProps} sensors={sensors} />}
+        {activeModule === 'firstaid'              && <FirstAidModule              {...moduleProps} sensors={sensors} />}
         <DailyCheckin moduleId={activeModule} {...moduleProps} todayChecked={lp.getTodayCheckin(activeModule)} onToggle={handleToggleCheckin} streak={lp.getStreak(activeModule)} />
         <ReflectionJournal moduleId={activeModule} {...moduleProps} getJournal={lp.getJournal} saveJournal={lp.saveJournal} sensors={sensors} />
         <NotificationSettings sensors={sensors} modules={Object.values(MODULES)} {...moduleProps} />
