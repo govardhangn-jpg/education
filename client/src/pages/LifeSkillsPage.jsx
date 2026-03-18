@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useLifeProgress } from '../hooks/useLifeProgress';
 import { useSensors } from '../hooks/useSensors';
 import { useLanguage } from '../hooks/useLanguage';
+import { useAuth } from '../hooks/useAuth';
 import { SUPPORTED_LANGUAGES, LANG_TO_TTS } from '../utils/i18n';
 import { VoiceButton, SedentaryBanner, FitnessStats, ScreenTimeWidget, NotificationSettings, FoodCamera } from '../components/SensorsPanel';
 import SensorsPanel from '../components/SensorsPanel';
@@ -1412,40 +1413,152 @@ function ReflectionJournal({ moduleId, accent, accentDim, accentBorder, getJourn
 
 // ── User Profile Setup ────────────────────────────────────────────────────
 function UserProfileSetup({ profile, onChange, accent, accentDim, accentBorder }) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(!profile.gender);
   const set = (k, v) => onChange({ ...profile, [k]: v });
 
+  // Fields derived automatically from registered profile (read-only display)
+  const autoFields = [
+    user?.name  && { label:'Name',     value: user.name },
+    user?.grade && { label:'Course',   value: user.grade },
+    user?.email && { label:'Email',    value: user.email },
+  ].filter(Boolean);
+
+  // Editable fields — selects with proper options
+  const editFields = [
+    {
+      key:'gender', label:'Gender',
+      options:['Male','Female','Non-binary','Prefer not to say'],
+    },
+    {
+      key:'age', label:'Age group',
+      options:['Under 18','18–25','26–35','36–45','46–60','60+'],
+    },
+    {
+      key:'income', label:'Monthly income',
+      options:['Under ₹15k','₹15k–30k','₹30k–60k','₹60k–1L','₹1L–2L','₹2L+','Not applicable'],
+    },
+    {
+      key:'city', label:'Location',
+      options:['Metro city','Tier-2 city','Small town','Rural area','Outside India'],
+    },
+  ];
+
+  const isComplete = profile.gender && profile.age;
+
+  const selectStyle = {
+    width: '100%',
+    background: '#1e1e3a',
+    border: `1.5px solid ${accentBorder}`,
+    borderRadius: 9,
+    padding: '10px 12px',
+    color: 'white',
+    fontSize: 14,
+    fontFamily: 'inherit',
+    outline: 'none',
+    cursor: 'pointer',
+    WebkitAppearance: 'none',
+    appearance: 'none',
+  };
+
   return (
     <div style={{ background:'rgba(255,255,255,0.02)', border:`1.5px solid ${accentBorder}`, borderRadius:16, overflow:'hidden' }}>
+      {/* Header toggle */}
       <button onClick={() => setOpen(o => !o)}
         style={{ width:'100%', padding:'14px 18px', background:'none', border:'none', color:'white', fontFamily:'inherit', fontSize:13, fontWeight:800, cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <span>👤 Your Profile <span style={{ color:'rgba(255,255,255,0.35)', fontWeight:400, fontSize:12 }}>— helps the AI give personalised advice</span></span>
-        <span style={{ color:accent, fontSize:12 }}>{open ? '▲ Close' : '▼ Edit'}</span>
-      </button>
-      {open && (
-        <div style={{ padding:'0 18px 18px', display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))', gap:12 }}>
-          {[
-            { key:'gender', label:'Gender', options:['Male','Female','Non-binary','Prefer not to say'] },
-            { key:'age',    label:'Age group', options:['Under 18','18–25','26–35','36–45','46–60','60+'] },
-            { key:'income', label:'Monthly income', options:['Under ₹15k','₹15k–30k','₹30k–60k','₹60k–1L','₹1L–2L','₹2L+'] },
-            { key:'city',   label:'Location type', options:['Metro city','Tier-2 city','Small town','Rural area'] },
-          ].map(f => (
-            <div key={f.key}>
-              <div style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:700, marginBottom:6, textTransform:'uppercase', letterSpacing:'0.6px' }}>{f.label}</div>
-              <select value={profile[f.key] || ''} onChange={e => set(f.key, e.target.value)}
-                style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:`1px solid ${accentBorder}`, borderRadius:9, padding:'9px 12px', color:profile[f.key] ? 'white' : 'rgba(255,255,255,0.3)', fontSize:13, fontFamily:'inherit', outline:'none', cursor:'pointer' }}>
-                <option value="">Select...</option>
-                {f.options.map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <span style={{ fontSize:20 }}>{user?.avatar || '👤'}</span>
+          <div style={{ textAlign:'left' }}>
+            <div style={{ color:'white', fontSize:13, fontWeight:800 }}>
+              {user?.name || 'Your Profile'}
+              {isComplete && <span style={{ color:accent, fontSize:11, fontWeight:700, marginLeft:8 }}>✓ Complete</span>}
             </div>
-          ))}
-          <div style={{ gridColumn:'1 / -1' }}>
-            <div style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:700, marginBottom:6, textTransform:'uppercase', letterSpacing:'0.6px' }}>Your main goal (optional)</div>
-            <input value={profile.goals || ''} onChange={e => set('goals', e.target.value)}
-              placeholder="e.g. Lose 10kg, dress better for interviews, build a morning routine..."
-              style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:`1px solid ${accentBorder}`, borderRadius:9, padding:'9px 12px', color:'white', fontSize:13, fontFamily:'inherit', outline:'none' }} />
+            <div style={{ color:'rgba(255,255,255,0.35)', fontSize:11, fontWeight:400 }}>
+              {user?.grade ? `${user.grade} · ` : ''}{isComplete ? 'AI advice is personalised to you' : 'Complete profile for personalised AI advice'}
+            </div>
           </div>
-          {profile.gender && <div style={{ gridColumn:'1 / -1', color:accent, fontSize:12, fontWeight:700 }}>✓ Profile saved — the AI will now personalise all advice to you</div>}
+        </div>
+        <span style={{ color:accent, fontSize:11, fontWeight:700, flexShrink:0 }}>{open ? '▲ Close' : '▼ Edit'}</span>
+      </button>
+
+      {open && (
+        <div style={{ padding:'0 18px 20px' }}>
+
+          {/* Auto-populated fields from registration — read-only */}
+          {autoFields.length > 0 && (
+            <div style={{ marginBottom:16, padding:'12px 14px', background:accentDim, border:`1px solid ${accentBorder}`, borderRadius:12 }}>
+              <div style={{ color:accent, fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:10 }}>
+                From your account
+              </div>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
+                {autoFields.map(f => (
+                  <div key={f.label} style={{ display:'flex', gap:6, alignItems:'center' }}>
+                    <span style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:700 }}>{f.label}:</span>
+                    <span style={{ color:'white', fontSize:12, fontWeight:700 }}>{f.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Editable fields */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(175px,1fr))', gap:12, marginBottom:14 }}>
+            {editFields.map(f => (
+              <div key={f.key}>
+                <div style={{ color:'rgba(255,255,255,0.5)', fontSize:11, fontWeight:700, marginBottom:6, textTransform:'uppercase', letterSpacing:'0.6px' }}>
+                  {f.label} {!profile[f.key] && <span style={{ color:'#e74c3c' }}>*</span>}
+                </div>
+                <div style={{ position:'relative' }}>
+                  <select
+                    value={profile[f.key] || ''}
+                    onChange={e => set(f.key, e.target.value)}
+                    style={{ ...selectStyle, color: profile[f.key] ? 'white' : 'rgba(255,255,255,0.4)' }}
+                  >
+                    <option value="" disabled style={{ background:'#1e1e3a', color:'rgba(255,255,255,0.4)' }}>
+                      Select {f.label}…
+                    </option>
+                    {f.options.map(o => (
+                      <option key={o} value={o} style={{ background:'#1e1e3a', color:'white', padding:'8px' }}>
+                        {o}
+                      </option>
+                    ))}
+                  </select>
+                  {/* Custom dropdown arrow */}
+                  <span style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', color:accent, fontSize:10, pointerEvents:'none' }}>▼</span>
+                </div>
+                {/* Show current value as a pill for confirmation */}
+                {profile[f.key] && (
+                  <div style={{ marginTop:4, display:'inline-flex', alignItems:'center', gap:4, background:`${accent}18`, border:`1px solid ${accent}40`, borderRadius:20, padding:'2px 8px' }}>
+                    <span style={{ color:accent, fontSize:10, fontWeight:700 }}>✓ {profile[f.key]}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Goals text field */}
+          <div>
+            <div style={{ color:'rgba(255,255,255,0.5)', fontSize:11, fontWeight:700, marginBottom:6, textTransform:'uppercase', letterSpacing:'0.6px' }}>
+              Personal goal (optional)
+            </div>
+            <input
+              value={profile.goals || ''}
+              onChange={e => set('goals', e.target.value)}
+              placeholder="e.g. Build better sleep, dress professionally, manage money better..."
+              style={{ width:'100%', background:'#1e1e3a', border:`1.5px solid ${accentBorder}`, borderRadius:9, padding:'10px 12px', color:'white', fontSize:13, fontFamily:'inherit', outline:'none' }}
+            />
+          </div>
+
+          {/* Status */}
+          {isComplete ? (
+            <div style={{ marginTop:14, padding:'10px 14px', background:'rgba(82,183,136,0.1)', border:'1px solid rgba(82,183,136,0.25)', borderRadius:10, color:'#52b788', fontSize:12, fontWeight:700 }}>
+              ✓ Profile complete — the AI coach will personalise all advice specifically for you
+            </div>
+          ) : (
+            <div style={{ marginTop:14, color:'rgba(255,255,255,0.3)', fontSize:11 }}>
+              * Select at least Gender and Age group so the AI can personalise its advice
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -3240,8 +3353,39 @@ export default function LifeSkillsPage() {
   const lp      = useLifeProgress();
   const sensors = useSensors();
   const { t, lang, isRTL } = useLanguage();
+  const { user } = useAuth();
   const [activeModule, setActive] = useState(() => lp.lastModule || 'finance');
   const [showSensors, setShowSensors] = useState(false);
+
+  // ── Derive age group from grade ──────────────────────────────────────────
+  const deriveAgeGroup = (grade) => {
+    if (!grade) return '';
+    const g = grade.toLowerCase();
+    if (['class 1','class 2','class 3','class 4','class 5'].some(c => g.startsWith(c.toLowerCase()))) return 'Under 18';
+    if (['class 6','class 7','class 8','class 9','class 10'].some(c => g.startsWith(c.toLowerCase()))) return 'Under 18';
+    if (['class 11','class 12'].some(c => g.startsWith(c.toLowerCase()))) return 'Under 18';
+    if (g.includes('neet') || g.includes('iit') || g.includes('kcet')) return '18–25';
+    if (g.includes('llb year 1') || g.includes('llb year 2') || g.includes('llb year 3')) return '18–25';
+    if (g.includes('mbbs') || g.includes('bds') || g.includes('bsc') || g.includes('bpt') || g.includes('bmlt')) return '18–25';
+    if (g.includes('llb year 4') || g.includes('llb year 5')) return '18–25';
+    if (g.includes('upsc') || g.includes('neet pg')) return '26–35';
+    return '18–25';
+  };
+
+  // ── Auto-populate Life Skills profile from registered user data ──────────
+  useEffect(() => {
+    if (!user || !lp.profile || lp.loading) return;
+    const p = lp.profile;
+    // Only auto-fill fields that are still empty
+    const updates = {};
+    if (!p.name  && user.name)              updates.name  = user.name;
+    if (!p.age   && user.grade)             updates.age   = deriveAgeGroup(user.grade);
+    if (!p.grade && user.grade)             updates.grade = user.grade;
+    if (!p.lang  && user.preferredLanguage) updates.lang  = user.preferredLanguage;
+    if (Object.keys(updates).length > 0) {
+      lp.updateProfile({ ...p, ...updates });
+    }
+  }, [user, lp.loading]); // eslint-disable-line
 
   useEffect(() => {
     if (!lp.loading && lp.lastModule && lp.lastModule !== activeModule) {
