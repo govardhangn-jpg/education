@@ -101,6 +101,21 @@ const MODULES = {
     accent: '#c8b6ff', accentDim: 'rgba(200,182,255,0.12)', accentBorder: 'rgba(200,182,255,0.3)',
     tagline: 'The present moment is the only moment available to us, and it is the door to all moments.',
   },
+  civic: {
+    id: 'civic', icon: '🏛️', label: 'Civic Responsibility',
+    accent: '#f8961e', accentDim: 'rgba(248,150,30,0.12)', accentBorder: 'rgba(248,150,30,0.3)',
+    tagline: 'The price of liberty is eternal vigilance.',
+  },
+  homemanagement: {
+    id: 'homemanagement', icon: '🏡', label: 'Home Management',
+    accent: '#80b918', accentDim: 'rgba(128,185,24,0.12)', accentBorder: 'rgba(128,185,24,0.3)',
+    tagline: 'Home is not a place — it is a feeling you build deliberately.',
+  },
+  lifestages: {
+    id: 'lifestages', icon: '👶', label: 'Life Stages',
+    accent: '#ee9b00', accentDim: 'rgba(238,155,0,0.12)', accentBorder: 'rgba(238,155,0,0.3)',
+    tagline: 'Every age has its own wisdom — and its own work to do.',
+  },
 };
 
 // ── Wisdom quotes ──────────────────────────────────────────────────────────
@@ -237,6 +252,27 @@ const QUOTES = {
     { text: 'Wherever you are, be all there.', by: 'Jim Elliot' },
     { text: 'If you want to conquer the anxiety of life, live in the moment, live in the breath.', by: 'Amit Ray' },
     { text: 'Meditation is not about feeling a certain way. It is about feeling the way you feel.', by: 'Dan Harris' },
+  ],
+  civic: [
+    { text: 'The world is not dangerous because of those who do harm but because of those who look at it without doing anything.', by: 'Albert Einstein' },
+    { text: 'Ask not what your country can do for you — ask what you can do for your country.', by: 'John F. Kennedy' },
+    { text: 'Democracy is not something that happens only at election time. It is an everyday practice.', by: 'Unknown' },
+    { text: 'The most common way people give up their power is by thinking they don\'t have any.', by: 'Alice Walker' },
+    { text: 'Bad officials are elected by good citizens who don\'t vote.', by: 'George Jean Nathan' },
+  ],
+  homemanagement: [
+    { text: 'A place for everything, and everything in its place.', by: 'Benjamin Franklin' },
+    { text: 'Your home should tell the story of who you are and be a collection of what you love.', by: 'Nate Berkus' },
+    { text: 'The objective of cleaning is not just to clean, but to feel happiness living within that environment.', by: 'Marie Kondo' },
+    { text: 'Owning less is better than organising more.', by: 'Joshua Becker' },
+    { text: 'A clean home is a clean mind.', by: 'Unknown' },
+  ],
+  lifestages: [
+    { text: 'Life is not a problem to be solved but a reality to be experienced.', by: 'Søren Kierkegaard' },
+    { text: 'You are not the same person you were a year ago, a month ago, or a week ago. You are always growing.', by: 'Unknown' },
+    { text: 'The privilege of a lifetime is being who you are.', by: 'Joseph Campbell' },
+    { text: 'It is not how old you are but how you are old.', by: 'Jules Renard' },
+    { text: 'Life must be lived forward but it can only be understood backward.', by: 'Søren Kierkegaard' },
   ],
 };
 
@@ -394,6 +430,30 @@ const HABITS = {
     { id:'mn5', text:'Paused and took 3 conscious breaths before reacting to stress' },
     { id:'mn6', text:'Named one thing I am genuinely grateful for today' },
   ],
+  civic: [
+    { id:'cv1', text:'Read or watched something about what is happening in my city or country' },
+    { id:'cv2', text:'Engaged thoughtfully with a civic or social issue — online or offline' },
+    { id:'cv3', text:'Paid taxes, followed a law, or fulfilled a civic duty today' },
+    { id:'cv4', text:'Spoke up or took action on something that was wrong rather than staying silent' },
+    { id:'cv5', text:'Was kind and respectful to a public servant, worker, or stranger' },
+    { id:'cv6', text:'Thought about or discussed the kind of society I want to help build' },
+  ],
+  homemanagement: [
+    { id:'hm1', text:'Made my bed and tidied my immediate space in the morning' },
+    { id:'hm2', text:'Cleaned or organised at least one area of my home' },
+    { id:'hm3', text:'Dealt with a home maintenance or administrative task I had been deferring' },
+    { id:'hm4', text:'Tracked or reviewed a household expense today' },
+    { id:'hm5', text:'Prepared or planned at least one meal at home' },
+    { id:'hm6', text:'Did something that made my living space feel more like home' },
+  ],
+  lifestages: [
+    { id:'ls1', text:'Reflected on where I am in life and what this stage requires of me' },
+    { id:'ls2', text:'Had a meaningful conversation with someone at a different life stage' },
+    { id:'ls3', text:'Did something that aligned with my values and long-term self' },
+    { id:'ls4', text:'Took care of a relationship that matters for my future' },
+    { id:'ls5', text:'Learned something about the next life stage I am approaching' },
+    { id:'ls6', text:'Made a decision I will be proud of in 10 years' },
+  ],
 };
 
 // ── Reflection prompts ─────────────────────────────────────────────────────
@@ -531,6 +591,27 @@ const REFLECTIONS = {
     'If you could observe your mind like a scientist for one day, what patterns would you notice?',
     'What does "being present" mean to you in practical terms — and how often does your life actually feel that way?',
   ],
+  civic: [
+    'What does being a good citizen mean to you — beyond just voting and paying taxes?',
+    'Is there a problem in your neighbourhood, city, or country that you feel personally responsible for helping fix?',
+    'Have you ever used your rights as a citizen — RTI, consumer complaint, grievance portal? Why or why not?',
+    'What kind of India do you want to live in at age 60 — and what does that require from you now?',
+    'Who has shaped your political and civic beliefs most — and have you ever seriously questioned those influences?',
+  ],
+  homemanagement: [
+    'Does your home feel like a sanctuary or a source of stress — and what is the main thing driving that?',
+    'What is one home management task you keep avoiding that, if you handled it, would give you the most relief?',
+    'How did the home you grew up in shape what "home" means to you — good or bad?',
+    'If a stranger walked into your home right now, what would it tell them about who you are?',
+    'What would your ideal home life look like in 5 years — and what would need to change to get there?',
+  ],
+  lifestages: [
+    'What is the most important thing this stage of your life is asking you to grow through?',
+    'What unfinished business from your last life stage are you still carrying with you?',
+    'If your 70-year-old self could send you a message right now, what would they most want you to know?',
+    'What relationships do you need to invest in now that will matter most to you in 20 years?',
+    'Are you living this stage of life fully — or waiting for the next stage to really begin living?',
+  ],
 };
 
 // ── Budget tool data ───────────────────────────────────────────────────────
@@ -577,6 +658,9 @@ const COACH_PROMPTS = {
   digitalliteracy: `You are a digital safety and literacy educator with deep knowledge of cybersecurity, online privacy, social media, misinformation, and India's digital landscape. You help people protect themselves online, think critically about what they consume and share, manage their digital reputation, and use technology as a tool rather than being used by it. You are practical and specific — never preachy. Reference Indian context (UPI fraud, WhatsApp forwards, DPDP Act, cybercrime helpline 1930). Ask one question at the end.`,
   environment: `You are a passionate but pragmatic environmental educator focused on India. You help people understand climate change, India's specific environmental challenges (air quality, water scarcity, plastic, deforestation), and what individuals can actually do — practical, budget-conscious, India-specific actions. You avoid guilt and doom. You connect environment to health, economy, and daily life. You are inspiring and solutions-focused. Ask one question at the end.`,
   mindfulness: `You are a warm, experienced mindfulness and meditation teacher rooted in both ancient wisdom (Vipassana, yoga, Zen) and modern neuroscience (MBSR, Huberman Lab). You help people build a sustainable meditation practice, work with difficult thoughts and emotions, find stillness in a distracted world, and develop a richer inner life. You are gentle, non-dogmatic, and deeply human. Indian context matters — family pressure, spirituality, noise, heat. Ask one reflective question at the end.`,
+  civic: `You are a civic educator and community leadership coach passionate about Indian democracy and active citizenship. You help people understand how government works at every level (Panchayat to Parliament), how to use their rights (RTI, consumer law, grievance redressal), how to vote responsibly, and how to lead within their communities. You are inspiring but grounded — you connect civic participation to the everyday life of ordinary Indians. Ask one question at the end.`,
+  homemanagement: `You are a practical home management and life organisation coach. You help people set up their first home, manage household finances, deal with landlords and maintenance, build good domestic routines, and create a living environment that supports their wellbeing and goals. You are specific and India-aware — PG accommodation, joint families, Bangalore vs Delhi costs, domestic workers, BBMP, society maintenance. Ask one practical question at the end.`,
+  lifestages: `You are a life-stage counsellor and developmental coach who understands the psychological, social, and practical challenges at every age — adolescence, early adulthood, the twenties, thirties, middle age, and beyond. You help people understand what each life stage is asking of them, navigate major transitions (education, work, marriage, parenthood, loss), and approach each chapter with intention rather than default. Indian cultural context (arranged marriage, joint families, career expectations, filial duty) is essential. Ask one question at the end.`,
 };
 
 function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, sensors }) {
@@ -635,6 +719,9 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     digitalliteracy:  ['How do I know if a WhatsApp forward is fake?', 'What should I do if I get scammed online?', 'How do I protect my privacy on my phone?'],
     environment:      ['What is my carbon footprint and how do I reduce it?', 'What can one person actually do about climate change?', 'How do I live more sustainably on a student budget?'],
     mindfulness:      ['How do I start meditating if I have never done it before?', 'My mind never stops — how do I quiet it?', 'What is the difference between mindfulness and meditation?'],
+    civic:            ['How does the Indian government actually work?', 'How do I file an RTI application?', 'What can I do about a civic problem in my area?'],
+    homemanagement:   ['What should I check before signing a rental agreement?', 'How do I budget for running a household?', 'How do I deal with a difficult landlord?'],
+    lifestages:       ['What should I focus on in my 20s?', 'How do I navigate the pressure to get married?', 'How do I take care of ageing parents while managing my own life?'],
   };
 
   useEffect(() => {
@@ -2634,6 +2721,347 @@ function MindfulnessModule({ accent, accentDim, accentBorder, sensors }) {
   );
 }
 
+// ── Civic Responsibility Module ────────────────────────────────────────────
+function CivicModule({ accent, accentDim, accentBorder, sensors }) {
+  const [tab, setTab] = useState('coach');
+
+  const govLevels = [
+    {
+      level: 'Ward / Gram Panchayat', icon: '🏘️', color: '#74c69d',
+      who: 'Elected councillor or Panchayat members',
+      does: 'Roads, drains, streetlights, local parks, birth/death certificates, property tax',
+      contact: 'Visit ward office, BBMP/municipal corporation app, 1533 helpline (most cities)',
+    },
+    {
+      level: 'State Government', icon: '🏢', color: '#f4a261',
+      who: 'MLA (Member of Legislative Assembly) — your state representative',
+      does: 'Police, public health, education, electricity, water, state highways, land records',
+      contact: 'CM helpline varies by state: 1905 (UP), 14545 (Karnataka), 181 (Delhi)',
+    },
+    {
+      level: 'Central Government', icon: '🏛️', color: '#4cc9f0',
+      who: 'MP (Member of Parliament) — Lok Sabha and Rajya Sabha',
+      does: 'Defence, railways, income tax, national highways, foreign affairs, Aadhaar, passports',
+      contact: 'pgportal.gov.in, 1800-11-1800 (PM helpline), MPs accessible via constituency office',
+    },
+  ];
+
+  const rtiSteps = [
+    { step: 'Identify the authority', detail: 'Determine which government office holds the information — central (use CIC) or state (use SIC). Any public authority is covered.' },
+    { step: 'Write the application', detail: 'Write in plain language: "I seek information about [specific details]". Be as specific as possible. No need for legal language.' },
+    { step: 'Pay ₹10 fee', detail: 'Court fee stamp or demand draft or online payment on the RTI portal. BPL applicants are exempt from fees.' },
+    { step: 'Submit', detail: 'Online: rtionline.gov.in (for central ministries). Offline: by hand or speed post to the Public Information Officer (PIO) of that office.' },
+    { step: 'Wait 30 days', detail: 'Response must come within 30 days by law. For information that affects life/liberty — 48 hours. Keep your receipt.' },
+    { step: 'Appeal if needed', detail: 'No response or unsatisfactory response? File First Appeal to the Appellate Authority within 30 days. Then Second Appeal to CIC/SIC.' },
+  ];
+
+  const grievances = [
+    { portal: 'pgportal.gov.in', desc: 'Central Government grievances — any ministry or department', icon: '🌐' },
+    { portal: 'consumerhelpline.gov.in', desc: 'Consumer complaints against companies, banks, e-commerce', icon: '🛒' },
+    { portal: 'cybercrime.gov.in', desc: 'Online fraud, harassment, child abuse, financial crimes', icon: '🔐' },
+    { portal: 'Right to Information: rtionline.gov.in', desc: 'File RTI applications to any central government body', icon: '📋' },
+    { portal: 'National Human Rights: nhrc.nic.in', desc: 'Human rights violations by state actors', icon: '⚖️' },
+    { portal: 'lokpal.gov.in', desc: 'Corruption complaints against central government employees', icon: '🔍' },
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {[['coach','🤖 AI Coach'],['govt','🏛️ How Govt Works'],['rti','📋 How to File RTI'],['portals','🌐 Grievance Portals']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding: '8px 16px', borderRadius: 20, border: `1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background: tab===id?accentDim:'transparent', color: tab===id?accent:'rgba(255,255,255,0.5)', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+
+      {tab==='coach' && <div style={{ height: 460, display: 'flex', flexDirection: 'column' }}><AICoach moduleId="civic" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} /></div>}
+
+      {tab==='govt' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, lineHeight: 1.7 }}>India has a three-tier democracy. Most daily problems are solved at the first tier — not by the Prime Minister.</div>
+          {govLevels.map(g => (
+            <div key={g.level} style={{ padding: '18px', background: 'rgba(255,255,255,0.03)', border: `1.5px solid ${g.color}40`, borderRadius: 16 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontSize: 26 }}>{g.icon}</span>
+                <div style={{ color: g.color, fontSize: 15, fontWeight: 800 }}>{g.level}</div>
+              </div>
+              {[['Who represents you', g.who],['What they control', g.does],['How to contact/complain', g.contact]].map(([lbl, val]) => (
+                <div key={lbl} style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+                  <span style={{ color: g.color, fontSize: 12, fontWeight: 800, minWidth: 160, flexShrink: 0 }}>{lbl}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 1.6 }}>{val}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+          <div style={{ padding: '14px 16px', background: accentDim, border: `1px solid ${accentBorder}`, borderRadius: 12 }}>
+            <div style={{ color: accent, fontSize: 13, fontWeight: 800, marginBottom: 6 }}>Your vote matters most locally</div>
+            <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 1.7 }}>Municipal and panchayat elections have the most direct impact on your daily life — roads, water, garbage, local schools. Turnout is often lower than state/national elections. This is where individual participation matters most.</div>
+          </div>
+        </div>
+      )}
+
+      {tab==='rti' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ padding: '12px 16px', background: accentDim, border: `1px solid ${accentBorder}`, borderRadius: 12, color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 1.7 }}>
+            The Right to Information Act 2005 gives every Indian citizen the right to ask any public authority for any information. It is one of the most powerful tools democracy offers. Most people never use it.
+          </div>
+          {rtiSteps.map((s, i) => (
+            <div key={i} style={{ display: 'flex', gap: 14, padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: `1px solid rgba(255,255,255,0.07)`, borderRadius: 14 }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: accentDim, border: `2px solid ${accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: accent, fontSize: 13, fontWeight: 900 }}>{i+1}</div>
+              <div>
+                <div style={{ color: accent, fontSize: 13, fontWeight: 800, marginBottom: 5 }}>{s.step}</div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 1.7 }}>{s.detail}</div>
+              </div>
+            </div>
+          ))}
+          <div style={{ padding: '14px 16px', background: 'rgba(248,150,30,0.08)', border: '1px solid rgba(248,150,30,0.2)', borderRadius: 12 }}>
+            <div style={{ color: '#f8961e', fontSize: 13, fontWeight: 800, marginBottom: 6 }}>💡 What can you ask for?</div>
+            <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 1.7 }}>Road repair status · Police FIR copies · Government school inspection reports · Why your passport was delayed · City budget spending · Land records · Tender details · Any decision made by any public authority.</div>
+          </div>
+        </div>
+      )}
+
+      {tab==='portals' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {grievances.map(g => (
+            <div key={g.portal} style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${accentBorder}`, borderRadius: 14, display: 'flex', gap: 14 }}>
+              <span style={{ fontSize: 22, flexShrink: 0 }}>{g.icon}</span>
+              <div>
+                <div style={{ color: accent, fontSize: 13, fontWeight: 800, marginBottom: 4 }}>{g.portal}</div>
+                <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 1.6 }}>{g.desc}</div>
+              </div>
+            </div>
+          ))}
+          <div style={{ padding: '14px 16px', background: accentDim, border: `1px solid ${accentBorder}`, borderRadius: 12, color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 1.7 }}>
+            <strong style={{ color: accent }}>Emergency numbers:</strong> Police 100 · Ambulance 108 · Fire 101 · All emergencies 112 · Women helpline 1091 · Child helpline 1098 · Cybercrime 1930
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Home Management Module ─────────────────────────────────────────────────
+function HomeManagementModule({ accent, accentDim, accentBorder, sensors, userProfile }) {
+  const [tab, setTab] = useState('coach');
+
+  const rentalChecklist = [
+    { cat: '📄 Documents to verify', items: ['Owner\'s title deed or property tax receipt', 'Society NOC for renting', 'Owner\'s Aadhaar/PAN match with agreement', 'Previous tenant reference if possible'] },
+    { cat: '🔍 Physical inspection', items: ['Water pressure at all taps (morning and evening)', 'Electricity points — working sockets, earthing', 'Seepage marks on walls and ceiling', 'Lock quality on doors and windows', 'Mobile network and internet signal strength', 'Noise levels from neighbours, road, construction'] },
+    { cat: '📝 Agreement must include', items: ['Exact rent amount and due date', 'Security deposit amount and return terms', 'Notice period (typically 1–2 months both ways)', 'Who pays maintenance charges', 'Rent escalation clause (cap at 5–10% annually)', 'What is included — furniture, appliances, parking'] },
+    { cat: '💰 Costs to budget for', items: ['Security deposit: typically 2–10 months rent', 'Brokerage: 1 month rent (negotiate hard)', 'Society maintenance: ₹1,000–5,000/month', 'Electricity, water, gas separately', 'Shifting/moving costs', 'Minor repairs before moving in'] },
+  ];
+
+  const budget = [
+    { category: 'Rent', typical: '25–35%', note: 'Keep below 30% of take-home salary' },
+    { category: 'Food & groceries', typical: '15–20%', note: 'Cooking saves 40–60% vs eating out daily' },
+    { category: 'Transport', typical: '5–10%', note: 'Public transport vs own vehicle significantly different' },
+    { category: 'Utilities', typical: '3–5%', note: 'Electricity, internet, gas, water' },
+    { category: 'Maintenance', typical: '1–3%', note: 'Society charges, repairs, cleaning supplies' },
+    { category: 'Emergency fund', typical: '10–15%', note: 'Build 3 months expenses before other goals' },
+    { category: 'Savings/investments', typical: '20%', note: 'Non-negotiable — pay yourself first' },
+  ];
+
+  const repairs = [
+    { issue: '🚿 Dripping tap', fix: 'Replace the washer inside the tap — costs ₹5–20. Turn off water supply first (under sink valve or main stopcock). YouTube the specific tap model.' },
+    { issue: '💡 Tripped circuit breaker', fix: 'Open MCB box (usually near meter). Find the tripped switch (it will be between ON and OFF). Switch fully off, then fully on. If it trips again immediately, there is a fault — call electrician.' },
+    { issue: '🪟 Stiff door lock', fix: 'Apply graphite powder or WD-40 to the key and lock mechanism. Do not use oil — it attracts dust and makes it worse long-term.' },
+    { issue: '🕷️ Cockroach infestation', fix: 'Boric acid powder along walls, under sink, behind fridge. Gel bait in corners. Block any gaps with steel wool. Address moisture — fix leaks first.' },
+    { issue: '💧 Ceiling seepage', fix: 'Map when it appears (rain only, or always). If rain-only: roof waterproofing issue — escalate to building society. If always: pipe leak above — find source floor and escalate.' },
+    { issue: '⚡ No power in one room', fix: 'Check if that room\'s MCB has tripped. If not, check if the issue is one socket (test another device) or all sockets (wiring fault — call electrician).' },
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {[['coach','🤖 AI Coach'],['rental','🏠 Renting a Home'],['budget','💰 Household Budget'],['repairs','🔧 Basic Repairs']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding: '8px 16px', borderRadius: 20, border: `1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background: tab===id?accentDim:'transparent', color: tab===id?accent:'rgba(255,255,255,0.5)', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+
+      {tab==='coach' && <div style={{ height: 460, display: 'flex', flexDirection: 'column' }}><AICoach moduleId="homemanagement" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} userProfile={userProfile} /></div>}
+
+      {tab==='rental' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {rentalChecklist.map(c => (
+            <details key={c.cat} style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${accentBorder}`, borderRadius: 14, overflow: 'hidden' }}>
+              <summary style={{ padding: '14px 16px', cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'white', fontSize: 14, fontWeight: 800 }}>{c.cat}</span>
+                <span style={{ color: accent, fontSize: 11 }}>▼</span>
+              </summary>
+              <div style={{ padding: '0 16px 14px' }}>
+                {c.items.map((item, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, padding: '7px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ color: accent, fontSize: 12, flexShrink: 0, marginTop: 2 }}>✓</span>
+                    <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, lineHeight: 1.6 }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          ))}
+        </div>
+      )}
+
+      {tab==='budget' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, lineHeight: 1.7, marginBottom: 4 }}>Recommended allocation of monthly take-home income for a single person in an Indian metro:</div>
+          {budget.map(b => (
+            <div key={b.category} style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: `1px solid rgba(255,255,255,0.07)`, borderRadius: 12, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <div style={{ minWidth: 120 }}>
+                <div style={{ color: 'white', fontSize: 13, fontWeight: 800 }}>{b.category}</div>
+                <div style={{ color: accent, fontSize: 16, fontWeight: 900, marginTop: 2 }}>{b.typical}</div>
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, lineHeight: 1.6, paddingTop: 2 }}>{b.note}</div>
+            </div>
+          ))}
+          <div style={{ padding: '14px 16px', background: accentDim, border: `1px solid ${accentBorder}`, borderRadius: 12, color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 1.7 }}>
+            <strong style={{ color: accent }}>First-time renter rule:</strong> Never pay more than 30% of your take-home in rent. If the city forces you above 40%, either find flatmates, move further out, or negotiate salary before accepting the job.
+          </div>
+        </div>
+      )}
+
+      {tab==='repairs' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {repairs.map(r => (
+            <details key={r.issue} style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${accentBorder}`, borderRadius: 14, overflow: 'hidden' }}>
+              <summary style={{ padding: '13px 16px', cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ color: 'white', fontSize: 13, fontWeight: 800, flex: 1 }}>{r.issue}</span>
+                <span style={{ color: accent, fontSize: 11 }}>▼ How to fix</span>
+              </summary>
+              <div style={{ padding: '0 16px 14px', color: 'rgba(255,255,255,0.75)', fontSize: 13, lineHeight: 1.8 }}>{r.fix}</div>
+            </details>
+          ))}
+          <div style={{ padding: '12px 16px', background: accentDim, border: `1px solid ${accentBorder}`, borderRadius: 12, color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 1.7 }}>
+            <strong style={{ color: accent }}>Always keep handy:</strong> Plumber number · Electrician number · Building watchman number · Society secretary number · Gas agency number. Save them in your phone the day you move in.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Life Stages Module ─────────────────────────────────────────────────────
+function LifeStagesModule({ accent, accentDim, accentBorder, sensors, userProfile }) {
+  const [tab, setTab] = useState('coach');
+
+  const stages = [
+    {
+      range: '13–18 · Adolescence', color: '#a8dadc', icon: '🌱',
+      theme: 'Identity formation — who am I, really?',
+      focus: ['Separate your identity from your parents\' expectations — this is healthy and necessary', 'Choose friends based on who you want to become, not just who is convenient', 'Exam results are real — but they do not determine your worth or your ceiling', 'Your brain is still developing until age 25 — be patient with yourself and others', 'This is the best time to discover what you love before the world tells you what to do'],
+      challenge: 'Peer pressure, exam stress, identity confusion, social media comparison',
+      gift: 'Energy, neuroplasticity, time to experiment, no major responsibilities yet',
+    },
+    {
+      range: '18–25 · Early Adulthood', color: '#74c69d', icon: '🚀',
+      theme: 'Exploration — try more than you commit',
+      focus: ['This decade is for exploring, not optimising — do not lock in too early', 'Build skills, not just credentials — what can you actually do?', 'Your relationships now will shape who you become — choose them consciously', 'Learn to manage money before you earn a lot of it', 'Travel, try new things, fail in low-stakes ways — this is the time'],
+      challenge: 'Career confusion, relationship pressure, financial anxiety, comparison with peers',
+      gift: 'Flexibility, low obligations, maximum learning curve, time to recover from mistakes',
+    },
+    {
+      range: '25–35 · Building', color: '#f4a261', icon: '🏗️',
+      theme: 'Commitment — go deep on what matters',
+      focus: ['Choose depth over breadth — in career, relationships, and values', 'The marriage/partner decision is the most consequential of your life — take time', 'Build an emergency fund and start investing before lifestyle creep sets in', 'Your health habits now determine your health at 60 — non-negotiable', 'Mentor someone younger and find mentors older — both are essential'],
+      challenge: 'Work-life balance, relationship transitions, financial pressure, comparison anxiety',
+      gift: 'Peak cognitive ability, growing income, deepening relationships, clarity of values',
+    },
+    {
+      range: '35–50 · Midlife', color: '#ee9b00', icon: '⚡',
+      theme: 'Recalibration — what actually matters?',
+      focus: ['The midlife question is not crisis — it is "Is this still aligned with who I am?"', 'Your children are watching everything you do, not what you say', 'Parents are ageing — begin having the hard conversations now, not in a crisis', 'Career pivots are possible and often necessary at 40 — do not wait', 'Invest in friendships — they require deliberate effort at this stage'],
+      challenge: 'Aging parents, children\'s needs, career plateau, health changes, identity questions',
+      gift: 'Experience, financial stability, deeper self-knowledge, reduced peer pressure',
+    },
+    {
+      range: '50+ · Mastery & Legacy', color: '#c8b6ff', icon: '🌳',
+      theme: 'Legacy — what will outlast you?',
+      focus: ['Shift from achievement to contribution — what do you want to give back?', 'Your health is now your most important asset — invest in it without compromise', 'Simplify ruthlessly — possessions, obligations, relationships that drain you', 'The most valuable thing you can give the next generation is your time and wisdom', 'Retirement is a financial event, not an identity — know who you are without the title'],
+      challenge: 'Health management, purpose after career, generational transitions, loss and grief',
+      gift: 'Wisdom, perspective, freedom from approval, time to focus on what truly matters',
+    },
+  ];
+
+  const transitions = [
+    { name: 'Leaving home for college', prep: 'Learn basic cooking, laundry, and budgeting before you leave. Build the skill — not just the attitude.' },
+    { name: 'First job', prep: 'Negotiate salary from day one. Build professional relationships. Never stop learning. Understand your PF and tax from month 1.' },
+    { name: 'Marriage / partnership', prep: 'Discuss money, family planning, living arrangements, and career goals before committing — not after. These are not taboo topics.' },
+    { name: 'Becoming a parent', prep: 'Read about infant development. Build your support network before the baby arrives. Plan finances 6 months ahead. Both partners equally responsible.' },
+    { name: 'Losing a job', prep: 'Keep 6 months expenses in a separate account always. Your identity is not your job. Use the transition to course-correct if needed.' },
+    { name: 'Caring for ageing parents', prep: 'Have the conversation about health wishes, finances, and living arrangements while everyone is healthy. Avoid making these decisions in a crisis.' },
+    { name: 'Loss and grief', prep: 'Grief is not linear and has no timeline. Professional support is not weakness. The goal is not to "get over it" — it is to carry it and continue.' },
+  ];
+
+  const ageGroup = userProfile?.age
+    ? parseInt(userProfile.age) < 18 ? 0
+    : parseInt(userProfile.age) < 25 ? 1
+    : parseInt(userProfile.age) < 35 ? 2
+    : parseInt(userProfile.age) < 50 ? 3 : 4
+    : null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {[['coach','🤖 AI Coach'],['stages','🗓️ Life Stages'],['transitions','🔀 Major Transitions']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding: '8px 16px', borderRadius: 20, border: `1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background: tab===id?accentDim:'transparent', color: tab===id?accent:'rgba(255,255,255,0.5)', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+
+      {tab==='coach' && <div style={{ height: 460, display: 'flex', flexDirection: 'column' }}><AICoach moduleId="lifestages" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} userProfile={userProfile} /></div>}
+
+      {tab==='stages' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {ageGroup !== null && (
+            <div style={{ padding: '10px 14px', background: accentDim, border: `1px solid ${accentBorder}`, borderRadius: 10, color: accent, fontSize: 12, fontWeight: 700 }}>
+              Based on your profile: your current stage is highlighted below ↓
+            </div>
+          )}
+          {stages.map((s, i) => (
+            <details key={s.range} open={ageGroup === i} style={{ background: 'rgba(255,255,255,0.02)', border: `1.5px solid ${ageGroup===i ? s.color : `${s.color}30`}`, borderRadius: 16, overflow: 'hidden' }}>
+              <summary style={{ padding: '14px 16px', cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: 22 }}>{s.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: s.color, fontSize: 14, fontWeight: 800 }}>{s.range}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, marginTop: 2 }}>{s.theme}</div>
+                </div>
+                {ageGroup === i && <span style={{ padding: '2px 10px', background: `${s.color}25`, borderRadius: 10, color: s.color, fontSize: 11, fontWeight: 800 }}>YOUR STAGE</span>}
+              </summary>
+              <div style={{ padding: '0 16px 16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+                  {s.focus.map((f, fi) => (
+                    <div key={fi} style={{ display: 'flex', gap: 10 }}>
+                      <span style={{ color: s.color, fontSize: 12, flexShrink: 0, marginTop: 3 }}>▸</span>
+                      <span style={{ color: 'rgba(255,255,255,0.78)', fontSize: 13, lineHeight: 1.7 }}>{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {[['⚡ Challenge', s.challenge, 'rgba(231,76,60,0.15)'],['🎁 Gift', s.gift, 'rgba(82,183,136,0.12)']].map(([lbl, val, bg]) => (
+                    <div key={lbl} style={{ padding: '10px 12px', background: bg, borderRadius: 10 }}>
+                      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, marginBottom: 5 }}>{lbl}</div>
+                      <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, lineHeight: 1.6 }}>{val}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </details>
+          ))}
+        </div>
+      )}
+
+      {tab==='transitions' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, lineHeight: 1.7, marginBottom: 4 }}>Major transitions are predictable. Preparing in advance makes them navigable instead of destabilising.</div>
+          {transitions.map(t => (
+            <div key={t.name} style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${accentBorder}`, borderRadius: 14 }}>
+              <div style={{ color: accent, fontSize: 13, fontWeight: 800, marginBottom: 7 }}>🔀 {t.name}</div>
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 1.7 }}>{t.prep}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Milestone Toast ────────────────────────────────────────────────────────
 function MilestoneToast({ milestones, onDismiss }) {
   if (!milestones?.length) return null;
@@ -2789,7 +3217,7 @@ export default function LifeSkillsPage() {
       <div style={{ marginBottom:14, padding:'11px 16px', background:mod.accentDim, border:`1px solid ${mod.accentBorder}`, borderRadius:12, color:mod.accent, fontSize:13, fontStyle:'italic', fontWeight:700 }}>"{mod.tagline}"</div>
 
       <div className="ls-card" key={activeModule} style={{ display:'flex', flexDirection:'column', gap:16 }}>
-        {['fitness','grooming','lifestyle','etiquette','criticalthinking','publicspeaking','legalliteracy','emotionalintelligence','firstaid','sleep','cooking','timemanagement','careerplanning','digitalliteracy','environment','mindfulness'].includes(activeModule) && (
+        {['fitness','grooming','lifestyle','etiquette','criticalthinking','publicspeaking','legalliteracy','emotionalintelligence','firstaid','sleep','cooking','timemanagement','careerplanning','digitalliteracy','environment','mindfulness','civic','homemanagement','lifestages'].includes(activeModule) && (
           <UserProfileSetup profile={lp.profile} onChange={lp.updateProfile} {...moduleProps} />
         )}
         <QuoteCard moduleId={activeModule} {...moduleProps} />
@@ -2812,6 +3240,9 @@ export default function LifeSkillsPage() {
         {activeModule === 'digitalliteracy'       && <DigitalLiteracyModule       {...moduleProps} sensors={sensors} />}
         {activeModule === 'environment'           && <EnvironmentModule           {...moduleProps} sensors={sensors} />}
         {activeModule === 'mindfulness'           && <MindfulnessModule           {...moduleProps} sensors={sensors} />}
+        {activeModule === 'civic'                 && <CivicModule                 {...moduleProps} sensors={sensors} />}
+        {activeModule === 'homemanagement'        && <HomeManagementModule        {...moduleProps} sensors={sensors} userProfile={lp.profile} />}
+        {activeModule === 'lifestages'            && <LifeStagesModule            {...moduleProps} sensors={sensors} userProfile={lp.profile} />}
         <DailyCheckin moduleId={activeModule} {...moduleProps} todayChecked={lp.getTodayCheckin(activeModule)} onToggle={handleToggleCheckin} streak={lp.getStreak(activeModule)} />
         <ReflectionJournal moduleId={activeModule} {...moduleProps} getJournal={lp.getJournal} saveJournal={lp.saveJournal} sensors={sensors} />
         <NotificationSettings sensors={sensors} modules={Object.values(MODULES)} {...moduleProps} />
