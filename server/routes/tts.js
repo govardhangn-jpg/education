@@ -65,7 +65,7 @@ router.post('/speak', protect, async (req, res) => {
     .replace(/\n/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 2500);
+    .slice(0, 4800);  // Client chunks at ≤2400 chars, so each call arrives well under limit
 
   const selectedVoiceId = clientVoiceId || voiceIds[language] || voiceIds.English;
   console.log('[tts/speak] lang:', language, '| voiceId:', selectedVoiceId, '| chars:', clean.length);

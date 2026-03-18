@@ -673,36 +673,110 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
   const endRef = useRef(null);
   const mod = MODULES[moduleId];
   const { lang, langMeta, t } = useLanguage();
-
-  // Map app language code to language name for AI prompt
   const langName = langMeta?.label || 'English';
 
-  // ElevenLabs TTS for coach responses
   const BACKEND_TTS = process.env.REACT_APP_API_URL
     ? process.env.REACT_APP_API_URL.replace(/\/api$/, '')
     : 'http://localhost:5000';
 
-  const speakMessage = async (text, idx) => {
-    if (speakingIdx === idx) { setSpeakingIdx(null); return; }
-    setSpeakingIdx(idx);
+  // ── Full-text TTS with sentence chunking ────────────────────────────────
+  // ElevenLabs has a ~2500 char practical limit per call.
+  // We split the response into sentence chunks and play them sequentially
+  // so the entire AI response is spoken, no matter how long.
+
+  const activeSources = useRef([]);   // keep AudioBufferSource refs so we can stop
+  const chunkQueue    = useRef([]);   // pending chunks still to be fetched/played
+  const isSpeaking    = useRef(false);
+
+  const stopAll = () => {
+    isSpeaking.current = false;
+    chunkQueue.current = [];
+    activeSources.current.forEach(s => { try { s.stop(); } catch {} });
+    activeSources.current = [];
+    setSpeakingIdx(null);
+  };
+
+  // Split text into chunks ≤ 2400 chars, breaking only on sentence boundaries
+  const chunkText = (text) => {
+    const clean = text
+      .replace(/\*\*/g, '').replace(/\*/g, '')
+      .replace(/#{1,6}\s/g, '')
+      .replace(/`{1,3}[^`]*`{1,3}/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/\n{2,}/g, '. ')
+      .replace(/\n/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const MAX = 2400;
+    if (clean.length <= MAX) return [clean];
+
+    // Split on sentence-ending punctuation
+    const sentences = clean.match(/[^.!?]+[.!?]+["']?|[^.!?]+$/g) || [clean];
+    const chunks = [];
+    let current = '';
+    for (const s of sentences) {
+      if ((current + s).length > MAX) {
+        if (current.trim()) chunks.push(current.trim());
+        current = s;
+      } else {
+        current += s;
+      }
+    }
+    if (current.trim()) chunks.push(current.trim());
+    return chunks.length ? chunks : [clean.slice(0, MAX)];
+  };
+
+  const fetchAndPlayChunk = async (chunk, onDone) => {
+    if (!isSpeaking.current) return;
     try {
       const token = localStorage.getItem('samarthaa_token');
       const r = await fetch(`${BACKEND_TTS}/api/tts/speak`, {
         method: 'POST',
-        headers: { 'Content-Type':'application/json', ...(token ? { Authorization:`Bearer ${token}` } : {}) },
-        body: JSON.stringify({ text: text.slice(0, 1000), language: langName }),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ text: chunk, language: langName }),
       });
-      if (!r.ok) throw new Error('TTS failed');
+      if (!r.ok) throw new Error(`TTS HTTP ${r.status}`);
       const buf = await r.arrayBuffer();
+      if (!isSpeaking.current) return;
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       await ctx.resume();
       const decoded = await ctx.decodeAudioData(buf.slice(0));
+      if (!isSpeaking.current) return;
       const src = ctx.createBufferSource();
       src.buffer = decoded;
       src.connect(ctx.destination);
-      src.onended = () => setSpeakingIdx(null);
+      activeSources.current.push(src);
+      src.onended = onDone;
       src.start(0);
-    } catch { setSpeakingIdx(null); }
+    } catch (e) {
+      console.warn('[TTS chunk error]', e.message);
+      onDone(); // skip failed chunk, continue with next
+    }
+  };
+
+  const playQueue = () => {
+    if (!isSpeaking.current || chunkQueue.current.length === 0) {
+      isSpeaking.current = false;
+      setSpeakingIdx(null);
+      return;
+    }
+    const next = chunkQueue.current.shift();
+    fetchAndPlayChunk(next, playQueue);
+  };
+
+  const speakMessage = (text, idx) => {
+    if (speakingIdx === idx) { stopAll(); return; }
+    stopAll();
+    const chunks = chunkText(text);
+    if (!chunks.length) return;
+    isSpeaking.current = true;
+    chunkQueue.current = [...chunks];
+    setSpeakingIdx(idx);
+    playQueue();
   };
 
   const starterQuestions = {
@@ -734,7 +808,7 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  useEffect(() => { setMessages([]); setSpeakingIdx(null); }, [moduleId]);
+  useEffect(() => { setMessages([]); setSpeakingIdx(null); stopAll(); }, [moduleId]); // eslint-disable-line
 
   const buildSystemPrompt = () => {
     let base = COACH_PROMPTS[moduleId];
@@ -817,7 +891,7 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
           <div key={i} style={{ display:'flex', justifyContent: m.role==='user' ? 'flex-end' : 'flex-start', gap:6, alignItems:'flex-end' }}>
             {m.role === 'assistant' && (
               <button onClick={() => speakMessage(m.content, i)}
-                title={speakingIdx === i ? 'Stop speaking' : 'Listen with ElevenLabs'}
+                title={speakingIdx === i ? 'Stop' : 'Read aloud (full response)'}
                 style={{ flexShrink:0, width:28, height:28, borderRadius:'50%', background: speakingIdx===i ? `${accent}25` : 'rgba(255,255,255,0.06)', border:`1.5px solid ${speakingIdx===i ? accent : 'rgba(255,255,255,0.1)'}`, cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center', animation: speakingIdx===i ? 'pulse 1.2s infinite' : 'none', marginBottom:4 }}>
                 {speakingIdx === i ? '⏹' : '🔊'}
               </button>
@@ -830,6 +904,15 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
         {loading && (
           <div style={{ display:'flex', gap:5, padding:'12px 16px' }}>
             {[0,1,2].map(i => <div key={i} style={{ width:7, height:7, borderRadius:'50%', background:accent, opacity:0.7, animation:`bounce 1.2s ${i*0.2}s infinite` }} />)}
+          </div>
+        )}
+        {speakingIdx !== null && (
+          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 12px', background:accentDim, border:`1px solid ${accentBorder}`, borderRadius:20, alignSelf:'flex-start' }}>
+            {[0,1,2,3].map(i => (
+              <div key={i} style={{ width:3, height:12+i*4, background:accent, borderRadius:2, opacity:0.8, animation:`bounce 1.0s ${i*0.15}s infinite` }} />
+            ))}
+            <span style={{ color:accent, fontSize:11, fontWeight:700 }}>Reading aloud…</span>
+            <button onClick={stopAll} style={{ background:'none', border:'none', color:accent, cursor:'pointer', fontSize:13, padding:'0 4px' }}>⏹</button>
           </div>
         )}
         <div ref={endRef} />
