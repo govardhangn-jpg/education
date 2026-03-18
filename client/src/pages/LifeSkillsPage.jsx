@@ -86,6 +86,21 @@ const MODULES = {
     accent: '#fd9644', accentDim: 'rgba(253,150,68,0.12)', accentBorder: 'rgba(253,150,68,0.3)',
     tagline: 'Choose a job you love and you will never have to work a day in your life.',
   },
+  digitalliteracy: {
+    id: 'digitalliteracy', icon: '🌐', label: 'Digital Literacy',
+    accent: '#48cae4', accentDim: 'rgba(72,202,228,0.12)', accentBorder: 'rgba(72,202,228,0.3)',
+    tagline: 'On the internet, if you are not paying for the product, you are the product.',
+  },
+  environment: {
+    id: 'environment', icon: '🌱', label: 'Environmental Awareness',
+    accent: '#74c69d', accentDim: 'rgba(116,198,157,0.12)', accentBorder: 'rgba(116,198,157,0.3)',
+    tagline: 'We do not inherit the earth from our ancestors — we borrow it from our children.',
+  },
+  mindfulness: {
+    id: 'mindfulness', icon: '🧘', label: 'Mindfulness & Inner Life',
+    accent: '#c8b6ff', accentDim: 'rgba(200,182,255,0.12)', accentBorder: 'rgba(200,182,255,0.3)',
+    tagline: 'The present moment is the only moment available to us, and it is the door to all moments.',
+  },
 };
 
 // ── Wisdom quotes ──────────────────────────────────────────────────────────
@@ -201,6 +216,27 @@ const QUOTES = {
     { text: 'Do not follow your passion. Follow your contribution.', by: 'Mike Rowe' },
     { text: 'Success usually comes to those who are too busy to be looking for it.', by: 'Henry David Thoreau' },
     { text: 'Opportunities are not offered. They are seized, created, and worked for.', by: 'Sheryl Sandberg' },
+  ],
+  digitalliteracy: [
+    { text: 'Privacy is not something that I am merely entitled to, it is an absolute prerequisite.', by: 'Marlon Brando' },
+    { text: 'The internet is the first thing that humanity has built that humanity does not understand.', by: 'Eric Schmidt' },
+    { text: 'It takes 20 years to build a reputation and five minutes to ruin it online.', by: 'Warren Buffett' },
+    { text: 'Think before you post — the internet never forgets.', by: 'Unknown' },
+    { text: 'Digital literacy is not about technology. It is about being a thoughtful citizen of the world.', by: 'Unknown' },
+  ],
+  environment: [
+    { text: 'The earth does not belong to us. We belong to the earth.', by: 'Chief Seattle' },
+    { text: 'In every walk with nature, one receives far more than one seeks.', by: 'John Muir' },
+    { text: 'What we are doing to the forests of the world is but a mirror reflection of what we are doing to ourselves.', by: 'Mahatma Gandhi' },
+    { text: 'The environment is where we all meet, where all have a mutual interest — it is the one thing all of us share.', by: 'Lady Bird Johnson' },
+    { text: 'Small acts, when multiplied by millions of people, can transform the world.', by: 'Howard Zinn' },
+  ],
+  mindfulness: [
+    { text: 'You cannot stop the waves, but you can learn to surf.', by: 'Jon Kabat-Zinn' },
+    { text: 'The present moment is the only moment available to us, and it is the door to all moments.', by: 'Thich Nhat Hanh' },
+    { text: 'Wherever you are, be all there.', by: 'Jim Elliot' },
+    { text: 'If you want to conquer the anxiety of life, live in the moment, live in the breath.', by: 'Amit Ray' },
+    { text: 'Meditation is not about feeling a certain way. It is about feeling the way you feel.', by: 'Dan Harris' },
   ],
 };
 
@@ -334,6 +370,30 @@ const HABITS = {
     { id:'cp5', text:'Did something that built my portfolio, reputation, or visibility' },
     { id:'cp6', text:'Read or listened to something about my industry or area of interest' },
   ],
+  digitalliteracy: [
+    { id:'dl1', text:'Used a strong, unique password or password manager today' },
+    { id:'dl2', text:'Verified a piece of information before sharing or believing it' },
+    { id:'dl3', text:'Checked privacy settings on at least one app or account' },
+    { id:'dl4', text:'Did not click any suspicious link or attachment today' },
+    { id:'dl5', text:'Was mindful of what personal information I shared online' },
+    { id:'dl6', text:'Took a deliberate break from social media for at least 1 hour' },
+  ],
+  environment: [
+    { id:'en1', text:'Chose not to use single-use plastic today' },
+    { id:'en2', text:'Walked, cycled, or used public transport instead of a private vehicle' },
+    { id:'en3', text:'Turned off lights, fans, or devices when not in use' },
+    { id:'en4', text:'Avoided food waste — finished what was on my plate' },
+    { id:'en5', text:'Made a purchase decision considering its environmental impact' },
+    { id:'en6', text:'Learned something new about environmental issues in India' },
+  ],
+  mindfulness: [
+    { id:'mn1', text:'Spent at least 5 minutes in silent, focused breathing or meditation' },
+    { id:'mn2', text:'Noticed my thoughts without being swept away by them' },
+    { id:'mn3', text:'Put the phone down and was fully present with a person or activity' },
+    { id:'mn4', text:'Wrote in a journal or spent time in quiet self-reflection' },
+    { id:'mn5', text:'Paused and took 3 conscious breaths before reacting to stress' },
+    { id:'mn6', text:'Named one thing I am genuinely grateful for today' },
+  ],
 };
 
 // ── Reflection prompts ─────────────────────────────────────────────────────
@@ -450,6 +510,27 @@ const REFLECTIONS = {
     'Who is one person doing work you admire, and what specifically can you learn from their path?',
     'What story are you telling yourself about why your ideal career is not possible — and is that story true?',
   ],
+  digitalliteracy: [
+    'How would your life change if everything you posted online became permanently public? How does that make you feel about what you share?',
+    'When did you last fall for misinformation — and what made it convincing?',
+    'How many apps on your phone have access to your location, contacts, or camera that you never explicitly approved?',
+    'What is your relationship with social media — does it serve you, or do you serve it?',
+    'If you lost your phone and all your accounts today, what would the actual impact be on your life?',
+  ],
+  environment: [
+    'What does your personal carbon footprint look like — food, transport, electricity? Where is it highest?',
+    'When did you last feel genuinely connected to nature — and how long ago was that?',
+    'What environmental habit would you most want to adopt but have not started yet — and what is the real reason?',
+    'How do the environmental choices available to you differ based on your income or location — and is that fair?',
+    'What will the city or town you grew up in look like in 40 years if current trends continue?',
+  ],
+  mindfulness: [
+    'When was the last time you sat completely still and did nothing — no phone, no music, no distraction? How did that feel?',
+    'What thought pattern keeps showing up in your mind that you know is not serving you?',
+    'What are you most afraid to face when you sit quietly with yourself?',
+    'If you could observe your mind like a scientist for one day, what patterns would you notice?',
+    'What does "being present" mean to you in practical terms — and how often does your life actually feel that way?',
+  ],
 };
 
 // ── Budget tool data ───────────────────────────────────────────────────────
@@ -493,6 +574,9 @@ const COACH_PROMPTS = {
   cooking: `You are a friendly nutrition educator and home cooking coach with a deep understanding of Indian food. You help people learn to cook simple, healthy meals; understand nutrition without calorie obsession; eat better on a budget; and develop a healthier relationship with food. You reference Indian ingredients, cooking methods, and dietary patterns. You are encouraging and never judgmental about eating habits. Ask one practical question at the end.`,
   timemanagement: `You are a productivity and time management coach who cuts through the noise. You draw on Cal Newport (Deep Work), James Clear (Atomic Habits), and David Allen (GTD) but translate everything into specific, actionable advice. You help people identify their highest-leverage activities, eliminate time waste, build focus habits, and protect energy. Indian workplace and study context is important — exams, joint family distractions, boss culture, WhatsApp overload. Ask one question at the end.`,
   careerplanning: `You are a career strategist and mentor who has helped people across education, technology, healthcare, law, government, and entrepreneurship. You help people think clearly about what they want from a career, how to build skills deliberately, how to navigate the Indian job market, and how to make bold career moves with confidence. You are honest about hard realities while being genuinely encouraging. Ask one probing question at the end.`,
+  digitalliteracy: `You are a digital safety and literacy educator with deep knowledge of cybersecurity, online privacy, social media, misinformation, and India's digital landscape. You help people protect themselves online, think critically about what they consume and share, manage their digital reputation, and use technology as a tool rather than being used by it. You are practical and specific — never preachy. Reference Indian context (UPI fraud, WhatsApp forwards, DPDP Act, cybercrime helpline 1930). Ask one question at the end.`,
+  environment: `You are a passionate but pragmatic environmental educator focused on India. You help people understand climate change, India's specific environmental challenges (air quality, water scarcity, plastic, deforestation), and what individuals can actually do — practical, budget-conscious, India-specific actions. You avoid guilt and doom. You connect environment to health, economy, and daily life. You are inspiring and solutions-focused. Ask one question at the end.`,
+  mindfulness: `You are a warm, experienced mindfulness and meditation teacher rooted in both ancient wisdom (Vipassana, yoga, Zen) and modern neuroscience (MBSR, Huberman Lab). You help people build a sustainable meditation practice, work with difficult thoughts and emotions, find stillness in a distracted world, and develop a richer inner life. You are gentle, non-dogmatic, and deeply human. Indian context matters — family pressure, spirituality, noise, heat. Ask one reflective question at the end.`,
 };
 
 function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, sensors }) {
@@ -548,6 +632,9 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     cooking:          ['What are 5 basic dishes every Indian should know?', 'How do I eat healthy on ₹200 a day?', 'What is the easiest high-protein Indian meal?'],
     timemanagement:   ['How do I stop procrastinating on important work?', 'How do I do deep work when I have constant interruptions?', 'How do I plan my week effectively?'],
     careerplanning:   ['How do I figure out what career is right for me?', 'When is the right time to change jobs?', 'How do I get a mentor in my field?'],
+    digitalliteracy:  ['How do I know if a WhatsApp forward is fake?', 'What should I do if I get scammed online?', 'How do I protect my privacy on my phone?'],
+    environment:      ['What is my carbon footprint and how do I reduce it?', 'What can one person actually do about climate change?', 'How do I live more sustainably on a student budget?'],
+    mindfulness:      ['How do I start meditating if I have never done it before?', 'My mind never stops — how do I quiet it?', 'What is the difference between mindfulness and meditation?'],
   };
 
   useEffect(() => {
@@ -2191,6 +2278,362 @@ function CareerPlanningModule({ accent, accentDim, accentBorder, sensors, userPr
   );
 }
 
+// ── Digital Literacy Module ────────────────────────────────────────────────
+function DigitalLiteracyModule({ accent, accentDim, accentBorder, sensors }) {
+  const [tab, setTab] = useState('coach');
+
+  const threats = [
+    { icon:'📱', name:'UPI / Payment Fraud', severity:'HIGH', desc:'Fake payment requests, screen-share scams, QR code tricks. The sender always pays — you never need to scan to receive money.', action:'Never share OTP, UPI PIN, or do a "test transaction". Hang up on anyone who asks. Call 1930 immediately if defrauded.' },
+    { icon:'📧', name:'Phishing', severity:'HIGH', desc:'Fake emails/SMS from "HDFC Bank", "IRCTC", "Amazon" with urgent links. Always check the actual sender domain — not the display name.', action:'Never click links in SMS. Type the URL directly. Hover over links to see the real destination before clicking.' },
+    { icon:'📲', name:'WhatsApp Forwards', severity:'MED', desc:'Fake news, doctored photos, false health advice, investment scams. India shares more misinformation per capita than any other country.', action:'Apply the 3-source rule: verify with 3 independent reliable sources before believing or sharing anything alarming.' },
+    { icon:'🔐', name:'Weak Passwords', severity:'HIGH', desc:'Using the same password across accounts means one breach exposes everything. "Password123" and your birthday are hacked in seconds.', action:'Use a password manager (Bitwarden is free). Enable 2FA on all important accounts. Each password must be unique.' },
+    { icon:'📷', name:'Camera & Mic Access', severity:'MED', desc:'Many apps request camera, microphone, and location access they do not need. This data is harvested and sold.', action:'Review app permissions: Settings → Apps → Permissions. Revoke access for any app that does not genuinely need it.' },
+    { icon:'🌐', name:'Public Wi-Fi', severity:'MED', desc:'Airport, café, and hotel Wi-Fi can be intercepted. Man-in-the-middle attacks capture passwords, banking sessions, messages.', action:'Never do banking or sensitive transactions on public Wi-Fi. Use mobile data instead, or a reputable VPN.' },
+    { icon:'🎣', name:'Social Engineering', severity:'HIGH', desc:'"KYC expiry", "your account will be blocked", "lottery winner" — these trigger panic so you act before thinking.', action:'Slow down. Legitimate organisations never demand immediate action by phone. Call the official number yourself.' },
+    { icon:'👤', name:'Digital Footprint', severity:'LOW', desc:'Everything you post, like, comment, or search creates a permanent profile. Future employers, colleges, and partners will search for you.', action:'Google yourself. Review your social media privacy settings now. Anything you would not show your boss — remove it.' },
+  ];
+
+  const audit = [
+    { cat:'Passwords', checks:['I use different passwords for different accounts','I use a password manager or very strong unique passwords','I have enabled 2-Factor Authentication on email and banking apps','I have not shared my password with anyone'] },
+    { cat:'Phone Security', checks:['My phone has a strong PIN or biometric lock','I review app permissions regularly and revoke unnecessary ones','I have Find My Device / Remote Wipe enabled','I back up my phone data weekly'] },
+    { cat:'Online Behaviour', checks:['I verify news before sharing it','I never click links in SMS messages — I type URLs directly','I use secure websites (https://) for any sensitive transactions','I have checked my privacy settings on WhatsApp, Instagram, and Google'] },
+    { cat:'Financial Safety', checks:['I never share OTP with anyone — including "bank employees"','I have set transaction limits on my UPI and banking apps','I know how to freeze my card instantly if needed','I know the cybercrime helpline number: 1930'] },
+  ];
+
+  const [checked, setChecked] = useState({});
+  const toggle = (key) => setChecked(c => ({ ...c, [key]: !c[key] }));
+  const totalChecks = audit.reduce((a, c) => a + c.checks.length, 0);
+  const doneChecks  = Object.values(checked).filter(Boolean).length;
+  const score       = Math.round((doneChecks / totalChecks) * 100);
+  const scoreColor  = score >= 80 ? '#52b788' : score >= 50 ? '#ffd166' : '#e74c3c';
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {[['coach','🤖 AI Coach'],['threats','🚨 Threat Guide'],['audit','🔍 Security Audit']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background:tab===id?accentDim:'transparent', color:tab===id?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+
+      {tab==='coach' && <div style={{ height:460, display:'flex', flexDirection:'column' }}><AICoach moduleId="digitalliteracy" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} /></div>}
+
+      {tab==='threats' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {threats.map(t => (
+            <details key={t.name} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${t.severity==='HIGH'?'rgba(231,76,60,0.3)':t.severity==='MED'?'rgba(255,209,102,0.25)':'rgba(255,255,255,0.08)'}`, borderRadius:14, overflow:'hidden' }}>
+              <summary style={{ padding:'13px 16px', cursor:'pointer', listStyle:'none', display:'flex', alignItems:'center', gap:10 }}>
+                <span style={{ fontSize:20 }}>{t.icon}</span>
+                <span style={{ color:'white', fontSize:13, fontWeight:800, flex:1 }}>{t.name}</span>
+                <span style={{ padding:'2px 9px', borderRadius:10, fontSize:10, fontWeight:800, background: t.severity==='HIGH'?'rgba(231,76,60,0.2)':t.severity==='MED'?'rgba(255,209,102,0.15)':'rgba(255,255,255,0.08)', color: t.severity==='HIGH'?'#e74c3c':t.severity==='MED'?'#ffd166':'rgba(255,255,255,0.4)' }}>{t.severity}</span>
+              </summary>
+              <div style={{ padding:'0 16px 14px', display:'flex', flexDirection:'column', gap:10 }}>
+                <div style={{ color:'rgba(255,255,255,0.65)', fontSize:13, lineHeight:1.7 }}>{t.desc}</div>
+                <div style={{ padding:'10px 14px', background:accentDim, borderRadius:10 }}>
+                  <span style={{ color:accent, fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.5px' }}>What to do: </span>
+                  <span style={{ color:'rgba(255,255,255,0.8)', fontSize:13, lineHeight:1.6 }}>{t.action}</span>
+                </div>
+              </div>
+            </details>
+          ))}
+        </div>
+      )}
+
+      {tab==='audit' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ padding:'16px 20px', background:accentDim, border:`1.5px solid ${accentBorder}`, borderRadius:16, display:'flex', alignItems:'center', gap:20 }}>
+            <div style={{ textAlign:'center' }}>
+              <div style={{ fontSize:42, fontWeight:900, color:scoreColor }}>{score}%</div>
+              <div style={{ color:'rgba(255,255,255,0.4)', fontSize:11 }}>security score</div>
+            </div>
+            <div>
+              <div style={{ color:'white', fontSize:14, fontWeight:800, marginBottom:4 }}>
+                {score>=80?'Well protected':'Needs attention'}
+              </div>
+              <div style={{ color:'rgba(255,255,255,0.55)', fontSize:13 }}>{doneChecks} of {totalChecks} checks done</div>
+              <div style={{ width:180, height:6, background:'rgba(255,255,255,0.08)', borderRadius:3, marginTop:8 }}>
+                <div style={{ width:`${score}%`, height:'100%', background:scoreColor, borderRadius:3, transition:'width 0.4s' }} />
+              </div>
+            </div>
+          </div>
+          {audit.map(cat => (
+            <div key={cat.cat} style={{ padding:'16px', background:'rgba(255,255,255,0.02)', border:`1px solid rgba(255,255,255,0.07)`, borderRadius:14 }}>
+              <div style={{ color:accent, fontSize:13, fontWeight:800, marginBottom:12 }}>{cat.cat}</div>
+              {cat.checks.map((chk, i) => {
+                const key = `${cat.cat}-${i}`;
+                return (
+                  <div key={i} onClick={() => toggle(key)} style={{ display:'flex', gap:12, padding:'8px 0', borderTop:'1px solid rgba(255,255,255,0.05)', cursor:'pointer', alignItems:'flex-start' }}>
+                    <div style={{ width:18, height:18, borderRadius:4, border:`2px solid ${checked[key]?accent:'rgba(255,255,255,0.2)'}`, background:checked[key]?accentDim:'transparent', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', marginTop:1 }}>
+                      {checked[key] && <span style={{ color:accent, fontSize:12, fontWeight:900 }}>✓</span>}
+                    </div>
+                    <span style={{ color:checked[key]?'rgba(255,255,255,0.45)':'rgba(255,255,255,0.8)', fontSize:13, lineHeight:1.6, textDecoration:checked[key]?'line-through':'none' }}>{chk}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Environmental Awareness Module ─────────────────────────────────────────
+function EnvironmentModule({ accent, accentDim, accentBorder, sensors }) {
+  const [tab, setTab] = useState('coach');
+  const [footprint, setFootprint] = useState({ diet:'veg', transport:'public', flights:'0', electricity:'medium', shopping:'medium' });
+
+  const calcFootprint = () => {
+    const diet    = { veg:0.5, eggetarian:1.0, nonveg:2.0, vegan:0.3 }[footprint.diet] || 1;
+    const travel  = { walk:0, cycle:0.1, public:0.5, twoWheeler:1.2, car:2.5 }[footprint.transport] || 0.5;
+    const flights = parseFloat(footprint.flights)||0;
+    const elec    = { low:0.3, medium:0.8, high:1.8 }[footprint.electricity] || 0.8;
+    const shop    = { low:0.2, medium:0.6, high:1.5 }[footprint.shopping] || 0.6;
+    return ((diet + travel + (flights * 0.9) + elec + shop) * 365 / 1000).toFixed(1);
+  };
+
+  const actions = [
+    { impact:'🔴 High', title:'Reduce meat consumption', detail:'Switching one meat meal per day to plant-based food cuts your food carbon footprint by ~40%. India has the richest vegetarian cuisine in the world — use it.' },
+    { impact:'🔴 High', title:'Avoid one flight per year', detail:'A single return flight Mumbai–Delhi emits ~0.15 tonnes CO₂ — equal to 3 months of daily commuting. Take trains instead when possible.' },
+    { impact:'🟡 Medium', title:'Switch to LED and unplug', detail:'LED bulbs use 75% less energy. Devices on standby consume 5–10% of household electricity. Unplug chargers and appliances when not in use.' },
+    { impact:'🟡 Medium', title:'Carry your own bag and bottle', detail:'India uses 16.5 billion plastic bags per year. A reusable bottle eliminates ~150 plastic bottles annually. Two easy switches, lasting impact.' },
+    { impact:'🟡 Medium', title:'Use public transport or cycle', detail:'Cars and two-wheelers account for ~18% of India\'s CO₂ emissions. One car trip replaced with a bus per week saves ~250kg CO₂ per year.' },
+    { impact:'🟢 Easy', title:'Eat local and seasonal food', detail:'Food transported thousands of kilometres has a massive carbon cost. Local seasonal produce is cheaper, fresher, and 5x lower in emissions.' },
+    { impact:'🟢 Easy', title:'Fix leaking taps', detail:'A dripping tap wastes 15 litres per day — 5,000 litres per year. India faces a severe water crisis. Fix leaks immediately.' },
+    { impact:'🟢 Easy', title:'Buy less, buy better', detail:'Fast fashion is the world\'s second most polluting industry. Buy less clothing, choose quality that lasts, and consider second-hand first.' },
+  ];
+
+  const indiaFacts = [
+    { stat:'7 of 10', context:'Most polluted cities in the world are in India (IQAir 2023)' },
+    { stat:'600M', context:'Indians will face acute water stress by 2030 (NITI Aayog)' },
+    { stat:'3rd', context:'India is the third largest emitter of greenhouse gases globally' },
+    { stat:'40%', context:'Of India\'s land is already degraded or facing desertification' },
+    { stat:'12 min', context:'Average life expectancy lost per Indian due to air pollution' },
+  ];
+
+  const tonnes = calcFootprint();
+  const avgIndian = 1.9;
+  const comparison = parseFloat(tonnes) < avgIndian ? 'below' : 'above';
+  const fpColor = parseFloat(tonnes) <= 1.5 ? '#52b788' : parseFloat(tonnes) <= 2.5 ? '#ffd166' : '#e74c3c';
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {[['coach','🤖 AI Coach'],['footprint','🌍 Carbon Calculator'],['actions','⚡ Actions'],['facts','📊 India Facts']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background:tab===id?accentDim:'transparent', color:tab===id?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+
+      {tab==='coach' && <div style={{ height:460, display:'flex', flexDirection:'column' }}><AICoach moduleId="environment" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} /></div>}
+
+      {tab==='footprint' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          {[
+            ['diet','🍽️ Diet',{veg:'Vegetarian',eggetarian:'Eggetarian',nonveg:'Non-vegetarian',vegan:'Vegan'}],
+            ['transport','🚌 Daily transport',{walk:'Walk/cycle',public:'Public transport',twoWheeler:'Two-wheeler',car:'Car'}],
+            ['electricity','💡 Electricity use',{low:'Low (fan, LED)',medium:'Medium (AC sometimes)',high:'High (AC always)'}],
+            ['shopping','🛍️ Clothes/shopping',{low:'Minimal (buy rarely)',medium:'Average (monthly)',high:'Frequent (weekly)'}],
+          ].map(([key,lbl,opts]) => (
+            <div key={key}>
+              <div style={{ color:'rgba(255,255,255,0.5)', fontSize:11, fontWeight:700, textTransform:'uppercase', marginBottom:8 }}>{lbl}</div>
+              <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                {Object.entries(opts).map(([val,label]) => (
+                  <button key={val} onClick={() => setFootprint(f=>({...f,[key]:val}))}
+                    style={{ padding:'8px 14px', borderRadius:20, border:`1px solid ${footprint[key]===val?accent:'rgba(255,255,255,0.1)'}`, background:footprint[key]===val?accentDim:'transparent', color:footprint[key]===val?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+          <div key="flights">
+            <div style={{ color:'rgba(255,255,255,0.5)', fontSize:11, fontWeight:700, textTransform:'uppercase', marginBottom:8 }}>✈️ Flights per year (return trips)</div>
+            <input type="number" min="0" max="20" value={footprint.flights} onChange={e=>setFootprint(f=>({...f,flights:e.target.value}))}
+              style={{ width:80, background:'rgba(255,255,255,0.07)', border:`1px solid ${accentBorder}`, borderRadius:10, padding:'10px 14px', color:'white', fontSize:16, fontFamily:'inherit', outline:'none' }} />
+          </div>
+          <div style={{ padding:'20px', background:accentDim, border:`1.5px solid ${accentBorder}`, borderRadius:16, textAlign:'center' }}>
+            <div style={{ color:'rgba(255,255,255,0.4)', fontSize:12, fontWeight:700, marginBottom:6 }}>ESTIMATED ANNUAL FOOTPRINT</div>
+            <div style={{ fontSize:52, fontWeight:900, color:fpColor }}>{tonnes}</div>
+            <div style={{ color:'rgba(255,255,255,0.5)', fontSize:14, marginBottom:8 }}>tonnes CO₂ per year</div>
+            <div style={{ color:fpColor, fontSize:14, fontWeight:700 }}>
+              {parseFloat(tonnes) <= 1.5 ? 'Below average — well done' : parseFloat(tonnes) <= 3 ? `${comparison} average Indian (${avgIndian}t)` : 'High impact — significant room to reduce'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab==='actions' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {actions.map(a => (
+            <div key={a.title} style={{ padding:'14px 16px', background:'rgba(255,255,255,0.02)', border:`1px solid rgba(255,255,255,0.07)`, borderRadius:14, display:'flex', gap:14 }}>
+              <span style={{ fontSize:13, flexShrink:0, marginTop:2 }}>{a.impact}</span>
+              <div>
+                <div style={{ color:accent, fontSize:13, fontWeight:800, marginBottom:5 }}>{a.title}</div>
+                <div style={{ color:'rgba(255,255,255,0.65)', fontSize:13, lineHeight:1.7 }}>{a.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==='facts' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {indiaFacts.map(f => (
+            <div key={f.stat} style={{ padding:'16px 20px', background:'rgba(255,255,255,0.03)', border:`1px solid ${accentBorder}`, borderRadius:14, display:'flex', gap:20, alignItems:'center' }}>
+              <div style={{ color:accent, fontSize:28, fontWeight:900, minWidth:80, textAlign:'center' }}>{f.stat}</div>
+              <div style={{ color:'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.6 }}>{f.context}</div>
+            </div>
+          ))}
+          <div style={{ padding:'14px 16px', background:accentDim, border:`1px solid ${accentBorder}`, borderRadius:12, color:'rgba(255,255,255,0.65)', fontSize:13, lineHeight:1.7 }}>
+            India is simultaneously one of the most climate-vulnerable countries <em>and</em> one of its biggest contributors. What you do matters — not because one person changes everything, but because culture changes when enough people change together.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Mindfulness Module ─────────────────────────────────────────────────────
+function MindfulnessModule({ accent, accentDim, accentBorder, sensors }) {
+  const [tab, setTab] = useState('coach');
+  const [breathPhase, setBreathPhase] = useState(null); // 'inhale'|'hold'|'exhale'|'hold2'|null
+  const [breathCount, setBreathCount] = useState(0);
+  const [breathTimer, setBreathTimer] = useState(0);
+  const [breathRunning, setBreathRunning] = useState(false);
+  const breathRef = useRef(null);
+
+  const BOX = [
+    { phase:'inhale', label:'Inhale', duration:4, color:'#a8dadc' },
+    { phase:'hold',   label:'Hold',   duration:4, color:'#7b68ee' },
+    { phase:'exhale', label:'Exhale', duration:4, color:'#c8b6ff' },
+    { phase:'hold2',  label:'Hold',   duration:4, color:'#48cae4' },
+  ];
+
+  const startBreath = () => {
+    if (breathRunning) {
+      clearInterval(breathRef.current);
+      setBreathRunning(false); setBreathPhase(null); setBreathTimer(0);
+      return;
+    }
+    setBreathRunning(true);
+    let idx = 0, tick = 0, rounds = 0;
+    setBreathPhase(BOX[0].phase); setBreathTimer(BOX[0].duration);
+    breathRef.current = setInterval(() => {
+      tick++;
+      const cur = BOX[idx];
+      if (tick >= cur.duration) {
+        tick = 0; idx = (idx + 1) % 4;
+        if (idx === 0) { rounds++; setBreathCount(rounds); }
+        setBreathPhase(BOX[idx].phase); setBreathTimer(BOX[idx].duration);
+      } else {
+        setBreathTimer(cur.duration - tick);
+      }
+    }, 1000);
+  };
+
+  useEffect(() => () => clearInterval(breathRef.current), []);
+
+  const practices = [
+    { name:'Breath Awareness', duration:'5 min', level:'Beginner', desc:'Sit comfortably. Close eyes. Focus only on the sensation of breathing — the air entering the nostrils, the chest rising, the exhale. When the mind wanders (it will), gently return attention to the breath. No force, no judgment.' },
+    { name:'Body Scan', duration:'10 min', level:'Beginner', desc:'Lie down or sit. Slowly move attention from the top of your head to the tips of your toes — noticing sensations (warmth, tension, tingling, numbness) without trying to change them. This rewires your ability to be in your body.' },
+    { name:'Loving-Kindness (Metta)', duration:'10 min', level:'Intermediate', desc:'Silently repeat: "May I be happy. May I be healthy. May I be safe. May I live with ease." Then extend this to a loved one, a neutral person, a difficult person, and finally all beings. Builds empathy and softens reactivity.' },
+    { name:'Noting Practice', duration:'15 min', level:'Intermediate', desc:'While meditating, softly label what arises: "thinking", "hearing", "feeling", "planning". This creates distance between you and mental content — you observe rather than being lost in thoughts.' },
+    { name:'Open Awareness', duration:'20 min', level:'Advanced', desc:'Rest in open awareness — not focusing on any single object, but aware of everything that arises and passes in consciousness: sounds, thoughts, sensations, emotions. You are the sky; thoughts are clouds passing through.' },
+  ];
+
+  const myths = [
+    { myth:'You have to stop thinking to meditate', truth:'The goal is not empty mind — it is noticing when you have wandered and returning. Every return is a rep.' },
+    { myth:'You need 30+ minutes a day to benefit', truth:'5 minutes of consistent daily practice beats 30 minutes twice a week. Start with 5.' },
+    { myth:'Mindfulness is religious or Hindu/Buddhist', truth:'Clinical mindfulness (MBSR) is completely secular. It is a mental training practice, like going to the gym.' },
+    { myth:'If your mind wanders, you are doing it wrong', truth:'Mind wandering is the practice. Noticing you wandered and returning — that is the actual exercise.' },
+    { myth:'You need to sit in lotus position on a cushion', truth:'Sit in a chair, lie down, walk — any position where you are alert but not tense.' },
+  ];
+
+  const curPhaseData = BOX.find(b => b.phase === breathPhase);
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {[['coach','🤖 AI Coach'],['breathe','🫁 Box Breathing'],['practices','🧘 Practices'],['myths','💡 Myths']].map(([id,lbl]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding:'8px 16px', borderRadius:20, border:`1px solid ${tab===id?accent:'rgba(255,255,255,0.1)'}`, background:tab===id?accentDim:'transparent', color:tab===id?accent:'rgba(255,255,255,0.5)', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer' }}>{lbl}</button>
+        ))}
+      </div>
+
+      {tab==='coach' && <div style={{ height:460, display:'flex', flexDirection:'column' }}><AICoach moduleId="mindfulness" accent={accent} accentDim={accentDim} accentBorder={accentBorder} sensors={sensors} /></div>}
+
+      {tab==='breathe' && (
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:24, padding:'20px 0' }}>
+          <div style={{ color:'rgba(255,255,255,0.6)', fontSize:13, lineHeight:1.7, textAlign:'center', maxWidth:400 }}>
+            Box breathing — used by Navy SEALs, surgeons, and elite athletes. Activates the parasympathetic nervous system. Reduces cortisol in 4 cycles.
+          </div>
+          {/* Animated box */}
+          <div style={{ position:'relative', width:200, height:200 }}>
+            <div style={{ position:'absolute', inset:0, border:`3px solid ${accentBorder}`, borderRadius:24 }} />
+            {breathPhase && (
+              <div style={{ position:'absolute', inset:6, background:accentDim, borderRadius:18, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', border:`2px solid ${curPhaseData?.color||accent}`, transition:'border-color 1s' }}>
+                <div style={{ fontSize:52, fontWeight:900, color:curPhaseData?.color||accent }}>{breathTimer}</div>
+                <div style={{ fontSize:16, fontWeight:800, color:'white', marginTop:4 }}>{curPhaseData?.label}</div>
+              </div>
+            )}
+            {!breathPhase && (
+              <div style={{ position:'absolute', inset:6, background:'rgba(255,255,255,0.02)', borderRadius:18, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <div style={{ color:'rgba(255,255,255,0.3)', fontSize:13 }}>Press start</div>
+              </div>
+            )}
+          </div>
+          <div style={{ display:'flex', gap:16, alignItems:'center' }}>
+            <button onClick={startBreath} style={{ padding:'12px 32px', borderRadius:24, border:`2px solid ${accent}`, background:breathRunning?accentDim:'transparent', color:accent, fontFamily:'inherit', fontSize:14, fontWeight:800, cursor:'pointer' }}>
+              {breathRunning ? '⏸ Pause' : '▶ Start'}
+            </button>
+            {breathCount > 0 && <div style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>{breathCount} round{breathCount!==1?'s':''} complete</div>}
+          </div>
+          <div style={{ display:'flex', gap:12 }}>
+            {BOX.map(b => (
+              <div key={b.phase} style={{ textAlign:'center', padding:'8px 14px', background: breathPhase===b.phase?`${b.color}25`:'rgba(255,255,255,0.03)', border:`1px solid ${breathPhase===b.phase?b.color:'rgba(255,255,255,0.07)'}`, borderRadius:10, transition:'all 0.5s' }}>
+                <div style={{ color:breathPhase===b.phase?b.color:'rgba(255,255,255,0.3)', fontSize:11, fontWeight:800 }}>{b.label}</div>
+                <div style={{ color:'rgba(255,255,255,0.3)', fontSize:11 }}>{b.duration}s</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab==='practices' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {practices.map(p => (
+            <div key={p.name} style={{ padding:'16px 18px', background:'rgba(255,255,255,0.03)', border:`1px solid ${accentBorder}`, borderRadius:16 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                <div style={{ color:accent, fontSize:14, fontWeight:800 }}>{p.name}</div>
+                <div style={{ display:'flex', gap:6 }}>
+                  <span style={{ padding:'2px 9px', background:accentDim, borderRadius:8, color:accent, fontSize:11, fontWeight:700 }}>⏱ {p.duration}</span>
+                  <span style={{ padding:'2px 9px', background:'rgba(255,255,255,0.05)', borderRadius:8, color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:700 }}>{p.level}</span>
+                </div>
+              </div>
+              <div style={{ color:'rgba(255,255,255,0.7)', fontSize:13, lineHeight:1.8 }}>{p.desc}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==='myths' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {myths.map((m,i) => (
+            <div key={i} style={{ padding:'16px 18px', background:'rgba(255,255,255,0.02)', border:`1px solid rgba(255,255,255,0.07)`, borderRadius:14 }}>
+              <div style={{ display:'flex', gap:10, marginBottom:10 }}>
+                <span style={{ color:'#e74c3c', fontSize:12, fontWeight:800, flexShrink:0, marginTop:2 }}>MYTH</span>
+                <span style={{ color:'rgba(255,255,255,0.55)', fontSize:13, fontStyle:'italic' }}>{m.myth}</span>
+              </div>
+              <div style={{ display:'flex', gap:10 }}>
+                <span style={{ color:'#52b788', fontSize:12, fontWeight:800, flexShrink:0, marginTop:2 }}>TRUTH</span>
+                <span style={{ color:'rgba(255,255,255,0.8)', fontSize:13, lineHeight:1.7 }}>{m.truth}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Milestone Toast ────────────────────────────────────────────────────────
 function MilestoneToast({ milestones, onDismiss }) {
   if (!milestones?.length) return null;
@@ -2346,7 +2789,7 @@ export default function LifeSkillsPage() {
       <div style={{ marginBottom:14, padding:'11px 16px', background:mod.accentDim, border:`1px solid ${mod.accentBorder}`, borderRadius:12, color:mod.accent, fontSize:13, fontStyle:'italic', fontWeight:700 }}>"{mod.tagline}"</div>
 
       <div className="ls-card" key={activeModule} style={{ display:'flex', flexDirection:'column', gap:16 }}>
-        {['fitness','grooming','lifestyle','etiquette','criticalthinking','publicspeaking','legalliteracy','emotionalintelligence','firstaid','sleep','cooking','timemanagement','careerplanning'].includes(activeModule) && (
+        {['fitness','grooming','lifestyle','etiquette','criticalthinking','publicspeaking','legalliteracy','emotionalintelligence','firstaid','sleep','cooking','timemanagement','careerplanning','digitalliteracy','environment','mindfulness'].includes(activeModule) && (
           <UserProfileSetup profile={lp.profile} onChange={lp.updateProfile} {...moduleProps} />
         )}
         <QuoteCard moduleId={activeModule} {...moduleProps} />
@@ -2366,6 +2809,9 @@ export default function LifeSkillsPage() {
         {activeModule === 'cooking'               && <CookingModule               {...moduleProps} sensors={sensors} userProfile={lp.profile} />}
         {activeModule === 'timemanagement'        && <TimeManagementModule        {...moduleProps} sensors={sensors} />}
         {activeModule === 'careerplanning'        && <CareerPlanningModule        {...moduleProps} sensors={sensors} userProfile={lp.profile} />}
+        {activeModule === 'digitalliteracy'       && <DigitalLiteracyModule       {...moduleProps} sensors={sensors} />}
+        {activeModule === 'environment'           && <EnvironmentModule           {...moduleProps} sensors={sensors} />}
+        {activeModule === 'mindfulness'           && <MindfulnessModule           {...moduleProps} sensors={sensors} />}
         <DailyCheckin moduleId={activeModule} {...moduleProps} todayChecked={lp.getTodayCheckin(activeModule)} onToggle={handleToggleCheckin} streak={lp.getStreak(activeModule)} />
         <ReflectionJournal moduleId={activeModule} {...moduleProps} getJournal={lp.getJournal} saveJournal={lp.saveJournal} sensors={sensors} />
         <NotificationSettings sensors={sensors} modules={Object.values(MODULES)} {...moduleProps} />
