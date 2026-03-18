@@ -1,23 +1,26 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../hooks/useLanguage';
+import LanguageSelector from './LanguageSelector';
 
 export default function AppLayout() {
   const { user, logoutUser } = useAuth();
+  const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => { logoutUser(); navigate('/login'); };
 
   const navItems = [
-    { to:'/dashboard',   icon:'🏠', label:'Home' },
-    { to:'/chat',        icon:'💬', label:'Chat' },
-    { to:'/quiz',        icon:'📝', label:'Quiz' },
-    { to:'/visual-lab',  icon:'🔬', label:'Lab' },
-    { to:'/ar-lab',      icon:'🌍', label:'AR' },
-    { to:'/life-skills', icon:'🧭', label:'Life' },
-    { to:'/progress',    icon:'📊', label:'Progress' },
-    ...(user?.role==='admin'||user?.role==='teacher' ? [{ to:'/admin', icon:'🛡️', label:'Admin' }] : []),
+    { to:'/dashboard',   icon:'🏠', labelKey:'nav_home' },
+    { to:'/chat',        icon:'💬', labelKey:'nav_chat' },
+    { to:'/quiz',        icon:'📝', labelKey:'nav_quiz' },
+    { to:'/visual-lab',  icon:'🔬', labelKey:'nav_lab' },
+    { to:'/ar-lab',      icon:'🌍', labelKey:'nav_ar' },
+    { to:'/life-skills', icon:'🧭', labelKey:'nav_life' },
+    { to:'/progress',    icon:'📊', labelKey:'nav_progress' },
+    ...(user?.role==='admin'||user?.role==='teacher' ? [{ to:'/admin', icon:'🛡️', labelKey:'nav_admin' }] : []),
   ];
 
   return (
@@ -67,12 +70,17 @@ export default function AppLayout() {
         <div className="desktop-nav" style={{ display:'flex', gap:4, marginLeft:16 }}>
           {navItems.map(item => (
             <NavLink key={item.to} to={item.to} className={({isActive})=>`nav-link${isActive?' active':''}`}>
-              <span>{item.icon}</span><span>{item.label}</span>
+              <span>{item.icon}</span><span>{t(item.labelKey)}</span>
             </NavLink>
           ))}
         </div>
 
         <div style={{ flex:1 }} />
+
+        {/* Language selector — desktop */}
+        <div className="desktop-nav" style={{ display:'flex', marginRight:8 }}>
+          <LanguageSelector />
+        </div>
 
         {/* Desktop user info */}
         <div className="desktop-user" style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -89,7 +97,7 @@ export default function AppLayout() {
               <div style={{ color:'rgba(255,255,255,0.4)', fontSize:10 }}>{user?.grade} · {user?.syllabus}</div>
             </div>
           </div>
-          <button onClick={handleLogout} style={{ background:'rgba(255,80,80,0.12)', border:'1px solid rgba(255,80,80,0.25)', borderRadius:10, padding:'6px 12px', color:'#ff6b6b', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>Logout</button>
+          <button onClick={handleLogout} style={{ background:'rgba(255,80,80,0.12)', border:'1px solid rgba(255,80,80,0.25)', borderRadius:10, padding:'6px 12px', color:'#ff6b6b', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>{t('logout')}</button>
         </div>
 
         {/* Mobile: avatar + hamburger */}
@@ -111,11 +119,15 @@ export default function AppLayout() {
             </div>
             {navItems.map(item => (
               <NavLink key={item.to} to={item.to} className={({isActive})=>`mob-nav-link${isActive?' active':''}`} onClick={() => setMenuOpen(false)}>
-                <span style={{ fontSize:18 }}>{item.icon}</span><span>{item.label}</span>
+                <span style={{ fontSize:18 }}>{item.icon}</span><span>{t(item.labelKey)}</span>
               </NavLink>
             ))}
+            {/* Language picker in mobile menu */}
+            <div style={{ padding:'12px 20px', borderTop:'1px solid rgba(255,255,255,0.05)' }}>
+              <LanguageSelector />
+            </div>
             <button onClick={handleLogout} style={{ width:'100%', padding:'14px 20px', background:'transparent', border:'none', borderTop:'1px solid rgba(255,255,255,0.05)', color:'#ff6b6b', fontSize:15, fontWeight:700, cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif" }}>
-              🚪 Logout
+              🚪 {t('logout')}
             </button>
           </div>
         </div>
@@ -131,7 +143,7 @@ export default function AppLayout() {
         {navItems.map(item => (
           <NavLink key={item.to} to={item.to} className={({isActive})=>`bottom-nav-item${isActive?' active':''}`}>
             <span className="icon">{item.icon}</span>
-            <span>{item.label}</span>
+            <span>{t(item.labelKey)}</span>
           </NavLink>
         ))}
       </nav>

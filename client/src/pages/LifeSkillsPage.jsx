@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLifeProgress } from '../hooks/useLifeProgress';
 import { useSensors } from '../hooks/useSensors';
+import { useLanguage } from '../hooks/useLanguage';
+import { SUPPORTED_LANGUAGES, LANG_TO_TTS } from '../utils/i18n';
 import { VoiceButton, SedentaryBanner, FitnessStats, ScreenTimeWidget, NotificationSettings, FoodCamera } from '../components/SensorsPanel';
 import SensorsPanel from '../components/SensorsPanel';
 
@@ -670,6 +672,10 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
   const [speakingIdx, setSpeakingIdx] = useState(null);
   const endRef = useRef(null);
   const mod = MODULES[moduleId];
+  const { lang, langMeta, t } = useLanguage();
+
+  // Map app language code to language name for AI prompt
+  const langName = langMeta?.label || 'English';
 
   // ElevenLabs TTS for coach responses
   const BACKEND_TTS = process.env.REACT_APP_API_URL
@@ -677,14 +683,14 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     : 'http://localhost:5000';
 
   const speakMessage = async (text, idx) => {
-    if (speakingIdx === idx) { setSpeakingIdx(null); return; } // toggle off
+    if (speakingIdx === idx) { setSpeakingIdx(null); return; }
     setSpeakingIdx(idx);
     try {
       const token = localStorage.getItem('samarthaa_token');
       const r = await fetch(`${BACKEND_TTS}/api/tts/speak`, {
         method: 'POST',
         headers: { 'Content-Type':'application/json', ...(token ? { Authorization:`Bearer ${token}` } : {}) },
-        body: JSON.stringify({ text: text.slice(0, 1000), language: 'English' }),
+        body: JSON.stringify({ text: text.slice(0, 1000), language: langName }),
       });
       if (!r.ok) throw new Error('TTS failed');
       const buf = await r.arrayBuffer();
@@ -732,6 +738,8 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
 
   const buildSystemPrompt = () => {
     let base = COACH_PROMPTS[moduleId];
+    // Always respond in the user's selected language
+    base += `\n\nIMPORTANT: The user's interface language is set to ${langName}. You MUST respond entirely in ${langName}. If the user writes in any language, respond in ${langName}.`;
     if (userProfile && (userProfile.gender || userProfile.age || userProfile.income || userProfile.city)) {
       const parts = [];
       if (userProfile.gender) parts.push(`Gender: ${userProfile.gender}`);
@@ -753,7 +761,6 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     setLoading(true);
 
     try {
-      // ✅ FIX 1: correct token key  ✅ FIX 2: correct endpoint  ✅ FIX 3: correct response field
       const token = localStorage.getItem('samarthaa_token');
       const res = await fetch(`${BACKEND}/api/chat/message`, {
         method: 'POST',
@@ -766,8 +773,8 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
           subject:      mod.label,
           grade:        'Life Skills',
           syllabus:     'General',
-          language:     'English',
-          systemPrompt: buildSystemPrompt(), // passed but server uses its own buildSystemPrompt
+          language:     langName,
+          systemPrompt: buildSystemPrompt(),
         }),
       });
 
@@ -777,13 +784,9 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
       }
 
       const data = await res.json();
-      // ✅ FIX 3: server returns 'reply', not 'message'
       const reply = data.reply || data.message || 'Could not get a response. Please try again.';
-      const newIdx = newMessages.length; // index in updated messages array
+      const newIdx = newMessages.length;
       setMessages(m => [...m, { role:'assistant', content: reply }]);
-
-      // Auto-speak the reply using ElevenLabs if TTS is available
-      // Small delay so state settles
       setTimeout(() => speakMessage(reply, newIdx), 200);
 
     } catch (e) {
@@ -842,7 +845,7 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
         )}
         <input value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key==='Enter' && !e.shiftKey && send()}
-          placeholder={sensors ? 'Type or tap 🎤 to speak...' : `Ask your ${mod.label.toLowerCase()} coach...`}
+          placeholder={t('ls_ask_coach')}
           style={{ flex:1, background:'rgba(255,255,255,0.05)', border:`1px solid ${accentBorder}`, borderRadius:12, padding:'11px 16px', color:'white', fontSize:14, fontFamily:'inherit', outline:'none', minHeight:44 }} />
         <button onClick={() => send()} disabled={loading}
           style={{ background:loading ? 'rgba(255,255,255,0.1)' : accent, border:'none', borderRadius:12, padding:'0 18px', color: loading ? 'rgba(255,255,255,0.3)' : '#0d0d0d', fontWeight:800, fontSize:16, cursor:loading?'wait':'pointer', minHeight:44, minWidth:44 }}>
@@ -1187,19 +1190,20 @@ function DailyCheckin({ moduleId, accent, accentDim, accentBorder, todayChecked,
   const habits = HABITS[moduleId] || [];
   const checked = todayChecked || [];
   const pct = habits.length ? Math.round((checked.length / habits.length) * 100) : 0;
+  const { t } = useLanguage();
 
   return (
     <div style={{ padding:20, background:'rgba(255,255,255,0.02)', border:`1.5px solid ${accentBorder}`, borderRadius:16 }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14, flexWrap:'wrap', gap:8 }}>
-        <div style={{ color:accent, fontSize:13, fontWeight:800 }}>Today's Practice</div>
+        <div style={{ color:accent, fontSize:13, fontWeight:800 }}>{t('ls_habits')}</div>
         <div style={{ display:'flex', gap:12, alignItems:'center' }}>
           {streak > 0 && (
             <div style={{ display:'flex', alignItems:'center', gap:5, background:accentDim, border:`1px solid ${accentBorder}`, borderRadius:20, padding:'4px 10px' }}>
               <span style={{ fontSize:14 }}>🔥</span>
-              <span style={{ color:accent, fontSize:12, fontWeight:800 }}>{streak} day streak</span>
+              <span style={{ color:accent, fontSize:12, fontWeight:800 }}>{streak}d {t('ls_streak')}</span>
             </div>
           )}
-          <div style={{ color:'rgba(255,255,255,0.35)', fontSize:11, fontWeight:700 }}>{checked.length}/{habits.length} done</div>
+          <div style={{ color:'rgba(255,255,255,0.35)', fontSize:11, fontWeight:700 }}>{checked.length}/{habits.length} {t('ls_today_done')}</div>
         </div>
       </div>
       <div style={{ height:4, background:'rgba(255,255,255,0.07)', borderRadius:4, marginBottom:16, overflow:'hidden' }}>
@@ -1244,11 +1248,12 @@ function ReflectionJournal({ moduleId, accent, accentDim, accentBorder, getJourn
   const prompts = REFLECTIONS[moduleId] || [];
   const [idx, setIdx] = useState(0);
   const text = getJournal(moduleId, idx);
+  const { t } = useLanguage();
 
   return (
     <div style={{ padding:20, background:'rgba(255,255,255,0.02)', border:`1.5px solid ${accentBorder}`, borderRadius:16 }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-        <div style={{ color:accent, fontSize:13, fontWeight:800 }}>Reflection Journal</div>
+        <div style={{ color:accent, fontSize:13, fontWeight:800 }}>{t('ls_reflect')} · {t('ls_journal')}</div>
         <div style={{ display:'flex', gap:6 }}>
           <button onClick={() => setIdx(i => (i-1+prompts.length)%prompts.length)}
             style={{ background:'rgba(255,255,255,0.06)', border:'none', borderRadius:8, padding:'4px 10px', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:13 }}>←</button>
@@ -1260,17 +1265,17 @@ function ReflectionJournal({ moduleId, accent, accentDim, accentBorder, getJourn
       <div style={{ color:'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.7, marginBottom:14, fontStyle:'italic' }}>{prompts[idx]}</div>
       <div style={{ position:'relative' }}>
         <textarea value={text} onChange={e => saveJournal(moduleId, idx, e.target.value)}
-          placeholder="Write your thoughts here — or tap the mic to speak them."
+          placeholder={t('ls_ask_coach')}
           rows={5}
           style={{ width:'100%', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'12px 48px 12px 14px', color:'white', fontSize:13, fontFamily:'inherit', outline:'none', resize:'vertical', lineHeight:1.7 }} />
         {sensors && (
           <div style={{ position:'absolute', bottom:10, right:10 }}>
             <VoiceButton sensors={sensors} accent={accent} size={32}
-              onText={(t) => saveJournal(moduleId, idx, text ? text + ' ' + t : t)} />
+              onText={(txt) => saveJournal(moduleId, idx, text ? text + ' ' + txt : txt)} />
           </div>
         )}
       </div>
-      {text && <div style={{ color:'rgba(255,255,255,0.25)', fontSize:11, marginTop:6, textAlign:'right' }}>Saved to your account ✓</div>}
+      {text && <div style={{ color:'rgba(255,255,255,0.25)', fontSize:11, marginTop:6, textAlign:'right' }}>✓ {t('save')}</div>}
     </div>
   );
 }
@@ -3104,6 +3109,7 @@ function WellnessRing({ score }) {
 export default function LifeSkillsPage() {
   const lp      = useLifeProgress();
   const sensors = useSensors();
+  const { t, lang, isRTL } = useLanguage();
   const [activeModule, setActive] = useState(() => lp.lastModule || 'finance');
   const [showSensors, setShowSensors] = useState(false);
 
@@ -3139,13 +3145,13 @@ export default function LifeSkillsPage() {
   if (lp.loading) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'60vh', flexDirection:'column', gap:16 }}>
       <div style={{ fontSize:40, animation:'spin 1.5s linear infinite', display:'inline-block' }}>🧭</div>
-      <div style={{ color:'rgba(255,255,255,0.5)', fontSize:14 }}>Loading your journey...</div>
+      <div style={{ color:'rgba(255,255,255,0.5)', fontSize:14 }}>{t('loading')}</div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 
   return (
-    <div style={{ padding:'16px', maxWidth:900, margin:'0 auto', fontFamily:"'Nunito',sans-serif", minHeight:'100vh' }}>
+    <div dir={isRTL ? 'rtl' : 'ltr'} style={{ padding:'16px', maxWidth:900, margin:'0 auto', fontFamily:"'Nunito',sans-serif", minHeight:'100vh' }}>
       <style>{`
         @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
         @keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -3165,8 +3171,10 @@ export default function LifeSkillsPage() {
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <span style={{ fontSize:28 }}>🧭</span>
           <div>
-            <div style={{ color:'white', fontSize:22, fontWeight:900, lineHeight:1.1 }}>Life Skills</div>
-            <div style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>{isReturning ? `Day ${lp.totalDaysActive} of your journey` : 'Begin your journey today'}</div>
+            <div style={{ color:'white', fontSize:22, fontWeight:900, lineHeight:1.1 }}>{t('ls_title')}</div>
+            <div style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>
+              {isReturning ? `${t('ls_day')} ${lp.totalDaysActive} · ${topStreak}${t('ls_streak')}` : t('ls_journey')}
+            </div>
           </div>
         </div>
         <div style={{ display:'flex', gap:10, alignItems:'center' }}>
@@ -3182,12 +3190,12 @@ export default function LifeSkillsPage() {
       {isReturning && (
         <div style={{ marginBottom:14, padding:'11px 14px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
           <div style={{ color:'rgba(255,255,255,0.6)', fontSize:12 }}>
-            Welcome back! Last in <strong style={{color:'white'}}>{MODULES[lp.lastModule || 'finance']?.label}</strong>.
+            {t('dash_welcome')}! · <strong style={{color:'white'}}>{MODULES[lp.lastModule || 'finance']?.label}</strong>
           </div>
           <div style={{ display:'flex', gap:8, marginLeft:'auto', flexWrap:'wrap' }}>
-            {topStreak > 0 && <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,165,0,0.1)', border:'1px solid rgba(255,165,0,0.25)', borderRadius:20, padding:'4px 10px' }}><span>🔥</span><span style={{ color:'#f4a261', fontSize:11, fontWeight:800 }}>{topStreak}d streak</span></div>}
-            {sensors.steps > 0 && <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(76,201,240,0.1)', border:'1px solid rgba(76,201,240,0.25)', borderRadius:20, padding:'4px 10px' }}><span>🦶</span><span style={{ color:'#4cc9f0', fontSize:11, fontWeight:800 }}>{sensors.steps.toLocaleString()} steps</span></div>}
-            {!lp.serverOnline && <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(231,76,60,0.1)', border:'1px solid rgba(231,76,60,0.2)', borderRadius:20, padding:'4px 10px' }}><span style={{ color:'#e74c3c', fontSize:11, fontWeight:700 }}>📵 Offline</span></div>}
+            {topStreak > 0 && <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,165,0,0.1)', border:'1px solid rgba(255,165,0,0.25)', borderRadius:20, padding:'4px 10px' }}><span>🔥</span><span style={{ color:'#f4a261', fontSize:11, fontWeight:800 }}>{topStreak}d {t('ls_streak')}</span></div>}
+            {sensors.steps > 0 && <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(76,201,240,0.1)', border:'1px solid rgba(76,201,240,0.25)', borderRadius:20, padding:'4px 10px' }}><span>🦶</span><span style={{ color:'#4cc9f0', fontSize:11, fontWeight:800 }}>{sensors.steps.toLocaleString()}</span></div>}
+            {!lp.serverOnline && <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(231,76,60,0.1)', border:'1px solid rgba(231,76,60,0.2)', borderRadius:20, padding:'4px 10px' }}><span style={{ color:'#e74c3c', fontSize:11, fontWeight:700 }}>📵 {t('ls_offline')}</span></div>}
           </div>
         </div>
       )}

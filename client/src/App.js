@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { LanguageProvider } from './hooks/useLanguage';
 import AppLayout from './components/AppLayout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -29,23 +30,25 @@ function ProtectedRoute({ children }) {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="chat" element={<ChatPage />} />
-            <Route path="quiz" element={<QuizPage />} />
-            <Route path="progress" element={<ProgressPage />} />
-            <Route path="admin" element={<AdminPage />} />
-            <Route path="visual-lab" element={<VisualLabPage />} />
-            <Route path="ar-lab" element={<ARLabPage />} />
-            <Route path="life-skills" element={<LifeSkillsPage />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="chat" element={<ChatPage />} />
+              <Route path="quiz" element={<QuizPage />} />
+              <Route path="progress" element={<ProgressPage />} />
+              <Route path="admin" element={<AdminPage />} />
+              <Route path="visual-lab" element={<VisualLabPage />} />
+              <Route path="ar-lab" element={<ARLabPage />} />
+              <Route path="life-skills" element={<LifeSkillsPage />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </AuthProvider>
+      </LanguageProvider>
     </BrowserRouter>
   );
 }
