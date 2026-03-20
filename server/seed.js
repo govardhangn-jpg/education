@@ -53,7 +53,7 @@ const DEMO_STUDENTS = [
   // RGUHS — BPT
   { username: 'bpt_harish',  password: 'bpt2025',  name: 'Harish Naik',       grade: 'BPT Year 2', syllabus: 'RGUHS', avatar: '💪',  email: 'harish@demo.com',  preferredLanguage: 'English' },
   // Staff
-  { username: 'admin',    password: 'admin@samarthaa', name: 'Admin User',    grade: 'Class 10', syllabus: 'CBSE', avatar: '🛡️', role: 'admin' },
+  { username: 'admin',    password: 'admin@samarthaaa', name: 'Admin User',    grade: 'Class 10', syllabus: 'CBSE', avatar: '🛡️', role: 'admin' },
   { username: 'teacher1', password: 'teacher@123',     name: 'Smt. Kavitha Reddy', grade: 'Class 7', syllabus: 'CBSE', avatar: '👩‍🏫', role: 'teacher' },
 ];
 
