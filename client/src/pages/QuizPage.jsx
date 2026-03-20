@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { generateQuiz, submitQuiz, getQuizHistory, getCurriculum, getLeaderboard } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { SUBJECT_META, SUBJECTS_BY_GRADE, DIFFICULTY_META, LANGUAGES, GRADES, SYLLABI,
@@ -10,6 +10,7 @@ import { SUBJECT_META, SUBJECTS_BY_GRADE, DIFFICULTY_META, LANGUAGES, GRADES, SY
 export default function QuizPage() {
   const { user } = useAuth();
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const [tab, setTab] = useState('setup');
 
   const [config, setConfig] = useState(() => {
@@ -235,6 +236,24 @@ export default function QuizPage() {
                       );
                     })}
                   </div>
+                  {/* Direct access to Mains/Essay writing practice */}
+                  {(config.grade === 'UPSC Mains – GS' || config.grade === 'UPSC Mains – Essay') && (
+                    <div style={{ padding:'12px 14px', background:'rgba(230,126,34,0.1)', border:'1.5px solid rgba(230,126,34,0.35)', borderRadius:12, marginBottom:8 }}>
+                      <div style={{ color:'#e67e22', fontSize:12, fontWeight:800, marginBottom:6 }}>
+                        {config.grade === 'UPSC Mains – GS' ? '📚 Mains Answer Writing Practice' : '✍️ Essay Writing Practice'}
+                      </div>
+                      <div style={{ color:'rgba(255,255,255,0.5)', fontSize:11, lineHeight:1.5, marginBottom:10 }}>
+                        {config.grade === 'UPSC Mains – GS'
+                          ? 'Write descriptive answers to 10/15/20-mark questions. Get AI evaluation with scores, model answers, and detailed feedback.'
+                          : 'Write full essays on previous-year and AI-generated topics. Get dimension-wise scores, examiner notes, and model introductions.'}
+                      </div>
+                      <button onClick={() => navigate(`/upsc-writing?mode=${config.grade === 'UPSC Mains – Essay' ? 'essay' : 'mains'}`)}
+                        style={{ width:'100%', padding:'10px', background:'linear-gradient(135deg,#e67e22,#f39c12)', border:'none', borderRadius:10, color:'#0d0d0d', fontFamily:"'Nunito',sans-serif", fontSize:13, fontWeight:800, cursor:'pointer' }}>
+                        Open {config.grade === 'UPSC Mains – Essay' ? 'Essay' : 'Mains'} Writing Practice →
+                      </button>
+                    </div>
+                  )}
+
                   <label style={{ color:'rgba(255,255,255,0.5)', fontSize:10, fontWeight:700, display:'block', marginBottom:6 }}>OPTIONAL SUBJECT</label>
                   <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
                     {UPSC_META.stages.optional.grades.map(g => {
