@@ -58,6 +58,7 @@ export const UI = {
   nav_progress:   { en:'Progress',  hi:'प्रगति',  zh:'进度',   es:'Progreso',ar:'التقدم',   fr:'Progrès',  bn:'অগ্রগতি', pt:'Progresso', ru:'Прогресс', ja:'進捗',   de:'Fortschritt',kn:'ಪ್ರಗತಿ',te:'పురోగతి',ta:'முன்னேற்றம்', mr:'प्रगती' },
   nav_lab:        { en:'Lab',       hi:'लैब',     zh:'实验室', es:'Lab',     ar:'المختبر',  fr:'Labo',     bn:'ল্যাব',   pt:'Lab',    ru:'Лаб',     ja:'ラボ',     de:'Labor',      kn:'ಲ್ಯಾಬ್', te:'లాబ్',  ta:'ஆய்வகம்', mr:'लॅब' },
   nav_ar:         { en:'AR',        hi:'AR',      zh:'AR',     es:'AR',      ar:'الواقع المعزز', fr:'RA', bn:'AR',    pt:'RA',     ru:'AR',      ja:'AR',       de:'AR',         kn:'AR',     te:'AR',    ta:'AR',     mr:'AR' },
+  nav_legacy:     { en:'Legacy',    hi:'विरासत',  zh:'遗产',   es:'Legado',  ar:'الإرث',    fr:'Héritage', bn:'উত্তরাধিকার', pt:'Legado', ru:'Наследие', ja:'レガシー', de:'Vermächtnis', kn:'ಪಾರಂಪರ್ಯ', te:'వారసత్వం', ta:'மரபு', mr:'वारसा' },
   nav_admin:      { en:'Admin',     hi:'एडमिन',  zh:'管理',   es:'Admin',   ar:'المشرف',   fr:'Admin',    bn:'অ্যাডমিন',pt:'Admin', ru:'Админ',   ja:'管理',     de:'Admin',      kn:'ಅಡ್ಮಿನ್',te:'అడ్మిన్',ta:'நிர்வாகி', mr:'अ‍ॅडमिन' },
 
   // ── Common ──────────────────────────────────────────────────────────────

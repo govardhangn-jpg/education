@@ -19,6 +19,7 @@ export default function AppLayout() {
     { to:'/visual-lab',  icon:'🔬', labelKey:'nav_lab' },
     { to:'/ar-lab',      icon:'🌍', labelKey:'nav_ar' },
     { to:'/life-skills', icon:'🧭', labelKey:'nav_life' },
+    { to:'/legacy',      icon:'🕯️', labelKey:'nav_legacy' },
     { to:'/progress',    icon:'📊', labelKey:'nav_progress' },
     ...(user?.role==='admin'||user?.role==='teacher' ? [{ to:'/admin', icon:'🛡️', labelKey:'nav_admin' }] : []),
   ];

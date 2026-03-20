@@ -11,6 +11,7 @@ import AdminPage from './pages/AdminPage';
 import VisualLabPage from './pages/VisualLabPage';
 import ARLabPage from './pages/ARLabPage';
 import LifeSkillsPage from './pages/LifeSkillsPage';
+import DigitalLegacyPage from './pages/DigitalLegacyPage';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -44,6 +45,7 @@ function App() {
               <Route path="visual-lab" element={<VisualLabPage />} />
               <Route path="ar-lab" element={<ARLabPage />} />
               <Route path="life-skills" element={<LifeSkillsPage />} />
+            <Route path="legacy" element={<DigitalLegacyPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
