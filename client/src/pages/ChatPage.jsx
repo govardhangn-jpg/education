@@ -4,7 +4,7 @@ import { sendMessage, getCurriculum, getChatSessions, getChatSession, deleteChat
 import { useAuth } from '../hooks/useAuth';
 import { useTTS, useSpeechRecognition } from '../hooks/useSpeech';
 import { SUBJECT_META, SUBJECTS_BY_GRADE, EXAM_META, EXAM_MODES, LANGUAGES, getSyllabusKey } from '../utils/constants';
-import { isAdminOrTeacher, getChatGradeOptions, gradeFamily, accessLabel } from '../utils/access';
+import { isAdminOrTeacher, getChatGradeOptions, accessLabel } from '../utils/access';
 
 export default function ChatPage() {
   const { user } = useAuth();

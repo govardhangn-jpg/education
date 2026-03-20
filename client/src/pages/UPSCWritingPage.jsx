@@ -19,7 +19,7 @@
  *   3. PRACTICE HISTORY  — All attempts with scores and feedback
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { canAccessUPSCWriting } from '../utils/access';
 import { useSearchParams, useNavigate } from 'react-router-dom';
