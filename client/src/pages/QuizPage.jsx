@@ -6,7 +6,7 @@ import { SUBJECT_META, SUBJECTS_BY_GRADE, DIFFICULTY_META, LANGUAGES, GRADES, SY
          EXAM_META, EXAM_MODES, LLB_META, LLB_MODES, RGUHS_META, RGUHS_MODES,
          UPSC_META, UPSC_GRADES,
          ALL_PROFESSIONAL_MODES, getSyllabusKey } from '../utils/constants';
-import { isAdminOrTeacher, getAccessibleModes, accessLabel } from '../utils/access';
+import { isAdminOrTeacher, getAccessibleModes } from '../utils/access';
 
 export default function QuizPage() {
   const { user } = useAuth();
@@ -16,14 +16,15 @@ export default function QuizPage() {
   const [tab, setTab] = useState('setup');
 
   const [config, setConfig] = useState(() => {
-    // URL param ?examMode=... takes highest priority (works for NEET/KCET/LLB/RGUHS)
     const urlMode = params.get('examMode');
     if (urlMode && ALL_PROFESSIONAL_MODES.includes(urlMode)) {
       const syllabus = getSyllabusKey(urlMode) || 'CBSE';
       const subs = SUBJECTS_BY_GRADE[urlMode] || [];
       return { grade: urlMode, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English' };
     }
-    const grade    = user?.grade    || 'Class 7';
+    // Admin starts at Class 7 (neutral), students start at their registered grade
+    const isPriv = user?.role === 'admin' || user?.role === 'teacher';
+    const grade    = isPriv ? 'Class 7' : (user?.grade || 'Class 7');
     const syllabus = getSyllabusKey(grade) || user?.syllabus || 'CBSE';
     const subs     = SUBJECTS_BY_GRADE[grade] || [];
     return { grade, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English' };
@@ -43,7 +44,7 @@ export default function QuizPage() {
   const set = (k, v) => setConfig(c => ({ ...c, [k]: v }));
 
   // Classify current mode
-  const isExamMode  = EXAM_MODES.includes(config.grade);
+  const isExamMode  = EXAM_MODES.includes(config.grade);  // neet/kcet/iit/neetpg
   const isLLBMode   = LLB_MODES.includes(config.grade);
   const isRGUHSMode = RGUHS_MODES.includes(config.grade);
   const isUPSCMode  = UPSC_GRADES.includes(config.grade);
@@ -167,32 +168,38 @@ export default function QuizPage() {
           <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: 18 }}>
             <div style={{ color: 'white', fontWeight: 800, fontSize: 15, marginBottom: 16 }}>⚙️ Settings</div>
 
-            {/* Mode toggle: 5 modes */}
+            {/* Mode toggle — only show modes the user is registered for */}
             <div style={{ marginBottom: 12 }}>
               <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 8 }}>MODE</label>
               <div className="quiz-mode-grid">
                 {[
-                  { id:'school', icon:'🏫', label:'School',  active: !isProfMode,  color:'#4f8ef7' },
-                  { id:'exam',   icon:'🎯', label:'Entrance', active: isExamMode,  color:'#ffd700' },
-                  { id:'upsc',   icon:'🇮🇳', label:'UPSC',    active: isUPSCMode,  color:'#e67e22' },
-                  { id:'llb',    icon:'⚖️', label:'LLB',      active: isLLBMode,   color:'#c0392b' },
-                  { id:'rguhs',  icon:'🏥', label:'RGUHS',    active: isRGUHSMode, color:'#16a085' },
-                ].map(m => (
-                  <button key={m.id}
-                    disabled={!accessibleModes.includes(m.id)}
-                    title={!accessibleModes.includes(m.id) ? `Locked to ${accessLabel(user)}` : ''}
-                    onClick={() => {
-                    if (!accessibleModes.includes(m.id)) return;
-                    if (m.id === 'school') setConfig(c => ({ ...c, grade: isAdminOrTeacher(user) ? 'Class 7' : user.grade, syllabus:'CBSE', subject:'', chapter:'' }));
-                    if (m.id === 'exam')   setConfig(c => ({ ...c, grade:'IIT-JEE',     syllabus:'IIT-JEE', subject:'Physics', chapter:'' }));
-                    if (m.id === 'upsc')   setConfig(c => ({ ...c, grade:'UPSC Prelims',syllabus:'UPSC',    subject:SUBJECTS_BY_GRADE['UPSC Prelims'][0], chapter:'' }));
-                    if (m.id === 'llb')    setConfig(c => ({ ...c, grade:'LLB Year 1',  syllabus:'LLB',     subject:SUBJECTS_BY_GRADE['LLB Year 1'][0], chapter:'' }));
-                    if (m.id === 'rguhs')  setConfig(c => ({ ...c, grade:'MBBS Year 1', syllabus:'RGUHS',   subject:SUBJECTS_BY_GRADE['MBBS Year 1'][0], chapter:'' }));
-                  }} style={{ padding:'8px 4px', background: m.active ? m.color+'28' : 'rgba(255,255,255,0.04)', border:`1.5px solid ${m.active ? m.color : 'rgba(255,255,255,0.1)'}`, borderRadius:10, color: m.active ? m.color : !accessibleModes.includes(m.id) ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.45)', fontSize:11, fontWeight:700, cursor:accessibleModes.includes(m.id) ? 'pointer' : 'not-allowed', display:'flex', flexDirection:'column', alignItems:'center', gap:3, opacity: accessibleModes.includes(m.id) ? 1 : 0.4, position:'relative' }}>
-                    <span style={{ fontSize:14 }}>{m.icon}</span>
-                    <span style={{ fontSize:10 }}>{m.label}</span>
-                  </button>
-                ))}
+                  { id:'school', icon:'🏫', label:'School',   active: !isProfMode,  color:'#4f8ef7',  defaultGrade: isAdminOrTeacher(user) ? 'Class 7' : user?.grade, defaultSyl: 'CBSE' },
+                  { id:'neet',   icon:'🩺', label:'NEET',      active: EXAM_MODES.includes(config.grade) && (config.grade.includes('NEET')), color:'#e74c3c', defaultGrade: 'NEET Preparation', defaultSyl: 'NEET' },
+                  { id:'kcet',   icon:'🎯', label:'KCET',      active: config.grade === 'KCET Preparation', color:'#ffd700', defaultGrade: 'KCET Preparation', defaultSyl: 'KCET' },
+                  { id:'iit',    icon:'⚙️', label:'IIT-JEE',   active: config.grade === 'IIT-JEE', color:'#4cc9f0', defaultGrade: 'IIT-JEE', defaultSyl: 'IIT-JEE' },
+                  { id:'upsc',   icon:'🇮🇳', label:'UPSC',     active: isUPSCMode,   color:'#e67e22',  defaultGrade: 'UPSC Prelims', defaultSyl: 'UPSC' },
+                  { id:'llb',    icon:'⚖️', label:'LLB',       active: isLLBMode,    color:'#c0392b',  defaultGrade: 'LLB Year 1', defaultSyl: 'LLB' },
+                  { id:'rguhs',  icon:'🏥', label:'RGUHS',     active: isRGUHSMode,  color:'#16a085',  defaultGrade: 'MBBS Year 1', defaultSyl: 'RGUHS' },
+                ]
+                  // Students only see their own mode; admin sees all
+                  .filter(m => isAdminOrTeacher(user) || accessibleModes.includes(m.id))
+                  .map(m => {
+                  const canUse = isAdminOrTeacher(user) || accessibleModes.includes(m.id);
+                  return (
+                    <button key={m.id}
+                      disabled={!canUse}
+                      onClick={() => {
+                        if (!canUse) return;
+                        const g = m.defaultGrade;
+                        const s = m.defaultSyl;
+                        setConfig(c => ({ ...c, grade: g, syllabus: s, subject: SUBJECTS_BY_GRADE[g]?.[0] || '', chapter: '' }));
+                      }}
+                      style={{ padding:'8px 4px', background: m.active ? m.color+'28' : 'rgba(255,255,255,0.04)', border:`1.5px solid ${m.active ? m.color : 'rgba(255,255,255,0.1)'}`, borderRadius:10, color: m.active ? m.color : 'rgba(255,255,255,0.45)', fontSize:11, fontWeight:700, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                      <span style={{ fontSize:14 }}>{m.icon}</span>
+                      <span style={{ fontSize:10 }}>{m.label}</span>
+                    </button>
+                  );
+                })}
               </div>
 
               {/* School: grade + syllabus dropdowns */}
@@ -219,10 +226,12 @@ export default function QuizPage() {
                 </div>
               )}
 
-              {/* Entrance exam selector: IIT-JEE / NEET / KCET / NEET PG */}
+              {/* Entrance exam sub-selector — admin sees all, student sees only their exam */}
               {isExamMode && (
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                  {EXAM_MODES.map(em => {
+                  {EXAM_MODES
+                    .filter(em => isAdminOrTeacher(user) || user?.grade === em || (em === 'NEET PG' && user?.grade === 'NEET Preparation'))
+                    .map(em => {
                     const em_meta = EXAM_META[em];
                     const active  = config.grade === em;
                     const syllabusMap = { 'NEET Preparation':'NEET','KCET Preparation':'KCET','NEET PG':'NEET PG','IIT-JEE':'IIT-JEE' };

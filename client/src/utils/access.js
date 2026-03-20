@@ -2,14 +2,16 @@
  * access.js — Course Access Control
  * ──────────────────────────────────
  * Rules:
- *   • Admin / Teacher  → can access ALL grades, courses, and modes
- *   • Student          → can access ONLY their registered grade/course
- *   • Life Skills      → open to everyone (no restriction)
- *   • Digital Legacy   → open to everyone (no restriction)
- *   • UPSC Writing     → open only to UPSC-registered users (+ admin/teacher)
- *
- * Usage:
- *   import { canAccessGrade, getAccessibleGrades, isAdminOrTeacher } from '../utils/access';
+ *   • Admin / Teacher  → all modes, all courses, all grades
+ *   • School student   → school mode only, their own grade only
+ *   • NEET student     → NEET Preparation + NEET PG only
+ *   • KCET student     → KCET Preparation only
+ *   • IIT-JEE student  → IIT-JEE only
+ *   • UPSC student     → UPSC modes + UPSC writing practice
+ *   • LLB student      → LLB years only (their year and adjacent)
+ *   • RGUHS student    → RGUHS programme only (their year and adjacent)
+ *   • Life Skills      → open to ALL users
+ *   • Digital Legacy   → open to ALL users
  */
 
 import {
@@ -24,148 +26,94 @@ export const isAdminOrTeacher = (user) =>
 
 export const isAdmin = (user) => user?.role === 'admin';
 
-// ── Grade family helpers ────────────────────────────────────────────────────
+// ── Grade family ────────────────────────────────────────────────────────────
+// Each family maps to exactly one quiz mode button
 
-const SCHOOL_GRADES  = GRADES; // Class 1–12
-const NEET_FAMILY    = ['NEET Preparation', 'NEET PG'];
-const KCET_FAMILY    = ['KCET Preparation'];
-const IIT_FAMILY     = ['IIT-JEE'];
-const UPSC_FAMILY    = UPSC_GRADES;
-const LLB_FAMILY     = LLB_MODES;
-const RGUHS_FAMILY   = RGUHS_MODES;
-
-/**
- * Returns the "family" (course group) a grade belongs to.
- * Two grades in the same family can be accessed by users of that family.
- */
 export const gradeFamily = (grade) => {
   if (!grade) return 'school';
-  if (SCHOOL_GRADES.includes(grade))  return 'school';
-  if (NEET_FAMILY.includes(grade))    return 'neet';
-  if (KCET_FAMILY.includes(grade))    return 'kcet';
-  if (IIT_FAMILY.includes(grade))     return 'iit';
-  if (UPSC_FAMILY.includes(grade))    return 'upsc';
-  if (LLB_FAMILY.includes(grade))     return 'llb';
-  if (RGUHS_FAMILY.includes(grade))   return 'rguhs';
+  if (GRADES.includes(grade))           return 'school';
+  if (grade === 'NEET Preparation')     return 'neet';
+  if (grade === 'NEET PG')              return 'neet';
+  if (grade === 'KCET Preparation')     return 'kcet';
+  if (grade === 'IIT-JEE')              return 'iit';
+  if (EXAM_MODES.includes(grade))       return 'neet'; // catch-all for any other exam mode
+  if (UPSC_GRADES.includes(grade))      return 'upsc';
+  if (LLB_MODES.includes(grade))        return 'llb';
+  if (RGUHS_MODES.includes(grade))      return 'rguhs';
   return 'school';
 };
 
-/**
- * Can a user access a particular grade/course?
- *
- * Admin/Teacher → always yes
- * Student → only if the target grade is in the same family as their registered grade
- */
+// ── Mode access ─────────────────────────────────────────────────────────────
+// Returns array of mode IDs the user is allowed to see/use in Quiz and Chat.
+// Each entrance exam is its OWN mode — NEET students cannot access IIT-JEE and vice versa.
+
+export const getAccessibleModes = (user) => {
+  if (!user) return [];
+  if (isAdminOrTeacher(user)) return ['school', 'neet', 'kcet', 'iit', 'upsc', 'llb', 'rguhs'];
+  const f = gradeFamily(user.grade);
+  const map = {
+    school: ['school'],
+    neet:   ['neet'],
+    kcet:   ['kcet'],
+    iit:    ['iit'],
+    upsc:   ['upsc'],
+    llb:    ['llb'],
+    rguhs:  ['rguhs'],
+  };
+  return map[f] || ['school'];
+};
+
+// ── Grade access ─────────────────────────────────────────────────────────────
+
 export const canAccessGrade = (user, targetGrade) => {
   if (!user) return false;
   if (isAdminOrTeacher(user)) return true;
-  if (!targetGrade) return true;
-  // Same grade
-  if (user.grade === targetGrade) return true;
-  // Same family (e.g. MBBS Year 1 can access MBBS Year 2 content for preview? No — strict.)
-  // Actually enforce strict: student sees ONLY their grade
   return user.grade === targetGrade;
 };
 
-/**
- * Returns the list of grades the user is allowed to see/switch to.
- * Admin/Teacher → all grades
- * Student → only their own grade
- */
 export const getAccessibleGrades = (user) => {
   if (!user) return [];
-  if (isAdminOrTeacher(user)) return [...SCHOOL_GRADES, ...ALL_PROFESSIONAL_MODES];
+  if (isAdminOrTeacher(user)) return [...GRADES, ...ALL_PROFESSIONAL_MODES];
   return [user.grade];
 };
 
-/**
- * Returns which quiz/chat modes the user can access.
- * Admin/Teacher → all modes
- * Student → only their family's mode
- */
-export const getAccessibleModes = (user) => {
-  if (!user) return [];
-  if (isAdminOrTeacher(user)) {
-    return ['school', 'exam', 'upsc', 'llb', 'rguhs'];
-  }
-  const family = gradeFamily(user.grade);
-  if (family === 'school')  return ['school'];
-  if (family === 'neet' || family === 'kcet' || family === 'iit') return ['exam'];
-  if (family === 'upsc')    return ['upsc'];
-  if (family === 'llb')     return ['llb'];
-  if (family === 'rguhs')   return ['rguhs'];
-  return ['school'];
-};
+// ── UPSC Writing access ──────────────────────────────────────────────────────
 
-/**
- * Can this user access UPSC writing practice?
- */
 export const canAccessUPSCWriting = (user) => {
   if (!user) return false;
   if (isAdminOrTeacher(user)) return true;
   return gradeFamily(user.grade) === 'upsc';
 };
 
-/**
- * For the Chat page — returns which school grades the user can select.
- * Admin/Teacher → all Class 1–12
- * School student → only their own grade
- * Professional/exam student → no school grades (they use exam mode)
- */
-export const getAccessibleSchoolGrades = (user) => {
-  if (!user) return SCHOOL_GRADES;
-  if (isAdminOrTeacher(user)) return SCHOOL_GRADES;
-  if (SCHOOL_GRADES.includes(user.grade)) return [user.grade];
-  return []; // professional students don't access school grades
-};
+// ── Chat grade options ───────────────────────────────────────────────────────
 
-/**
- * For the Chat page grade select — returns all grades the user can chat about.
- * Admin/Teacher → everything
- * Student → their own grade only (but same family for professional)
- */
 export const getChatGradeOptions = (user) => {
-  if (!user) return SCHOOL_GRADES;
-  if (isAdminOrTeacher(user)) {
-    return [
-      ...SCHOOL_GRADES,
-      ...EXAM_MODES,
-      ...UPSC_GRADES,
-      ...LLB_MODES,
-      ...RGUHS_MODES,
-    ];
-  }
-  // Student sees only their own grade
+  if (!user) return GRADES;
+  if (isAdminOrTeacher(user)) return [...GRADES, ...ALL_PROFESSIONAL_MODES];
   return [user.grade];
 };
 
-/**
- * Returns a human-readable description of a user's access level.
- */
+// ── Display helpers ──────────────────────────────────────────────────────────
+
 export const accessLabel = (user) => {
   if (!user) return '';
-  if (user.role === 'admin')   return 'Full access — all courses';
-  if (user.role === 'teacher') return 'Full access — all courses';
+  if (isAdminOrTeacher(user)) return 'Full access — all courses';
   return user.grade || 'Unknown course';
 };
 
-/**
- * Access-locked component wrapper helper.
- * Returns { allowed: bool, message: string }
- */
+export const getAccessibleSchoolGrades = (user) => {
+  if (!user) return GRADES;
+  if (isAdminOrTeacher(user)) return GRADES;
+  if (GRADES.includes(user.grade)) return [user.grade];
+  return [];
+};
+
 export const checkPageAccess = (user, page) => {
   if (!user) return { allowed: false, message: 'Please log in.' };
-
-  // These pages are always open
-  if (['lifeskills', 'legacy', 'progress', 'dashboard'].includes(page)) {
-    return { allowed: true };
-  }
-
-  // UPSC writing — only UPSC students + admin/teacher
+  if (['lifeskills', 'legacy', 'progress', 'dashboard'].includes(page)) return { allowed: true };
   if (page === 'upsc-writing') {
     if (canAccessUPSCWriting(user)) return { allowed: true };
-    return { allowed: false, message: `UPSC Writing Practice is available for UPSC aspirants only. You are registered for ${user.grade}.` };
+    return { allowed: false, message: `UPSC Writing is for UPSC aspirants only. You are registered for ${user.grade}.` };
   }
-
   return { allowed: true };
 };
