@@ -86,12 +86,9 @@ router.post('/login', async (req, res) => {
       deviceName, deviceType, ipAddress: ip, userAgent: ua,
     });
 
-    // Keep only last 10 sessions per user (cleanup old ones)
-    const sessions = await Session.find({ userId: user._id }).sort({ createdAt: -1 });
-    if (sessions.length > 10) {
-      const toDelete = sessions.slice(10).map(s => s._id);
-      await Session.deleteMany({ _id: { $in: toDelete } });
-    }
+    // Sign out ALL previous sessions — only the latest login is valid
+    // Other devices will get "Session revoked. Please log in again." on next request
+    await Session.deleteMany({ userId: user._id, tokenId: { $ne: tokenId } });
 
     await User.findByIdAndUpdate(user._id, { lastLogin: new Date(), $inc: { loginCount: 1 } });
 

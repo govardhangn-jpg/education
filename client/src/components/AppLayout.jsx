@@ -128,8 +128,8 @@ export default function AppLayout() {
 
       {/* Mobile slide-down menu */}
       {menuOpen && (
-        <div className="mob-menu" style={{ position:'fixed', top:60, left:0, right:0, bottom:0, background:'rgba(13,13,26,0.98)', backdropFilter:'blur(12px)', zIndex:140, overflowY:'auto', WebkitOverflowScrolling:'touch' }}>
-          <div style={{ padding:'8px 0', paddingBottom:'env(safe-area-inset-bottom,16px)' }}>
+        <div className="mob-menu" style={{ position:'fixed', top:60, left:0, right:0, bottom:0, background:'rgba(13,13,26,0.98)', backdropFilter:'blur(12px)', zIndex:300, overflowY:'auto', WebkitOverflowScrolling:'touch' }}>
+          <div style={{ padding:'8px 0', paddingBottom:'calc(80px + env(safe-area-inset-bottom,0px))' }}>
             <div style={{ padding:'12px 20px 8px', color:'rgba(255,255,255,0.3)', fontSize:10, fontWeight:800, letterSpacing:1.5, textTransform:'uppercase' }}>
               {user?.avatar} {user?.name} · {(user?.role === 'admin' || user?.role === 'teacher') ? `${user.role} · All courses` : `${user?.grade} · ${user?.syllabus}`}
             </div>
@@ -146,9 +146,11 @@ export default function AppLayout() {
               style={{ display:'flex', alignItems:'center', gap:12, padding:'15px 20px', color:'rgba(255,255,255,0.7)', textDecoration:'none', fontSize:15, fontWeight:700, borderBottom:'1px solid rgba(255,255,255,0.05)', minHeight:52 }}>
               <span style={{ fontSize:18 }}>🔐</span><span>Manage Devices</span>
             </NavLink>
-            <button onClick={handleLogout} style={{ width:'100%', padding:'14px 20px', background:'transparent', border:'none', borderTop:'1px solid rgba(255,255,255,0.05)', color:'#ff6b6b', fontSize:15, fontWeight:700, cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif" }}>
-              🚪 {t('logout')}
-            </button>
+            <div style={{ padding:'12px 16px 8px' }}>
+              <button onClick={handleLogout} style={{ width:'100%', padding:'16px 20px', background:'rgba(255,80,80,0.12)', border:'1.5px solid rgba(255,80,80,0.3)', borderRadius:14, color:'#ff6b6b', fontSize:15, fontWeight:800, cursor:'pointer', textAlign:'center', fontFamily:"'Nunito',sans-serif", display:'flex', alignItems:'center', justifyContent:'center', gap:8, minHeight:52 }}>
+                🚪 {t('logout')}
+              </button>
+            </div>
           </div>
         </div>
       )}
