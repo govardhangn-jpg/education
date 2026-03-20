@@ -1,7 +1,7 @@
 // server/routes/auth.js
 import express    from 'express';
+import crypto      from 'crypto';
 import jwt        from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
 import dotenv     from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join }  from 'path';
@@ -45,7 +45,7 @@ router.post('/register', async (req, res) => {
 
     const user = await User.create({ username, password, name, email, grade, syllabus, avatar, preferredLanguage });
 
-    const tokenId = uuidv4();
+    const tokenId = crypto.randomUUID();
     const token   = signToken(user._id, tokenId);
     const { ua, ip, deviceName, deviceType } = getClientInfo(req);
 
@@ -76,7 +76,7 @@ router.post('/login', async (req, res) => {
     }
     if (!user.isActive) return res.status(403).json({ error: 'Account is disabled. Contact admin.' });
 
-    const tokenId = uuidv4();
+    const tokenId = crypto.randomUUID();
     const token   = signToken(user._id, tokenId);
     const { ua, ip, deviceName, deviceType } = getClientInfo(req);
 
