@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDashboard } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
+import { isAdminOrTeacher, accessLabel, gradeFamily } from '../utils/access';
 import { SUBJECT_META, EXAM_META, EXAM_MODES, SUBJECTS_BY_GRADE } from '../utils/constants';
 
 export default function DashboardPage() {
@@ -36,6 +37,12 @@ export default function DashboardPage() {
   );
 
   if (loading) return <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'60vh', color:'white', fontSize:16 }}>Loading...</div>;
+
+  // Access summary for dashboard
+  const isPrivileged = isAdminOrTeacher(user);
+  const accessSummary = isPrivileged
+    ? { icon:'🛡️', label:'Full access — all courses', color:'#ffd700', bg:'rgba(255,215,0,0.08)', border:'rgba(255,215,0,0.2)' }
+    : { icon:'📚', label:`Course: ${accessLabel(user)}`, color:'#4cc9f0', bg:'rgba(76,201,240,0.08)', border:'rgba(76,201,240,0.2)' };
 
   const avgQuiz = data?.quizStats?.length ? Math.round(data.quizStats.reduce((s,q)=>s+q.avgScore,0)/data.quizStats.length) : 0;
 
@@ -84,6 +91,16 @@ export default function DashboardPage() {
         <div style={{ textAlign:'right', flexShrink:0 }}>
           <div style={{ color:'#ffd700', fontSize:20, fontWeight:800 }}>🔥 {data?.streakDays || user?.streakDays || 0}</div>
           <div style={{ color:'rgba(255,255,255,0.5)', fontSize:10 }}>Day streak</div>
+        </div>
+      </div>
+
+      {/* Access level indicator */}
+      <div style={{ marginBottom:16, padding:'10px 14px', background:accessSummary.bg, border:`1px solid ${accessSummary.border}`, borderRadius:12, display:'flex', alignItems:'center', gap:10 }}>
+        <span style={{ fontSize:18 }}>{accessSummary.icon}</span>
+        <div>
+          <span style={{ color:accessSummary.color, fontSize:12, fontWeight:800 }}>{accessSummary.label}</span>
+          {!isPrivileged && <span style={{ color:'rgba(255,255,255,0.3)', fontSize:11, marginLeft:8 }}>· Life Skills &amp; Digital Legacy open to all</span>}
+          {isPrivileged && <span style={{ color:'rgba(255,215,0,0.5)', fontSize:11, marginLeft:8 }}>· Use Admin → Browse Courses to explore any course</span>}
         </div>
       </div>
 

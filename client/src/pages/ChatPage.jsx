@@ -4,6 +4,7 @@ import { sendMessage, getCurriculum, getChatSessions, getChatSession, deleteChat
 import { useAuth } from '../hooks/useAuth';
 import { useTTS, useSpeechRecognition } from '../hooks/useSpeech';
 import { SUBJECT_META, SUBJECTS_BY_GRADE, EXAM_META, EXAM_MODES, LANGUAGES, getSyllabusKey } from '../utils/constants';
+import { isAdminOrTeacher, getChatGradeOptions, gradeFamily, accessLabel } from '../utils/access';
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -235,8 +236,10 @@ export default function ChatPage() {
               </span>
             ) : (
               <>
-                <select value={grade} onChange={e => setGrade(e.target.value)}>
-                  {['Class 1','Class 2','Class 3','Class 4','Class 5','Class 6','Class 7','Class 8','Class 9','Class 10','Class 11','Class 12'].map(g=><option key={g} value={g}>{g}</option>)}
+                <select value={grade} onChange={e => setGrade(e.target.value)}
+                  disabled={!isAdminOrTeacher(user)}
+                  title={!isAdminOrTeacher(user) ? `Course locked to ${accessLabel(user)}` : 'Switch course'}>
+                  {getChatGradeOptions(user).map(g=><option key={g} value={g}>{g}</option>)}
                 </select>
                 <select value={syllabus} onChange={e => setSyllabus(e.target.value)}>
                   {['CBSE','ICSE','Karnataka State'].map(s=><option key={s} value={s}>{s}</option>)}

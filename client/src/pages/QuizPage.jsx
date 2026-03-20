@@ -6,11 +6,13 @@ import { SUBJECT_META, SUBJECTS_BY_GRADE, DIFFICULTY_META, LANGUAGES, GRADES, SY
          EXAM_META, EXAM_MODES, LLB_META, LLB_MODES, RGUHS_META, RGUHS_MODES,
          IIT_JEE_META, UPSC_META, UPSC_GRADES,
          ALL_PROFESSIONAL_MODES, getSyllabusKey } from '../utils/constants';
+import { isAdminOrTeacher, getAccessibleModes, gradeFamily, accessLabel } from '../utils/access';
 
 export default function QuizPage() {
   const { user } = useAuth();
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const accessibleModes = getAccessibleModes(user);
   const [tab, setTab] = useState('setup');
 
   const [config, setConfig] = useState(() => {
@@ -167,13 +169,17 @@ export default function QuizPage() {
                   { id:'llb',    icon:'⚖️', label:'LLB',      active: isLLBMode,   color:'#c0392b' },
                   { id:'rguhs',  icon:'🏥', label:'RGUHS',    active: isRGUHSMode, color:'#16a085' },
                 ].map(m => (
-                  <button key={m.id} onClick={() => {
-                    if (m.id === 'school') setConfig(c => ({ ...c, grade:'Class 7',     syllabus:'CBSE',    subject:'', chapter:'' }));
+                  <button key={m.id}
+                    disabled={!accessibleModes.includes(m.id)}
+                    title={!accessibleModes.includes(m.id) ? `Locked to ${accessLabel(user)}` : ''}
+                    onClick={() => {
+                    if (!accessibleModes.includes(m.id)) return;
+                    if (m.id === 'school') setConfig(c => ({ ...c, grade: isAdminOrTeacher(user) ? 'Class 7' : user.grade, syllabus:'CBSE', subject:'', chapter:'' }));
                     if (m.id === 'exam')   setConfig(c => ({ ...c, grade:'IIT-JEE',     syllabus:'IIT-JEE', subject:'Physics', chapter:'' }));
                     if (m.id === 'upsc')   setConfig(c => ({ ...c, grade:'UPSC Prelims',syllabus:'UPSC',    subject:SUBJECTS_BY_GRADE['UPSC Prelims'][0], chapter:'' }));
                     if (m.id === 'llb')    setConfig(c => ({ ...c, grade:'LLB Year 1',  syllabus:'LLB',     subject:SUBJECTS_BY_GRADE['LLB Year 1'][0], chapter:'' }));
                     if (m.id === 'rguhs')  setConfig(c => ({ ...c, grade:'MBBS Year 1', syllabus:'RGUHS',   subject:SUBJECTS_BY_GRADE['MBBS Year 1'][0], chapter:'' }));
-                  }} style={{ padding:'8px 4px', background: m.active ? m.color+'28' : 'rgba(255,255,255,0.04)', border:`1.5px solid ${m.active ? m.color : 'rgba(255,255,255,0.1)'}`, borderRadius:10, color: m.active ? m.color : 'rgba(255,255,255,0.45)', fontSize:11, fontWeight:700, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                  }} style={{ padding:'8px 4px', background: m.active ? m.color+'28' : 'rgba(255,255,255,0.04)', border:`1.5px solid ${m.active ? m.color : 'rgba(255,255,255,0.1)'}`, borderRadius:10, color: m.active ? m.color : !accessibleModes.includes(m.id) ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.45)', fontSize:11, fontWeight:700, cursor:accessibleModes.includes(m.id) ? 'pointer' : 'not-allowed', display:'flex', flexDirection:'column', alignItems:'center', gap:3, opacity: accessibleModes.includes(m.id) ? 1 : 0.4, position:'relative' }}>
                     <span style={{ fontSize:14 }}>{m.icon}</span>
                     <span style={{ fontSize:10 }}>{m.label}</span>
                   </button>
@@ -185,9 +191,15 @@ export default function QuizPage() {
                 <div style={{ display:'flex', gap:8 }}>
                   <div style={{ flex:1 }}>
                     <label style={{ color:'rgba(255,255,255,0.5)', fontSize:10, fontWeight:700, display:'block', marginBottom:4 }}>GRADE</label>
-                    <select value={config.grade} onChange={e => setConfig(c => ({ ...c, grade:e.target.value, subject:'', chapter:'' }))}>
-                      {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
-                    </select>
+                    {isAdminOrTeacher(user) ? (
+                      <select value={config.grade} onChange={e => setConfig(c => ({ ...c, grade:e.target.value, subject:'', chapter:'' }))}>
+                        {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                      </select>
+                    ) : (
+                      <div style={{ padding:'9px 12px', background:'rgba(255,255,255,0.04)', border:'1.5px solid rgba(255,255,255,0.1)', borderRadius:10, color:'rgba(255,255,255,0.75)', fontSize:13, fontWeight:700, display:'flex', alignItems:'center', gap:6 }}>
+                        <span style={{ fontSize:12 }}>🔒</span> {user?.grade}
+                      </div>
+                    )}
                   </div>
                   <div style={{ flex:1 }}>
                     <label style={{ color:'rgba(255,255,255,0.5)', fontSize:10, fontWeight:700, display:'block', marginBottom:4 }}>SYLLABUS</label>

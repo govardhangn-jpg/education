@@ -21,6 +21,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { canAccessUPSCWriting } from '../utils/access';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
 // ── Constants ─────────────────────────────────────────────────────────────
@@ -133,6 +134,24 @@ export default function UPSCWritingPage() {
   const { user }   = useAuth();
   const [params]   = useSearchParams();
   const navigate   = useNavigate();
+
+  // Access check — UPSC students and admin/teacher only
+  if (user && !canAccessUPSCWriting(user)) {
+    return (
+      <div style={{ padding:'40px 20px', textAlign:'center', maxWidth:500, margin:'0 auto' }}>
+        <div style={{ fontSize:48, marginBottom:16 }}>🔒</div>
+        <div style={{ color:'white', fontSize:18, fontWeight:800, marginBottom:8 }}>Access Restricted</div>
+        <div style={{ color:'rgba(255,255,255,0.5)', fontSize:13, lineHeight:1.7, marginBottom:20 }}>
+          UPSC Writing Practice is available for students registered under a UPSC course.<br />
+          You are registered for <strong style={{color:'white'}}>{user?.grade}</strong>.
+        </div>
+        <button onClick={() => navigate('/quiz')}
+          style={{ padding:'12px 24px', background:UPSC_DIM, border:`1.5px solid ${UPSC_BDR}`, borderRadius:12, color:UPSC_ORANGE, fontFamily:"'Nunito',sans-serif", fontSize:13, fontWeight:800, cursor:'pointer' }}>
+          ← Back to Quiz
+        </button>
+      </div>
+    );
+  }
 
   const initMode = params.get('mode') === 'essay' ? 'essay' : 'mains';
   const [mode, setMode]     = useState(initMode);

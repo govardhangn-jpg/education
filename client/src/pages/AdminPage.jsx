@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { getStudents, getAdminStats, toggleStudent, bulkCreateStudents } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { ALL_PROFESSIONAL_MODES } from '../utils/constants';
 import { GRADES } from '../utils/constants';
 
 export default function AdminPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab]           = useState('students');
   const [students, setStudents] = useState([]);
   const [stats, setStats]       = useState(null);
@@ -71,7 +74,7 @@ export default function AdminPage() {
       </div>
 
       <div style={{ display:'flex', borderBottom:'1px solid rgba(255,255,255,0.1)', marginBottom:20, overflowX:'auto' }}>
-        {[['students','👥 Students'],['stats','📊 Stats'],['bulk','📋 Bulk Import']].map(([t,lbl])=>
+        {[['students','👥 Students'],['stats','📊 Stats'],['bulk','📋 Bulk Import'],['browse','🗺️ Browse Courses']].map(([t,lbl])=>
           <button key={t} className={`admin-tab ${tab===t?'active':''}`} onClick={()=>setTab(t)}>{lbl}</button>
         )}
       </div>
@@ -199,6 +202,105 @@ export default function AdminPage() {
           )}
         </div>
       )}
+      {/* ── BROWSE ALL COURSES (admin only) ── */}
+      {tab==='browse' && (
+        <div>
+          <div style={{ padding:'14px 16px', background:'rgba(230,126,34,0.1)', border:'1px solid rgba(230,126,34,0.25)', borderRadius:14, marginBottom:20 }}>
+            <div style={{ color:'#e67e22', fontSize:13, fontWeight:800, marginBottom:4 }}>Admin Course Browser</div>
+            <div style={{ color:'rgba(255,255,255,0.55)', fontSize:12, lineHeight:1.6 }}>
+              As admin you can access and explore any course. Click a course to open it in Chat or Quiz.
+            </div>
+          </div>
+
+          {[
+            { label:'School Grades', color:'#4f8ef7', icon:'🏫',
+              items: ['Class 1','Class 2','Class 3','Class 4','Class 5','Class 6','Class 7','Class 8','Class 9','Class 10','Class 11','Class 12'].map(g => ({ grade:g, syllabus:'CBSE' }))
+            },
+            { label:'Entrance Exams', color:'#ffd700', icon:'🎯',
+              items: [
+                { grade:'IIT-JEE', syllabus:'IIT-JEE' },
+                { grade:'NEET Preparation', syllabus:'NEET' },
+                { grade:'KCET Preparation', syllabus:'KCET' },
+                { grade:'NEET PG', syllabus:'NEET PG' },
+              ]
+            },
+            { label:'UPSC Civil Services', color:'#e67e22', icon:'🇮🇳',
+              items: [
+                { grade:'UPSC Prelims', syllabus:'UPSC' },
+                { grade:'UPSC Mains – GS', syllabus:'UPSC' },
+                { grade:'UPSC Mains – Essay', syllabus:'UPSC' },
+              ]
+            },
+            { label:'LLB – Law', color:'#c0392b', icon:'⚖️',
+              items: ['LLB Year 1','LLB Year 2','LLB Year 3','LLB Year 4','LLB Year 5'].map(g => ({ grade:g, syllabus:'LLB' }))
+            },
+            { label:'RGUHS – Medical', color:'#16a085', icon:'🏥',
+              items: [
+                { grade:'MBBS Year 1', syllabus:'RGUHS' },
+                { grade:'MBBS Year 2', syllabus:'RGUHS' },
+                { grade:'MBBS Year 3 Part 1', syllabus:'RGUHS' },
+                { grade:'MBBS Final Year', syllabus:'RGUHS' },
+                { grade:'BDS Year 1', syllabus:'RGUHS' },
+                { grade:'BDS Year 2', syllabus:'RGUHS' },
+                { grade:'BDS Final Year', syllabus:'RGUHS' },
+                { grade:'B.Pharm Year 1', syllabus:'RGUHS' },
+                { grade:'B.Pharm Year 2', syllabus:'RGUHS' },
+                { grade:'BSc Nursing Year 1', syllabus:'RGUHS' },
+                { grade:'BSc Nursing Year 2', syllabus:'RGUHS' },
+              ]
+            },
+          ].map(group => (
+            <div key={group.label} style={{ marginBottom:20 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
+                <span style={{ fontSize:18 }}>{group.icon}</span>
+                <span style={{ color:group.color, fontSize:14, fontWeight:800 }}>{group.label}</span>
+                <span style={{ color:'rgba(255,255,255,0.25)', fontSize:11 }}>{group.items.length} courses</span>
+              </div>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                {group.items.map(item => (
+                  <div key={item.grade} style={{ display:'flex', gap:4 }}>
+                    <button onClick={() => navigate(`/chat?examMode=${encodeURIComponent(item.grade)}`)}
+                      style={{ padding:'8px 12px', background:'rgba(255,255,255,0.04)', border:`1px solid ${group.color}40`, borderRadius:10, color:'rgba(255,255,255,0.7)', fontFamily:"'Nunito',sans-serif", fontSize:11, fontWeight:700, cursor:'pointer' }}
+                      title="Open in Chat">
+                      💬 {item.grade}
+                    </button>
+                    <button onClick={() => navigate(`/quiz?examMode=${encodeURIComponent(item.grade)}`)}
+                      style={{ padding:'8px 10px', background:'rgba(255,255,255,0.04)', border:`1px solid ${group.color}40`, borderRadius:10, color:'rgba(255,255,255,0.5)', fontFamily:"'Nunito',sans-serif", fontSize:11, cursor:'pointer' }}
+                      title="Open in Quiz">
+                      📝
+                    </button>
+                    {(item.grade === 'UPSC Mains – GS' || item.grade === 'UPSC Mains – Essay') && (
+                      <button onClick={() => navigate(`/upsc-writing?mode=${item.grade.includes('Essay') ? 'essay' : 'mains'}`)}
+                        style={{ padding:'8px 10px', background:'rgba(230,126,34,0.1)', border:`1px solid rgba(230,126,34,0.3)`, borderRadius:10, color:'#e67e22', fontFamily:"'Nunito',sans-serif", fontSize:11, cursor:'pointer' }}
+                        title="Open Writing Practice">
+                        ✍️
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Always-open features */}
+          <div style={{ padding:'14px 16px', background:'rgba(82,183,136,0.08)', border:'1px solid rgba(82,183,136,0.2)', borderRadius:14 }}>
+            <div style={{ color:'#52b788', fontSize:12, fontWeight:800, marginBottom:10 }}>Open to all users</div>
+            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+              {[
+                { label:'🧭 Life Skills', path:'/life-skills' },
+                { label:'🕯️ Digital Legacy', path:'/legacy' },
+                { label:'📊 Progress', path:'/progress' },
+              ].map(p => (
+                <button key={p.path} onClick={() => navigate(p.path)}
+                  style={{ padding:'8px 14px', background:'rgba(82,183,136,0.1)', border:'1px solid rgba(82,183,136,0.25)', borderRadius:10, color:'#52b788', fontFamily:"'Nunito',sans-serif", fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
