@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { logoutServer } from '../utils/api';
 import { useLanguage } from '../hooks/useLanguage';
 import LanguageSelector from './LanguageSelector';
 
@@ -10,7 +11,11 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleLogout = () => { logoutUser(); navigate('/login'); };
+  const handleLogout = async () => {
+    try { await logoutServer(); } catch {} // revoke server session
+    logoutUser();
+    navigate('/login');
+  };
 
   const navItems = [
     { to:'/dashboard',   icon:'🏠', labelKey:'nav_home' },
@@ -98,6 +103,7 @@ export default function AppLayout() {
               <div style={{ color:'rgba(255,255,255,0.4)', fontSize:10 }}>{user?.grade} · {user?.syllabus}</div>
             </div>
           </div>
+          <button onClick={() => navigate('/sessions')} style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'6px 10px', color:'rgba(255,255,255,0.5)', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif" }} title="Manage devices">🔐</button>
           <button onClick={handleLogout} style={{ background:'rgba(255,80,80,0.12)', border:'1px solid rgba(255,80,80,0.25)', borderRadius:10, padding:'6px 12px', color:'#ff6b6b', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>{t('logout')}</button>
         </div>
 
@@ -127,6 +133,10 @@ export default function AppLayout() {
             <div style={{ padding:'12px 20px', borderTop:'1px solid rgba(255,255,255,0.05)' }}>
               <LanguageSelector />
             </div>
+            <NavLink to="/sessions" className="mob-nav-link" onClick={() => setMenuOpen(false)}
+              style={{ display:'flex', alignItems:'center', gap:12, padding:'15px 20px', color:'rgba(255,255,255,0.7)', textDecoration:'none', fontSize:15, fontWeight:700, borderBottom:'1px solid rgba(255,255,255,0.05)', minHeight:52 }}>
+              <span style={{ fontSize:18 }}>🔐</span><span>Manage Devices</span>
+            </NavLink>
             <button onClick={handleLogout} style={{ width:'100%', padding:'14px 20px', background:'transparent', border:'none', borderTop:'1px solid rgba(255,255,255,0.05)', color:'#ff6b6b', fontSize:15, fontWeight:700, cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif" }}>
               🚪 {t('logout')}
             </button>

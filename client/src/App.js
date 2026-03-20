@@ -13,6 +13,7 @@ import ARLabPage from './pages/ARLabPage';
 import LifeSkillsPage from './pages/LifeSkillsPage';
 import DigitalLegacyPage from './pages/DigitalLegacyPage';
 import UPSCWritingPage from './pages/UPSCWritingPage';
+import SessionsPage from './pages/SessionsPage';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -48,6 +49,7 @@ function App() {
               <Route path="life-skills" element={<LifeSkillsPage />} />
               <Route path="legacy" element={<DigitalLegacyPage />} />
               <Route path="upsc-writing" element={<UPSCWritingPage />} />
+              <Route path="sessions" element={<SessionsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

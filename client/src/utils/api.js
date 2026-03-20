@@ -38,6 +38,12 @@ export const login = (data) => api.post('/auth/login', data);
 export const register = (data) => api.post('/auth/register', data);
 export const getMe = () => api.get('/auth/me');
 export const updatePreferences = (data) => api.patch('/auth/preferences', data);
+export const logoutServer = () => api.post('/auth/logout');
+
+// Session management
+export const getSessions = () => api.get('/auth/sessions');
+export const revokeSession = (id) => api.delete(`/auth/sessions/${id}`);
+export const revokeAllOtherSessions = () => api.delete('/auth/sessions');
 
 // Chat
 export const sendMessage = (data) => api.post('/chat/message', data);
