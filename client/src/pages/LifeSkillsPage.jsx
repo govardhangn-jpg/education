@@ -771,7 +771,7 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     const abort = new AbortController();
     abortRef.current = abort;
     const ctx = getAudioCtx();
-    await ctx.resume();
+    // ctx.resume() already called in speakMessage (must be in gesture handler for iOS)
 
     let prefetchedBuffer = null;
 
@@ -788,8 +788,11 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
       if (!isSpeakingRef.current || !arrayBuf) break;
 
       // Decode & start prefetch of next chunk in parallel
+      // iOS Safari: don't use .slice(0) — pass ArrayBuffer directly
+      // Use a copy only for non-iOS to avoid detached buffer issues
+      const bufferToUse = arrayBuf.slice(0);
       const [decoded] = await Promise.all([
-        ctx.decodeAudioData(arrayBuf.slice(0)),
+        new Promise((res, rej) => ctx.decodeAudioData(bufferToUse, res, rej)),
         // Prefetch next chunk while current decodes
         (async () => {
           if (i + 1 < chunks.length && isSpeakingRef.current) {
@@ -810,11 +813,25 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     }
   };
 
-  const speakMessage = (text, idx) => {
+  const speakMessage = async (text, idx) => {
     if (speakingIdx === idx) { stopAll(); return; }
     stopAll();
     const chunks = chunkText(text);
     if (!chunks.length) return;
+
+    // iOS Safari REQUIRES AudioContext.resume() to be called synchronously
+    // inside the user gesture handler (this function IS the gesture handler).
+    // Any await before resume() breaks iOS audio.
+    const ctx = getAudioCtx();
+    try {
+      // Must call resume() synchronously before any await
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+    } catch (e) {
+      console.warn('[TTS] ctx.resume failed:', e.message);
+    }
+
     isSpeakingRef.current = true;
     setSpeakingIdx(idx);
     runPipeline(chunks);

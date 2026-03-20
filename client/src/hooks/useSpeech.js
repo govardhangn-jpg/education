@@ -100,17 +100,20 @@ export function useTTS() {
       actx = new (window.AudioContext || window.webkitAudioContext)();
       $.current.actx = actx;
     }
-    if (actx.state === 'suspended') {
-      try { await actx.resume(); } catch(_) {}
-    }
 
-    // Also create a silent buffer and play it NOW (inside user gesture)
-    // to satisfy iOS's requirement for a synchronous play() call
+    // iOS Safari: play silent buffer SYNCHRONOUSLY first (before any await)
+    // This satisfies iOS's "user gesture required" check.
+    // ONLY THEN do we await resume() — order matters critically on iOS.
     const silentBuf = actx.createBuffer(1, 1, 22050);
     const silentSrc = actx.createBufferSource();
     silentSrc.buffer = silentBuf;
     silentSrc.connect(actx.destination);
-    silentSrc.start(0);
+    silentSrc.start(0); // synchronous — unlocks audio on iOS
+
+    // Now safe to await — iOS audio is already unlocked
+    if (actx.state === 'suspended') {
+      try { await actx.resume(); } catch(_) {}
+    }
 
     // Check generation after unlock
     if (gen !== $.current.generation) { setLoadingAudio(false); return; }
@@ -124,7 +127,10 @@ export function useTTS() {
       // decodeAudioData works with MP3 on all modern iOS Safari versions
       let audioBuffer;
       try {
-        audioBuffer = await actx.decodeAudioData(arrayBuffer.slice(0)); // slice to copy
+        // Use callback form of decodeAudioData — more reliable on iOS Safari
+        audioBuffer = await new Promise((res, rej) =>
+          actx.decodeAudioData(arrayBuffer.slice(0), res, rej)
+        );
       } catch (decodeErr) {
         console.error('[TTS] decodeAudioData failed:', decodeErr);
         // Fallback: try playing via Audio element (non-iOS or older devices)
