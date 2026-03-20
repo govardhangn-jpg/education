@@ -14,7 +14,7 @@
 
 import {
   GRADES, EXAM_MODES, LLB_MODES, RGUHS_MODES, UPSC_GRADES,
-  ALL_PROFESSIONAL_MODES, getSyllabusKey,
+  ALL_PROFESSIONAL_MODES,
 } from './constants';
 
 // ── Role helpers ───────────────────────────────────────────────────────────

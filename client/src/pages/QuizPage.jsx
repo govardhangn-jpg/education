@@ -6,7 +6,7 @@ import { SUBJECT_META, SUBJECTS_BY_GRADE, DIFFICULTY_META, LANGUAGES, GRADES, SY
          EXAM_META, EXAM_MODES, LLB_META, LLB_MODES, RGUHS_META, RGUHS_MODES,
          IIT_JEE_META, UPSC_META, UPSC_GRADES,
          ALL_PROFESSIONAL_MODES, getSyllabusKey } from '../utils/constants';
-import { isAdminOrTeacher, getAccessibleModes, gradeFamily, accessLabel } from '../utils/access';
+import { isAdminOrTeacher, getAccessibleModes, accessLabel } from '../utils/access';
 
 export default function QuizPage() {
   const { user } = useAuth();

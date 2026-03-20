@@ -46,8 +46,8 @@ function App() {
               <Route path="visual-lab" element={<VisualLabPage />} />
               <Route path="ar-lab" element={<ARLabPage />} />
               <Route path="life-skills" element={<LifeSkillsPage />} />
-            <Route path="legacy" element={<DigitalLegacyPage />} />
-            <Route path="upsc-writing" element={<UPSCWritingPage />} />
+              <Route path="legacy" element={<DigitalLegacyPage />} />
+              <Route path="upsc-writing" element={<UPSCWritingPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

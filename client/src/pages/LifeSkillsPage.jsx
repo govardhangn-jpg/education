@@ -3,7 +3,7 @@ import { useLifeProgress } from '../hooks/useLifeProgress';
 import { useSensors } from '../hooks/useSensors';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
-import { SUPPORTED_LANGUAGES, LANG_TO_TTS } from '../utils/i18n';
+
 import { VoiceButton, SedentaryBanner, FitnessStats, ScreenTimeWidget, NotificationSettings, FoodCamera } from '../components/SensorsPanel';
 import SensorsPanel from '../components/SensorsPanel';
 

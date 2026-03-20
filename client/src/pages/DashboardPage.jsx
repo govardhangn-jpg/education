@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDashboard } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
-import { isAdminOrTeacher, accessLabel, gradeFamily } from '../utils/access';
+import { isAdminOrTeacher, accessLabel } from '../utils/access';
 import { SUBJECT_META, EXAM_META, EXAM_MODES, SUBJECTS_BY_GRADE } from '../utils/constants';
 
 export default function DashboardPage() {

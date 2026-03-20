@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { getStudents, getAdminStats, toggleStudent, bulkCreateStudents } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { ALL_PROFESSIONAL_MODES } from '../utils/constants';
 import { GRADES } from '../utils/constants';
 
 export default function AdminPage() {
