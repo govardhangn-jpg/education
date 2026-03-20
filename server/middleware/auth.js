@@ -55,3 +55,6 @@ export const requireAdmin = (req, res, next) => {
   }
   next();
 };
+
+// Alias for backwards compatibility with existing routes
+export const requireRole = requireAdmin;
