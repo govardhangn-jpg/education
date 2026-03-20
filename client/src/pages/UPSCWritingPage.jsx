@@ -135,7 +135,13 @@ export default function UPSCWritingPage() {
   const [params]   = useSearchParams();
   const navigate   = useNavigate();
 
-  // Access check — UPSC students and admin/teacher only
+  // ALL hooks must be declared before any conditional return (Rules of Hooks)
+  const initMode = params.get('mode') === 'essay' ? 'essay' : 'mains';
+  const [mode, setMode]     = useState(initMode);
+  const [tab, setTab]       = useState('practice'); // 'practice' | 'history'
+  const [history, setHistory] = useState(() => loadHistory(user?._id || user?.username || 'guest'));
+
+  // Access check — UPSC students and admin/teacher only (AFTER all hooks)
   if (user && !canAccessUPSCWriting(user)) {
     return (
       <div style={{ padding:'40px 20px', textAlign:'center', maxWidth:500, margin:'0 auto' }}>
@@ -152,11 +158,6 @@ export default function UPSCWritingPage() {
       </div>
     );
   }
-
-  const initMode = params.get('mode') === 'essay' ? 'essay' : 'mains';
-  const [mode, setMode]     = useState(initMode);
-  const [tab, setTab]       = useState('practice'); // 'practice' | 'history'
-  const [history, setHistory] = useState(() => loadHistory(user?._id || user?.username || 'guest'));
 
   const addHistory = (entry) => {
     const uid = user?._id || user?.username || 'guest';
