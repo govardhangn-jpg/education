@@ -403,15 +403,20 @@ router.post('/message', protect, async (req, res) => {
           language || session.language
         );
 
-    // Build message history — for custom prompts just send the single message
+    // Push user message to session FIRST (skip for evaluation calls)
+    if (!isCustomPrompt) {
+      session.messages.push({ role: 'user', content: message });
+      session.lastActivity = new Date();
+    }
+
+    // Build message history AFTER pushing so current message is always included
     const messages = isCustomPrompt
       ? [{ role: 'user', content: message }]
       : session.messages.slice(-20).map(m => ({ role: m.role, content: m.content }));
 
-    // Push user message to session (skip for evaluation calls)
-    if (!isCustomPrompt) {
-      session.messages.push({ role: 'user', content: message });
-      session.lastActivity = new Date();
+    // Safety guard — Anthropic requires at least one message
+    if (!messages.length) {
+      messages.push({ role: 'user', content: message });
     }
 
     // Stream the AI response — keeps connection alive on Render's free tier
