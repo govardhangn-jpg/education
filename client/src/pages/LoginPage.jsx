@@ -125,9 +125,7 @@ export default function LoginPage() {
             <label style={{ color:'rgba(255,255,255,0.6)',fontSize:12,fontWeight:700,display:'block',marginBottom:6 }}>PASSWORD</label>
             <input className="login-input" style={{ marginBottom:20 }} type="password" placeholder="Enter password" value={form.password} onChange={e=>set('password',e.target.value)} required/>
             <button className="submit-btn" disabled={loading}>{loading?'Logging in...':'Start Learning 🚀'}</button>
-            <div style={{ color:'rgba(255,255,255,0.3)',fontSize:11,textAlign:'center',marginTop:12 }}>
-              Demo: <b style={{ color:'rgba(255,255,255,0.5)' }}>arjun_k / learn123</b> &nbsp;|&nbsp; <b style={{ color:'rgba(255,255,255,0.5)' }}>llb_riya / llb2025</b>
-            </div>
+
           </form>
         ) : (
           <form onSubmit={handleRegister}>
