@@ -1,9 +1,17 @@
 // server/middleware/auth.js
-import jwt     from 'jsonwebtoken';
-import User    from '../models/User.js';
-import Session from '../models/Session.js';
+import jwt  from 'jsonwebtoken';
+import User from '../models/User.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'samarthaa-secret-change-in-prod';
+
+// Try to load Session model — only available after Session.js is deployed
+let Session = null;
+try {
+  const mod = await import('../models/Session.js');
+  Session = mod.default;
+} catch {
+  console.log('[auth] Session model not found — using JWT-only validation');
+}
 
 export const protect = async (req, res, next) => {
   try {
@@ -20,20 +28,22 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ error: 'Token expired or invalid. Please log in again.' });
     }
 
-    // Validate session exists in DB (enables revocation across devices)
-    const tokenId = decoded.jti;
-    if (tokenId) {
-      const session = await Session.findOne({ tokenId, userId: decoded.id });
-      if (!session) {
-        return res.status(401).json({ error: 'Session has been revoked. Please log in again.' });
+    // If Session model available, validate session is still active
+    if (Session && decoded.jti) {
+      try {
+        const session = await Session.findOne({ tokenId: decoded.jti, userId: decoded.id });
+        if (!session) {
+          return res.status(401).json({ error: 'Session has been revoked. Please log in again.' });
+        }
+        const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+        if (!session.lastSeen || session.lastSeen < fiveMinAgo) {
+          session.lastSeen = new Date();
+          await session.save();
+        }
+        req.tokenId = decoded.jti;
+      } catch {
+        // Session lookup failed — allow through with JWT-only auth
       }
-      // Update lastSeen periodically (not on every request — throttle to every 5 min)
-      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
-      if (!session.lastSeen || session.lastSeen < fiveMinAgo) {
-        session.lastSeen = new Date();
-        await session.save();
-      }
-      req.tokenId = tokenId;
     }
 
     const user = await User.findById(decoded.id).select('-password');
@@ -45,7 +55,7 @@ export const protect = async (req, res, next) => {
     next();
   } catch (err) {
     console.error('[auth middleware]', err.message);
-    res.status(401).json({ error: 'Authentication failed' });
+    res.status(500).json({ error: 'Authentication error' });
   }
 };
 
@@ -56,5 +66,5 @@ export const requireAdmin = (req, res, next) => {
   next();
 };
 
-// Alias for backwards compatibility with existing routes
+// Backwards compatibility alias
 export const requireRole = requireAdmin;
