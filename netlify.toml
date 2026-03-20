@@ -10,6 +10,24 @@
   GENERATE_SOURCEMAP    = "false"
   DISABLE_ESLINT_PLUGIN = "true"
 
+# Disable post-processing features that cause the spinner to hang
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle   = false
+  minify   = false
+
+[build.processing.js]
+  bundle   = false
+  minify   = false
+
+[build.processing.html]
+  pretty_urls = false
+
+[build.processing.images]
+  compress = false
+
 # SPA redirect — all React Router routes serve index.html
 [[redirects]]
   from   = "/*"
