@@ -146,17 +146,7 @@ export const accessLabel = (user) => {
   if (!user) return '';
   if (user.role === 'admin')   return 'Full access — all courses';
   if (user.role === 'teacher') return 'Full access — all courses';
-  const family = gradeFamily(user.grade);
-  const labels = {
-    school: `${user.grade} · ${user.syllabus}`,
-    neet:   user.grade,
-    kcet:   user.grade,
-    iit:    user.grade,
-    upsc:   user.grade,
-    llb:    user.grade,
-    rguhs:  user.grade,
-  };
-  return labels[family] || user.grade;
+  return user.grade || 'Unknown course';
 };
 
 /**

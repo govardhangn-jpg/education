@@ -3,27 +3,31 @@ import { useSearchParams } from 'react-router-dom';
 import { sendMessage, getCurriculum, getChatSessions, getChatSession, deleteChatSession } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { useTTS, useSpeechRecognition } from '../hooks/useSpeech';
-import { SUBJECT_META, SUBJECTS_BY_GRADE, EXAM_META, EXAM_MODES, LANGUAGES, getSyllabusKey } from '../utils/constants';
-import { isAdminOrTeacher, getChatGradeOptions, accessLabel } from '../utils/access';
+import { SUBJECT_META, SUBJECTS_BY_GRADE, EXAM_META, EXAM_MODES, LANGUAGES, GRADES, LLB_MODES, RGUHS_MODES, UPSC_GRADES, getSyllabusKey } from '../utils/constants';
+import { isAdminOrTeacher } from '../utils/access';
 
 export default function ChatPage() {
   const { user } = useAuth();
   const [params] = useSearchParams();
   const [grade, setGrade] = useState(() => {
     const examMode = params.get('examMode');
-    return examMode || user?.grade || 'Class 7';
+    if (examMode) return examMode;
+    // Admin/teacher: start at Class 7 (not their registered grade) so they can browse all
+    const isPriv = user?.role === 'admin' || user?.role === 'teacher';
+    return isPriv ? 'Class 7' : (user?.grade || 'Class 7');
   });
   const [syllabus, setSyllabus] = useState(() => {
     const examMode = params.get('examMode');
-    const g = examMode || user?.grade || 'Class 7';
-    // getSyllabusKey handles ALL modes: NEET, KCET, LLB, RGUHS, UPSC, IIT-JEE, school
+    const isPriv = user?.role === 'admin' || user?.role === 'teacher';
+    const g = examMode || (isPriv ? 'Class 7' : (user?.grade || 'Class 7'));
     return getSyllabusKey(g) || user?.syllabus || 'CBSE';
   });
   const [subject, setSubject] = useState(() => {
     const em = params.get('examMode');
     const subj = params.get('subject');
     if (subj) return subj;
-    const gradeKey = em || user?.grade || 'Class 7';
+    const isPriv = user?.role === 'admin' || user?.role === 'teacher';
+    const gradeKey = em || (isPriv ? 'Class 7' : (user?.grade || 'Class 7'));
     return SUBJECTS_BY_GRADE[gradeKey]?.[0] || 'Mathematics';
   });
   const [chapter, setChapter] = useState('');
@@ -51,7 +55,9 @@ export default function ChatPage() {
     if (!user) return;
     const urlExamMode = params.get('examMode');
     if (urlExamMode) return; // URL params take precedence
-    const g = user.grade || 'Class 7';
+    // Admin/teacher: do NOT lock to their registered grade — they browse all courses
+    const isPriv = user.role === 'admin' || user.role === 'teacher';
+    const g = isPriv ? 'Class 7' : (user.grade || 'Class 7');
     setGrade(g);
     setSyllabus(getSyllabusKey(g) || user.syllabus || 'CBSE');
     const subs = SUBJECTS_BY_GRADE[g] || [];
@@ -242,14 +248,45 @@ export default function ChatPage() {
               </span>
             ) : (
               <>
-                <select value={grade} onChange={e => setGrade(e.target.value)}
-                  disabled={!isAdminOrTeacher(user)}
-                  title={!isAdminOrTeacher(user) ? `Course locked to ${accessLabel(user)}` : 'Switch course'}>
-                  {getChatGradeOptions(user).map(g=><option key={g} value={g}>{g}</option>)}
-                </select>
-                <select value={syllabus} onChange={e => setSyllabus(e.target.value)}>
-                  {['CBSE','ICSE','Karnataka State'].map(s=><option key={s} value={s}>{s}</option>)}
-                </select>
+                {isAdminOrTeacher(user) ? (
+                  /* Admin: full grouped course selector */
+                  <select value={grade} onChange={e => {
+                    const g = e.target.value;
+                    setGrade(g);
+                    setSyllabus(getSyllabusKey(g) || 'CBSE');
+                    const subs = SUBJECTS_BY_GRADE[g] || [];
+                    if (subs.length) setSubject(subs[0]);
+                    setChapter('');
+                  }} style={{ minWidth:130 }}>
+                    <optgroup label="── School ──">
+                      {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                    </optgroup>
+                    <optgroup label="── Entrance Exams ──">
+                      {['IIT-JEE','NEET Preparation','KCET Preparation','NEET PG'].map(g => <option key={g} value={g}>{g}</option>)}
+                    </optgroup>
+                    <optgroup label="── UPSC ──">
+                      {UPSC_GRADES.map(g => <option key={g} value={g}>{g}</option>)}
+                    </optgroup>
+                    <optgroup label="── LLB ──">
+                      {LLB_MODES.map(g => <option key={g} value={g}>{g}</option>)}
+                    </optgroup>
+                    <optgroup label="── RGUHS ──">
+                      {RGUHS_MODES.map(g => <option key={g} value={g}>{g}</option>)}
+                    </optgroup>
+                  </select>
+                ) : (
+                  /* Student: read-only pill showing their course */
+                  <div style={{ padding:'6px 12px', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:9, color:'rgba(255,255,255,0.7)', fontSize:13, fontWeight:700, display:'flex', alignItems:'center', gap:6, cursor:'default' }}
+                    title="Course locked to your registration">
+                    🔒 {user?.grade}
+                  </div>
+                )}
+                {/* Syllabus selector — only for school grades and admin */}
+                {isAdminOrTeacher(user) && !getSyllabusKey(grade) && (
+                  <select value={syllabus} onChange={e => setSyllabus(e.target.value)}>
+                    {['CBSE','ICSE','Karnataka State'].map(s=><option key={s} value={s}>{s}</option>)}
+                  </select>
+                )}
               </>
             )}
             <select value={language} onChange={e => setLanguage(e.target.value)}>
