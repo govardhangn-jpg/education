@@ -99,7 +99,7 @@ export default function QuizPage() {
       startTime.current = Date.now();
       setTab('quiz');
     } catch (err) {
-      const msg = err.response?.data?.error || err.message || 'Failed to generate quiz.';
+      const msg = err.friendlyMessage || err.response?.data?.error || err.message || 'Failed to generate quiz.';
       alert(msg);
     } finally {
       setGenerating(false);
@@ -420,7 +420,7 @@ export default function QuizPage() {
               )}
               <button onClick={startQuiz} disabled={generating || !config.subject}
                 style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg,#ffd700,#ff9500)', border: 'none', borderRadius: 14, color: '#1a1a2e', fontSize: 15, fontWeight: 800, cursor: 'pointer', opacity: (generating||!config.subject)?0.6:1, fontFamily: "'Nunito',sans-serif" }}>
-                {generating ? '⏳ Generating...' : '🚀 Start Quiz'}
+                {generating ? '⏳ Generating… (may take ~15s)' : '🚀 Start Quiz'}
               </button>
             </div>
           </div>
@@ -504,7 +504,7 @@ export default function QuizPage() {
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={() => setTab('setup')} style={{ flex: 1, padding: 13, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 13, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: "'Nunito',sans-serif" }}>New Quiz</button>
-            <button onClick={startQuiz} disabled={generating} style={{ flex: 2, padding: 13, background: 'linear-gradient(135deg,#ffd700,#ff9500)', border: 'none', borderRadius: 13, color: '#1a1a2e', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: "'Nunito',sans-serif" }}>{generating?'Generating...':'Retry 🔄'}</button>
+            <button onClick={startQuiz} disabled={generating} style={{ flex: 2, padding: 13, background: 'linear-gradient(135deg,#ffd700,#ff9500)', border: 'none', borderRadius: 13, color: '#1a1a2e', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: "'Nunito',sans-serif" }}>{generating?'Generating… (~15s)':'Retry 🔄'}</button>
           </div>
         </div>
       )}

@@ -885,7 +885,7 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     try {
       const token = localStorage.getItem('samarthaa_token');
       const ctrl = new AbortController();
-      const timeout = setTimeout(() => ctrl.abort(), 55000);
+      const timeout = setTimeout(() => ctrl.abort(), 60000);
       const res = await fetch(`${BACKEND}/api/chat/message`, {
         method: 'POST',
         signal: ctrl.signal,

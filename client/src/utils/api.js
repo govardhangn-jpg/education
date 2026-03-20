@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const BASE = process.env.REACT_APP_API_URL || '/api';
 
-const api = axios.create({ baseURL: BASE, timeout: 30000 });
+const api = axios.create({ baseURL: BASE, timeout: 60000 }); // 60s — covers Render cold starts + AI generation
 
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('samarthaa_token');
@@ -17,7 +17,15 @@ api.interceptors.response.use(
     const is401 = err.response?.status === 401;
     const isTTS = url.includes('/tts/');
     const isAuth = url.includes('/auth/login') || url.includes('/auth/register');
-    if (is401 && !isTTS && !isAuth) {
+    const isTimeout = err.code === 'ECONNABORTED' || err.message?.includes('timeout');
+    const isNetwork = err.code === 'ERR_NETWORK' || !err.response;
+
+    // Attach a friendly message so UI can display it
+    if (isTimeout) err.friendlyMessage = 'Request timed out. The server may be starting up — please try again.';
+    else if (isNetwork) err.friendlyMessage = 'Cannot reach the server. Check your connection.';
+
+    // Only redirect to login on actual 401, not on timeouts/network errors
+    if (is401 && !isTTS && !isAuth && !isTimeout && !isNetwork) {
       localStorage.removeItem('samarthaa_token');
       window.location.href = '/login';
     }
@@ -92,3 +100,21 @@ export const speakText = async ({ text, language }) => {
 };
 
 export default api;
+
+// ── Keep-alive ping — prevents Render free tier cold starts ─────────────────
+// Render spins down free services after 15 min inactivity.
+// A cold start adds 30-50s to the FIRST request, making it look "stuck".
+// We ping /health every 9 minutes to keep the server warm.
+const HEALTH_URL = (process.env.REACT_APP_API_URL || '/api').replace(/\/api$/, '') + '/health';
+
+function pingServer() {
+  fetch(HEALTH_URL, { method: 'GET', cache: 'no-store' })
+    .then(() => console.log('[keep-alive] server warm'))
+    .catch(() => {}); // silent — don't bother user if ping fails
+}
+
+// Ping immediately on app load, then every 9 minutes
+if (typeof window !== 'undefined') {
+  setTimeout(pingServer, 3000);           // 3s after app loads
+  setInterval(pingServer, 9 * 60 * 1000); // every 9 minutes
+}

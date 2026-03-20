@@ -34,6 +34,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingSlow, setLoadingSlow] = useState(false); // shown after 8s
   const [loadingChapters, setLoadingChapters] = useState(false);
   const [sidebarTab, setSidebarTab] = useState('chapters');
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile drawer
@@ -112,16 +113,20 @@ export default function ChatPage() {
     setSidebarOpen(false);
     setMessages(prev => [...prev, { role:'user', content:msg }]);
     setLoading(true);
+    setLoadingSlow(false);
+    const slowTimer = setTimeout(() => setLoadingSlow(true), 8000); // show hint after 8s
     try {
       const r = await sendMessage({ sessionId: currentSessionId, message: msg, subject, grade, syllabus: getSyllabusKey(grade) || syllabus, chapter, language });
       setCurrentSessionId(r.data.sessionId);
       setMessages(prev => [...prev, { role:'assistant', content:r.data.reply }]);
       getChatSessions({ subject, limit: 15 }).then(r2 => setSessions(r2.data.sessions || [])).catch(() => {});
     } catch (err) {
-      const errMsg = err.response?.data?.error || err.message || 'Unknown error';
-      setMessages(prev => [...prev, { role:'assistant', content:'Error: ' + errMsg }]);
+      const errMsg = err.friendlyMessage || err.response?.data?.error || err.message || 'Unknown error';
+      setMessages(prev => [...prev, { role:'assistant', content:'⚠️ ' + errMsg }]);
     } finally {
+      clearTimeout(slowTimer);
       setLoading(false);
+      setLoadingSlow(false);
     }
   };
 
@@ -281,11 +286,18 @@ export default function ChatPage() {
             );
           })}
           {loading && (
-            <div style={{ display:'flex', gap:8, alignItems:'flex-end', marginBottom:12 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:12 }}>
+            {loadingSlow && (
+              <div style={{ fontSize:11, color:'rgba(255,215,0,0.6)', padding:'4px 14px', fontWeight:600 }}>
+                ⏳ Server is waking up — this takes ~15s on first request. Hang tight…
+              </div>
+            )}
+            <div style={{ display:'flex', gap:8, alignItems:'flex-end' }}>
               <div style={{ width:30, height:30, borderRadius:'50%', background:'linear-gradient(135deg,#ffd700,#ff9500)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>🎓</div>
               <div style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'18px 18px 18px 4px', padding:'12px 16px', display:'flex', gap:5, alignItems:'center' }}>
                 {[0,.2,.4].map((d,i)=><span key={i} style={{ display:'inline-block', width:6, height:6, borderRadius:'50%', background:'rgba(255,255,255,0.7)', animation:`blink 1.4s ${d}s infinite` }}/>)}
               </div>
+            </div>
             </div>
           )}
           <div ref={chatEndRef} />

@@ -301,7 +301,7 @@ Return this JSON:
     try {
       const token = localStorage.getItem('samarthaa_token');
       const ctrl = new AbortController();
-      const timeout = setTimeout(() => ctrl.abort(), 55000); // 55s timeout
+      const timeout = setTimeout(() => ctrl.abort(), 60000); // 55s timeout
       const res = await fetch(`${BACKEND}/api/chat/message`, {
         method:'POST',
         signal: ctrl.signal,
@@ -528,7 +528,7 @@ Return this JSON:
     try {
       const token = localStorage.getItem('samarthaa_token');
       const ctrl = new AbortController();
-      const timeout = setTimeout(() => ctrl.abort(), 55000); // 55s timeout
+      const timeout = setTimeout(() => ctrl.abort(), 60000); // 55s timeout
       const res = await fetch(`${BACKEND}/api/chat/message`, {
         method:'POST',
         signal: ctrl.signal,
