@@ -680,33 +680,31 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     ? process.env.REACT_APP_API_URL.replace(/\/api$/, '')
     : 'http://localhost:5000';
 
-  // ── Full-text TTS — single AudioContext, sentence-chunked pipeline ──────
-  // Fixes:
-  // 1. One AudioContext for the whole session (browsers allow ~6 max)
-  // 2. Proper async/await chain so chunks never drop
-  // 3. Prefetch next chunk while current plays (eliminates gaps between sentences)
-  // 4. Clean stop on demand
-
-  const audioCtxRef    = useRef(null);
-  const activeSources  = useRef([]);
+  // ── TTS pipeline — iOS-safe via HTMLAudioElement ────────────────────────
+  const audioRef       = useRef(null);
+  const blobUrlsRef    = useRef([]);
   const isSpeakingRef  = useRef(false);
-  const abortRef       = useRef(null);   // AbortController for in-flight fetch
-
-  // Lazily get/create a single shared AudioContext
-  const getAudioCtx = () => {
-    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    return audioCtxRef.current;
-  };
+  const abortRef       = useRef(null);
 
   const stopAll = () => {
     isSpeakingRef.current = false;
     if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
-    activeSources.current.forEach(s => { try { s.stop(); } catch {} });
-    activeSources.current = [];
+    if (audioRef.current) {
+      const a = audioRef.current;
+      a.oncanplaythrough = a.onended = a.onerror = null;
+      try { a.pause(); } catch(_) {}
+      try { a.src = ''; } catch(_) {}
+      try { a.load(); } catch(_) {}
+      audioRef.current = null;
+    }
+    blobUrlsRef.current.forEach(u => { try { URL.revokeObjectURL(u); } catch(_) {} });
+    blobUrlsRef.current = [];
     setSpeakingIdx(null);
   };
+
+  const isIOS = () =>
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   // Clean markdown so ElevenLabs reads natural prose
   const chunkText = (raw) => {
@@ -734,17 +732,13 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     return chunks.length ? chunks : [clean.slice(0, MAX)];
   };
 
-  // Fetch one chunk → returns ArrayBuffer or null
+  // Fetch one chunk → ArrayBuffer or null
   const fetchChunk = async (text, signal) => {
     try {
       const token = localStorage.getItem('samarthaa_token');
       const r = await fetch(`${BACKEND_TTS}/api/tts/speak`, {
-        method: 'POST',
-        signal,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        method: 'POST', signal,
+        headers: { 'Content-Type':'application/json', ...(token ? { Authorization:`Bearer ${token}` } : {}) },
         body: JSON.stringify({ text, language: langName }),
       });
       if (!r.ok) { console.warn('[TTS] HTTP', r.status); return null; }
@@ -755,56 +749,32 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     }
   };
 
-  // Play a decoded AudioBuffer, returns Promise that resolves when done
-  const playBuffer = (decoded) => new Promise((resolve) => {
-    const ctx = getAudioCtx();
-    const src = ctx.createBufferSource();
-    src.buffer = decoded;
-    src.connect(ctx.destination);
-    activeSources.current.push(src);
-    src.onended = resolve;
-    src.start(0);
+  // Play one ArrayBuffer via HTMLAudioElement, returns Promise resolving when done
+  const playBuf = (arrayBuf) => new Promise((resolve) => {
+    const blob = new Blob([arrayBuf], { type: 'audio/mpeg' });
+    const url  = URL.createObjectURL(blob);
+    blobUrlsRef.current.push(url);
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
+      blobUrlsRef.current = blobUrlsRef.current.filter(u => u !== url);
+      resolve();
+    };
+    audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+    audio.play().catch(() => resolve());
   });
 
-  // Main pipeline: fetch chunks sequentially, prefetch next while current plays
+  // Sequential pipeline: fetch and play each chunk one after another
   const runPipeline = async (chunks) => {
     const abort = new AbortController();
     abortRef.current = abort;
-    const ctx = getAudioCtx();
-    // ctx.resume() already called in speakMessage (must be in gesture handler for iOS)
-
-    let prefetchedBuffer = null;
 
     for (let i = 0; i < chunks.length; i++) {
       if (!isSpeakingRef.current) break;
-
-      // Use prefetched buffer if available, otherwise fetch now
-      let arrayBuf = prefetchedBuffer;
-      if (!arrayBuf) {
-        arrayBuf = await fetchChunk(chunks[i], abort.signal);
-      }
-      prefetchedBuffer = null;
-
-      if (!isSpeakingRef.current || !arrayBuf) break;
-
-      // Decode & start prefetch of next chunk in parallel
-      // iOS Safari: don't use .slice(0) — pass ArrayBuffer directly
-      // Use a copy only for non-iOS to avoid detached buffer issues
-      const bufferToUse = arrayBuf.slice(0);
-      const [decoded] = await Promise.all([
-        new Promise((res, rej) => ctx.decodeAudioData(bufferToUse, res, rej)),
-        // Prefetch next chunk while current decodes
-        (async () => {
-          if (i + 1 < chunks.length && isSpeakingRef.current) {
-            const next = await fetchChunk(chunks[i + 1], abort.signal);
-            if (next && isSpeakingRef.current) prefetchedBuffer = next;
-          }
-        })(),
-      ]);
-
-      if (!isSpeakingRef.current) break;
-
-      await playBuffer(decoded);  // wait for this chunk to finish playing
+      const buf = await fetchChunk(chunks[i], abort.signal);
+      if (!isSpeakingRef.current || !buf) break;
+      await playBuf(buf);
     }
 
     if (isSpeakingRef.current) {
@@ -813,27 +783,23 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
     }
   };
 
-  const speakMessage = async (text, idx) => {
+  const speakMessage = (text, idx) => {
     if (speakingIdx === idx) { stopAll(); return; }
     stopAll();
     const chunks = chunkText(text);
     if (!chunks.length) return;
 
-    // iOS Safari REQUIRES AudioContext.resume() to be called synchronously
-    // inside the user gesture handler (this function IS the gesture handler).
-    // Any await before resume() breaks iOS audio.
-    const ctx = getAudioCtx();
-    try {
-      // Must call resume() synchronously before any await
-      if (ctx.state === 'suspended') {
-        await ctx.resume();
-      }
-    } catch (e) {
-      console.warn('[TTS] ctx.resume failed:', e.message);
-    }
-
     isSpeakingRef.current = true;
     setSpeakingIdx(idx);
+
+    if (isIOS()) {
+      // iOS: prime the first Audio element synchronously inside gesture handler
+      // then pipeline takes over for remaining chunks
+      const audio = new Audio();
+      audio.play().catch(() => {}); // unlocks audio permission on iOS
+      audioRef.current = audio;
+    }
+
     runPipeline(chunks);
   };
 
