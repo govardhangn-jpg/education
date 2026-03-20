@@ -39,14 +39,15 @@ export default function AppLayout() {
         .nav-link{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;color:rgba(255,255,255,0.55);text-decoration:none;font-size:13px;font-weight:700;transition:all 0.2s;min-height:40px;}
         .nav-link:hover{background:rgba(255,255,255,0.07);color:white;}
         .nav-link.active{background:rgba(255,215,0,0.12);color:#ffd700;}
-        .mob-nav-link{display:flex;align-items:center;gap:12px;padding:15px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:15px;font-weight:700;transition:all 0.2s;border-bottom:1px solid rgba(255,255,255,0.05);min-height:52px;}
-        .mob-nav-link:hover,.mob-nav-link.active{background:rgba(255,215,0,0.08);color:#ffd700;}
-        ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
+        .mob-nav-link{display:flex;align-items:center;gap:12px;padding:16px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:15px;font-weight:700;transition:all 0.2s;border-bottom:1px solid rgba(255,255,255,0.05);min-height:54px;-webkit-tap-highlight-color:transparent;}
+        .mob-nav-link:active,.mob-nav-link.active{background:rgba(255,215,0,0.08);color:#ffd700;}
+        ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
+        /* Bottom nav */
         .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(13,13,26,0.97);border-top:1px solid rgba(255,255,255,0.08);z-index:200;padding:4px 0 env(safe-area-inset-bottom,4px);}
-        .bottom-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 8px;color:rgba(255,255,255,0.4);text-decoration:none;font-size:10px;font-weight:700;flex:1;transition:all 0.2s;min-height:48px;}
+        .bottom-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 2px;color:rgba(255,255,255,0.4);text-decoration:none;font-size:9px;font-weight:700;flex:1;transition:all 0.2s;min-height:50px;-webkit-tap-highlight-color:transparent;}
         .bottom-nav-item.active{color:#ffd700;}
-        .bottom-nav-item span.icon{font-size:20px;}
-        /* Main scroll container — this is the fix */
+        .bottom-nav-item span.icon{font-size:18px;line-height:1;}
+        /* Main scroll */
         .main-content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;}
         @media(max-width:768px){
           .desktop-nav{display:none!important;}
@@ -54,6 +55,10 @@ export default function AppLayout() {
           .bottom-nav{display:flex!important;}
           .main-content{padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))!important;}
           .hamburger{display:flex!important;}
+          /* Prevent text zoom on input focus iOS */
+          input,select,textarea{font-size:16px!important;}
+          /* Tap targets min 44px */
+          button{min-height:44px;}
         }
         @media(min-width:769px){
           .hamburger{display:none!important;}
@@ -100,7 +105,11 @@ export default function AppLayout() {
             <span style={{ fontSize:18 }}>{user?.avatar}</span>
             <div>
               <div style={{ color:'white', fontSize:12, fontWeight:800, lineHeight:1.2 }}>{user?.name}</div>
-              <div style={{ color:'rgba(255,255,255,0.4)', fontSize:10 }}>{user?.grade} · {user?.syllabus}</div>
+              <div style={{ color:'rgba(255,255,255,0.4)', fontSize:10 }}>
+                {(user?.role === 'admin' || user?.role === 'teacher')
+                  ? `${user.role === 'admin' ? '🛡️ Admin' : '👩‍🏫 Teacher'} · All courses`
+                  : `${user?.grade} · ${user?.syllabus}`}
+              </div>
             </div>
           </div>
           <button onClick={() => navigate('/sessions')} style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'6px 10px', color:'rgba(255,255,255,0.5)', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif" }} title="Manage devices">🔐</button>
@@ -119,10 +128,10 @@ export default function AppLayout() {
 
       {/* Mobile slide-down menu */}
       {menuOpen && (
-        <div className="mob-menu" style={{ position:'fixed', top:60, left:0, right:0, background:'rgba(13,13,26,0.98)', backdropFilter:'blur(12px)', zIndex:140, borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ padding:'8px 0' }}>
+        <div className="mob-menu" style={{ position:'fixed', top:60, left:0, right:0, bottom:0, background:'rgba(13,13,26,0.98)', backdropFilter:'blur(12px)', zIndex:140, overflowY:'auto', WebkitOverflowScrolling:'touch' }}>
+          <div style={{ padding:'8px 0', paddingBottom:'env(safe-area-inset-bottom,16px)' }}>
             <div style={{ padding:'12px 20px 8px', color:'rgba(255,255,255,0.3)', fontSize:10, fontWeight:800, letterSpacing:1.5, textTransform:'uppercase' }}>
-              {user?.avatar} {user?.name} · {user?.grade} · {user?.syllabus}
+              {user?.avatar} {user?.name} · {(user?.role === 'admin' || user?.role === 'teacher') ? `${user.role} · All courses` : `${user?.grade} · ${user?.syllabus}`}
             </div>
             {navItems.map(item => (
               <NavLink key={item.to} to={item.to} className={({isActive})=>`mob-nav-link${isActive?' active':''}`} onClick={() => setMenuOpen(false)}>

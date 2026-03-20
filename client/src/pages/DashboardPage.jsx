@@ -47,7 +47,9 @@ export default function DashboardPage() {
   const avgQuiz = data?.quizStats?.length ? Math.round(data.quizStats.reduce((s,q)=>s+q.avgScore,0)/data.quizStats.length) : 0;
 
   // Grade display label
-  const gradeLabel = isExamMode ? examMeta?.fullLabel : user?.grade;
+  const gradeLabel = (user?.role === 'admin' || user?.role === 'teacher')
+    ? (user.role === 'admin' ? '🛡️ Admin · All courses' : '👩‍🏫 Teacher · All courses')
+    : (isExamMode ? examMeta?.fullLabel : user?.grade);
   const syllabusLabel = isExamMode ? examMeta?.badge : user?.syllabus;
 
   return (
