@@ -117,7 +117,13 @@ app.use((err, req, res, next) => {
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/samarthaa')
   .then(() => {
     console.log('MongoDB connected');
-    app.listen(PORT, () => console.log('SamarthaaEdu server on port ' + PORT));
+    const server = app.listen(PORT, () => console.log('SamarthaaEdu server on port ' + PORT));
+
+    // Render free tier kills idle connections after ~30s.
+    // Set keepAlive and a 55s request timeout so handlers always complete or fail fast.
+    server.keepAliveTimeout = 61000;   // slightly above Render's 60s idle timeout
+    server.headersTimeout   = 65000;   // must be > keepAliveTimeout
+    server.requestTimeout   = 55000;   // Express-level per-request timeout (Node 14.11+)
   })
   .catch(err => { console.error('MongoDB connection failed:', err); process.exit(1); });
 

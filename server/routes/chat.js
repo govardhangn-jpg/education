@@ -414,11 +414,8 @@ router.post('/message', protect, async (req, res) => {
       session.lastActivity = new Date();
     }
 
-    // Use streaming to send first tokens immediately (kills the "forever" problem)
+    // Stream the AI response — keeps connection alive on Render's free tier
     let fullReply = '';
-
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('X-Accel-Buffering', 'no');
 
     const stream = anthropic.messages.stream({
       model:      'claude-sonnet-4-20250514',
@@ -436,7 +433,7 @@ router.post('/message', protect, async (req, res) => {
     if (!fullReply) throw new Error('Empty response from AI');
 
     // Save to session (skip for evaluation/one-off calls)
-    if (!isCustomPrompt) {
+    if (!isCustomPrompt && session) {
       session.messages.push({ role: 'assistant', content: fullReply });
       await session.save();
       await User.findByIdAndUpdate(req.user._id, {
@@ -447,11 +444,13 @@ router.post('/message', protect, async (req, res) => {
     }
 
     clearTimeout(reqTimeout);
-    res.json({
-      reply:        fullReply,
-      sessionId:    session?._id,
-      messageCount: session?.messages?.length,
-    });
+    if (!res.headersSent) {
+      res.json({
+        reply:        fullReply,
+        sessionId:    session?._id,
+        messageCount: session?.messages?.length,
+      });
+    }
 
   } catch (err) {
     clearTimeout(reqTimeout);

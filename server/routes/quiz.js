@@ -95,21 +95,49 @@ Rules:
 - DO NOT wrap output in markdown code fences`;
 
     const anthropic = getClient();
-    const response  = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2500,
-      messages: [{ role: 'user', content: prompt }],
-    });
 
-    let text = response.content[0].text.trim();
-    // Strip any accidental markdown fences
-    text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    // 45-second hard timeout — prevents infinite hang on Render
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      if (!res.headersSent) res.status(504).json({ error: 'Quiz generation timed out. Please try again.' });
+    }, 45000);
+
+    // Use streaming so Render does not kill the idle connection
+    let text = '';
+    try {
+      const stream = anthropic.messages.stream({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2500,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      for await (const event of stream) {
+        if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+          text += event.delta.text;
+        }
+      }
+    } catch (streamErr) {
+      clearTimeout(timer);
+      if (!res.headersSent) {
+        const msg = streamErr.status === 429 ? 'Rate limit reached. Please wait a moment.'
+          : streamErr.status === 401 ? 'Invalid Anthropic API key.'
+          : 'Failed to generate quiz: ' + streamErr.message;
+        res.status(500).json({ error: msg });
+      }
+      return;
+    }
+
+    clearTimeout(timer);
+    if (timedOut || res.headersSent) return;
+
+    // Strip markdown fences
+    text = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
     let questions;
     try {
       questions = JSON.parse(text);
     } catch (parseErr) {
-      console.error('[quiz] JSON parse failed. Raw response:\n', text.slice(0, 500));
+      console.error('[quiz] JSON parse failed. Raw:\n', text.slice(0, 500));
       return res.status(500).json({ error: 'AI returned invalid JSON. Please try again.' });
     }
 
@@ -120,12 +148,13 @@ Rules:
     res.json({ questions, chapter: resolvedChapter, subject, grade, syllabus, difficulty });
   } catch (err) {
     console.error('[quiz] generate error:', err.message);
-    const userMsg = err.message.includes('ANTHROPIC_API_KEY')
-      ? err.message
-      : err.status === 401 ? 'Invalid Anthropic API key.'
-      : err.status === 429 ? 'Rate limit reached. Please wait a moment and try again.'
-      : 'Failed to generate quiz: ' + err.message;
-    res.status(500).json({ error: userMsg });
+    if (!res.headersSent) {
+      const userMsg = err.message.includes('ANTHROPIC_API_KEY') ? err.message
+        : err.status === 401 ? 'Invalid Anthropic API key.'
+        : err.status === 429 ? 'Rate limit reached. Please wait a moment.'
+        : 'Failed to generate quiz: ' + err.message;
+      res.status(500).json({ error: userMsg });
+    }
   }
 });
 

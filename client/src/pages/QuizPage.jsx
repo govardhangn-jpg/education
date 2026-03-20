@@ -86,15 +86,24 @@ export default function QuizPage() {
     if (!config.subject) return alert('Please select a subject first.');
     setGenerating(true);
     try {
-      const r = await generateQuiz({ ...config, syllabus: effectiveSyllabus });
+      // 50s client-side timeout — matches server timeout
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Quiz generation timed out. Please try again.')), 50000)
+      );
+      const r = await Promise.race([
+        generateQuiz({ ...config, syllabus: effectiveSyllabus }),
+        timeoutPromise,
+      ]);
       setQuestions(r.data.questions);
       setAnswers({}); setResult(null); setCurrentQ(0);
       startTime.current = Date.now();
       setTab('quiz');
     } catch (err) {
-      alert('Failed to generate quiz: ' + (err.response?.data?.error || err.message));
+      const msg = err.response?.data?.error || err.message || 'Failed to generate quiz.';
+      alert(msg);
+    } finally {
+      setGenerating(false);
     }
-    setGenerating(false);
   };
 
   const submit = async () => {
