@@ -120,8 +120,9 @@ export default function ChatPage() {
     } catch (err) {
       const errMsg = err.response?.data?.error || err.message || 'Unknown error';
       setMessages(prev => [...prev, { role:'assistant', content:'Error: ' + errMsg }]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const isExamMode = EXAM_MODES.includes(grade);

@@ -884,8 +884,11 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
 
     try {
       const token = localStorage.getItem('samarthaa_token');
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 55000);
       const res = await fetch(`${BACKEND}/api/chat/message`, {
         method: 'POST',
+        signal: ctrl.signal,
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -899,6 +902,7 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
           systemPrompt: buildSystemPrompt(),
         }),
       });
+      clearTimeout(timeout);
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -912,10 +916,12 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
       setTimeout(() => speakMessage(reply, newIdx), 200);
 
     } catch (e) {
-      console.error('[AICoach] error:', e.message);
-      setMessages(m => [...m, { role:'assistant', content:`Error: ${e.message}. Check your connection and try again.` }]);
+      const msg = e.name === 'AbortError' ? 'Response timed out. Please try again.' : e.message;
+      console.error('[AICoach] error:', msg);
+      setMessages(m => [...m, { role:'assistant', content:`Error: ${msg}. Check your connection and try again.` }]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

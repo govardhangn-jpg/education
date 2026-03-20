@@ -549,8 +549,11 @@ function LivingPresence({ user, personality, entries, lifeSkillsProfile, complet
 
     try {
       const token = localStorage.getItem('samarthaa_token');
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 55000);
       const res = await fetch(`${BACKEND}/api/chat/message`, {
         method:'POST',
+        signal: ctrl.signal,
         headers:{ 'Content-Type':'application/json', ...(token ? {Authorization:`Bearer ${token}`} : {}) },
         body: JSON.stringify({
           message: q,
@@ -561,14 +564,17 @@ function LivingPresence({ user, personality, entries, lifeSkillsProfile, complet
           systemPrompt,
         }),
       });
+      clearTimeout(timeout);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const reply = data.reply || data.message || 'I am here.';
       setMessages(m => [...m, { role:'assistant', content:reply }]);
     } catch (e) {
-      setMessages(m => [...m, { role:'assistant', content:`[Connection error: ${e.message}]` }]);
+      const msg = e.name === 'AbortError' ? 'Response timed out. Please try again.' : e.message;
+      setMessages(m => [...m, { role:'assistant', content:`[${msg}]` }]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   if (completeness < 25) {

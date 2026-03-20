@@ -288,45 +288,38 @@ function MainsWriting({ user, addHistory }) {
       ? `UPSC Mains Optional – ${optional}`
       : `UPSC Mains ${currentPaper.label} (${currentPaper.sub})`;
 
-    const evalPrompt = `You are a senior UPSC examiner evaluating a Mains answer paper.
+    // Keep prompt concise — embed answer inline but trim to 1500 chars to avoid timeouts
+    const trimmedAnswer = answer.trim().slice(0, 1500);
+    const evalPrompt = `Evaluate this UPSC Mains answer as a strict examiner. Return JSON only.
 
-PAPER: ${paperLabel}
-QUESTION (${marks} marks, ${wordLimit} words limit): ${q}
-STUDENT'S ANSWER (${wc} words):
-${answer}
+PAPER: ${paperLabel} | QUESTION (${marks}m/${wordLimit}w): ${q.slice(0,200)}
+ANSWER (${wc} words): ${trimmedAnswer}
 
-Evaluate this answer STRICTLY as a UPSC examiner would. Respond in this EXACT JSON format only:
-
-{
-  "totalScore": <number out of ${marks}>,
-  "scorePercent": <number 0-100>,
-  "dimensions": [
-    {"name": "Content & Knowledge", "score": <out of ${Math.round(marks*0.4)}>, "max": ${Math.round(marks*0.4)}, "comment": "<2-3 sentences>"},
-    {"name": "Structure & Flow",    "score": <out of ${Math.round(marks*0.25)}>, "max": ${Math.round(marks*0.25)}, "comment": "<2-3 sentences>"},
-    {"name": "Analytical Depth",   "score": <out of ${Math.round(marks*0.2)}>, "max": ${Math.round(marks*0.2)}, "comment": "<2-3 sentences>"},
-    {"name": "Language & Clarity", "score": <out of ${Math.round(marks*0.15)}>, "max": ${Math.round(marks*0.15)}, "comment": "<2-3 sentences>"}
-  ],
-  "strengths": ["<strength 1>", "<strength 2>"],
-  "improvements": ["<specific improvement 1>", "<specific improvement 2>", "<specific improvement 3>"],
-  "wordCountFeedback": "<comment on word usage>",
-  "examinersNote": "<1-2 sentences as the examiner's overall note>",
-  "modelAnswer": "<Write a model ${marks}-mark answer in ${wordLimit} words following ideal UPSC structure: strong introduction, multiple dimensions covered, relevant facts/examples, balanced conclusion with way forward>"
-}`;
+Return this JSON:
+{"totalScore":N,"scorePercent":N,"dimensions":[{"name":"Content & Knowledge","score":N,"max":${Math.round(marks*0.4)},"comment":"..."},{"name":"Structure & Flow","score":N,"max":${Math.round(marks*0.25)},"comment":"..."},{"name":"Analytical Depth","score":N,"max":${Math.round(marks*0.2)},"comment":"..."},{"name":"Language & Clarity","score":N,"max":${Math.round(marks*0.15)},"comment":"..."}],"strengths":["...","..."],"improvements":["...","...","..."],"wordCountFeedback":"...","examinersNote":"...","modelAnswer":"Ideal ${marks}-mark answer in ${wordLimit} words with intro, dimensions, conclusion."}`;
 
     try {
       const token = localStorage.getItem('samarthaa_token');
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 55000); // 55s timeout
       const res = await fetch(`${BACKEND}/api/chat/message`, {
         method:'POST',
+        signal: ctrl.signal,
         headers:{ 'Content-Type':'application/json', ...(token ? {Authorization:`Bearer ${token}`} : {}) },
         body: JSON.stringify({
           message: evalPrompt,
           subject: paperLabel, grade:'UPSC Mains – GS', syllabus:'UPSC', language:'English',
-          systemPrompt: 'You are a UPSC examiner. Always respond with valid JSON only. No markdown, no extra text.',
+          systemPrompt: 'You are a UPSC examiner. Respond with valid JSON only. No markdown fences, no preamble.',
         }),
       });
+      clearTimeout(timeout);
       const data = await res.json();
-      const raw = (data.reply || data.message || '').replace(/```json|```/g,'').trim();
-      const evalData = JSON.parse(raw);
+      const raw = (data.reply || data.message || '')
+        .replace(/```json|```/g,'')
+        .replace(/^[^{]*/,'')   // strip any text before first {
+        .replace(/[^}]*$/,'')   // strip any text after last }
+        .trim();
+      const evalData = JSON.parse(raw + '}'); // ensure closing brace
       setEvaluation(evalData);
       addHistory({
         type: 'mains', paper: paperLabel, question: q.slice(0,100),
@@ -334,9 +327,11 @@ Evaluate this answer STRICTLY as a UPSC examiner would. Respond in this EXACT JS
         examinersNote: evalData.examinersNote,
       });
     } catch (e) {
-      setEvaluation({ error: 'Could not parse evaluation. Try again.', raw: '' });
+      const msg = e.name === 'AbortError' ? 'Evaluation timed out. Please try again.' : 'Evaluation failed. Check your connection and try again.';
+      setEvaluation({ error: msg });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -522,49 +517,37 @@ function EssayWriting({ user, addHistory }) {
     setEvaluation(null);
     const t = useCustom ? customTopic : topic;
 
-    const evalPrompt = `You are a senior UPSC examiner evaluating an Essay paper (125 marks per essay).
+    // Trim essay to 2000 chars to keep API payload manageable
+    const trimmedEssay = essay.trim().slice(0, 2000);
+    const evalPrompt = `Evaluate this UPSC Essay as a strict examiner. Return JSON only.
 
-TOPIC: "${t}"
-STUDENT'S ESSAY (${wc} words):
-${essay}
+TOPIC: "${t}" | ESSAY (${wc} words): ${trimmedEssay}
 
-Evaluate strictly on UPSC Essay rubric. Respond in EXACT JSON format only:
-
-{
-  "totalScore": <number out of 125>,
-  "scorePercent": <number 0-100>,
-  "dimensions": [
-    {"name": "Introduction & Hook",      "score": <out of 15>, "max": 15, "comment": "<specific 2-sentence feedback>"},
-    {"name": "Multidimensional Coverage","score": <out of 35>, "max": 35, "comment": "<which dimensions covered/missing>"},
-    {"name": "Balance & Objectivity",    "score": <out of 20>, "max": 20, "comment": "<bias assessment>"},
-    {"name": "Use of Examples & Data",   "score": <out of 20>, "max": 20, "comment": "<quality of illustrations>"},
-    {"name": "Language & Expression",    "score": <out of 20>, "max": 20, "comment": "<prose quality>"},
-    {"name": "Conclusion & Vision",      "score": <out of 15>, "max": 15, "comment": "<conclusion quality>"}
-  ],
-  "dimensionsCovered": ["historical", "social"],
-  "dimensionsMissing": ["economic", "constitutional"],
-  "strengths": ["<strength 1>", "<strength 2>"],
-  "improvements": ["<improvement 1>", "<improvement 2>", "<improvement 3>"],
-  "quoteSuggestions": ["<relevant quote 1 that would strengthen this essay>", "<quote 2>"],
-  "examinersNote": "<2-3 sentences overall examiner comment>",
-  "modelIntro": "<Write a model 120-word introduction for this essay topic that would score full marks: powerful hook, definition of key terms, thesis statement, roadmap of essay>",
-  "modelOutline": "<Write a 6-point outline showing ideal paragraph structure for this essay>"
-}`;
+Return this JSON:
+{"totalScore":N,"scorePercent":N,"dimensions":[{"name":"Introduction & Hook","score":N,"max":15,"comment":"..."},{"name":"Multidimensional Coverage","score":N,"max":35,"comment":"..."},{"name":"Balance & Objectivity","score":N,"max":20,"comment":"..."},{"name":"Use of Examples & Data","score":N,"max":20,"comment":"..."},{"name":"Language & Expression","score":N,"max":20,"comment":"..."},{"name":"Conclusion & Vision","score":N,"max":15,"comment":"..."}],"dimensionsCovered":["list"],"dimensionsMissing":["list"],"strengths":["...","..."],"improvements":["...","...","..."],"quoteSuggestions":["quote1","quote2"],"examinersNote":"...","modelIntro":"120-word model introduction for this topic.","modelOutline":"6-point outline for this essay."}`;
 
     try {
       const token = localStorage.getItem('samarthaa_token');
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 55000); // 55s timeout
       const res = await fetch(`${BACKEND}/api/chat/message`, {
         method:'POST',
+        signal: ctrl.signal,
         headers:{ 'Content-Type':'application/json', ...(token ? {Authorization:`Bearer ${token}`} : {}) },
         body: JSON.stringify({
           message: evalPrompt,
           subject:'Essay Writing', grade:'UPSC Mains – Essay', syllabus:'UPSC', language:'English',
-          systemPrompt:'You are a UPSC examiner. Always respond with valid JSON only. No markdown fences.',
+          systemPrompt:'You are a UPSC examiner. Respond with valid JSON only. No markdown fences, no preamble.',
         }),
       });
+      clearTimeout(timeout);
       const data = await res.json();
-      const raw = (data.reply || data.message || '').replace(/```json|```/g,'').trim();
-      const evalData = JSON.parse(raw);
+      const raw = (data.reply || data.message || '')
+        .replace(/```json|```/g,'')
+        .replace(/^[^{]*/,'')
+        .replace(/[^}]*$/,'')
+        .trim();
+      const evalData = JSON.parse(raw + '}');
       setEvaluation(evalData);
       addHistory({
         type:'essay', topic: t.slice(0,80), section,
@@ -572,9 +555,11 @@ Evaluate strictly on UPSC Essay rubric. Respond in EXACT JSON format only:
         examinersNote: evalData.examinersNote,
       });
     } catch (e) {
-      setEvaluation({ error:'Could not parse evaluation. Try again.' });
+      const msg = e.name === 'AbortError' ? 'Evaluation timed out. Please try again.' : 'Evaluation failed. Check your connection and try again.';
+      setEvaluation({ error: msg });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
