@@ -353,52 +353,115 @@ YOUR ROLE:
 Always be SamarthaaEdu — a trusted, knowledgeable, and caring learning companion!`;
 }
 
-// POST /api/chat/message
+// POST /api/chat/message  — uses streaming to avoid Render timeout
 router.post('/message', protect, async (req, res) => {
+  // Hard 50-second server-side timeout — prevents hanging forever
+  const reqTimeout = setTimeout(() => {
+    if (!res.headersSent) res.status(504).json({ error: 'Request timed out. Please try again.' });
+  }, 50000);
+
   try {
-    if (!anthropic) return res.status(500).json({ error:'ANTHROPIC_API_KEY not configured.' });
-    const { sessionId, message, subject, grade, syllabus, chapter, language } = req.body;
-    if (!message?.trim()) return res.status(400).json({ error:'Message required' });
+    if (!anthropic) {
+      clearTimeout(reqTimeout);
+      return res.status(500).json({ error:'ANTHROPIC_API_KEY not configured.' });
+    }
+
+    const { sessionId, message, subject, grade, syllabus, chapter, language, systemPrompt: clientSystemPrompt } = req.body;
+    if (!message?.trim()) {
+      clearTimeout(reqTimeout);
+      return res.status(400).json({ error:'Message required' });
+    }
+
+    // If a custom systemPrompt is passed (e.g. UPSC evaluation, Life Skills, Digital Legacy)
+    // use it directly instead of building a course-specific one
+    const isCustomPrompt = !!(clientSystemPrompt && clientSystemPrompt.trim().length > 20);
 
     let session;
-    if (sessionId) session = await ChatSession.findOne({ _id:sessionId, userId:req.user._id });
-    if (!session) {
+    if (sessionId && !isCustomPrompt) {
+      session = await ChatSession.findOne({ _id:sessionId, userId:req.user._id });
+    }
+    if (!session && !isCustomPrompt) {
       session = await ChatSession.create({
-        userId:  req.user._id,
-        grade:   grade   || req.user.grade,
-        syllabus:syllabus|| req.user.syllabus,
-        subject: subject || 'General',
-        chapter, language: language || req.user.preferredLanguage,
-        title:   message.slice(0,60),
+        userId:   req.user._id,
+        grade:    grade    || req.user.grade,
+        syllabus: syllabus || req.user.syllabus,
+        subject:  subject  || 'General',
+        chapter,
+        language: language || req.user.preferredLanguage,
+        title:    message.slice(0, 60),
       });
     }
 
-    session.messages.push({ role:'user', content:message });
-    session.lastActivity = new Date();
-    const recentMessages = session.messages.slice(-20).map(m => ({ role:m.role, content:m.content }));
+    const systemPromptToUse = isCustomPrompt
+      ? clientSystemPrompt
+      : buildSystemPrompt(
+          req.user,
+          subject  || session.subject,
+          grade    || session.grade,
+          syllabus || session.syllabus,
+          chapter  || session.chapter,
+          language || session.language
+        );
 
-    const response = await anthropic.messages.create({
+    // Build message history — for custom prompts just send the single message
+    const messages = isCustomPrompt
+      ? [{ role: 'user', content: message }]
+      : session.messages.slice(-20).map(m => ({ role: m.role, content: m.content }));
+
+    // Push user message to session (skip for evaluation calls)
+    if (!isCustomPrompt) {
+      session.messages.push({ role: 'user', content: message });
+      session.lastActivity = new Date();
+    }
+
+    // Use streaming to send first tokens immediately (kills the "forever" problem)
+    let fullReply = '';
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    const stream = anthropic.messages.stream({
       model:      'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      system:     buildSystemPrompt(req.user, subject||session.subject, grade||session.grade, syllabus||session.syllabus, chapter||session.chapter, language||session.language),
-      messages:   recentMessages,
+      max_tokens: isCustomPrompt ? 2048 : 1024,
+      system:     systemPromptToUse,
+      messages,
     });
 
-    const reply = response.content[0].text;
-    session.messages.push({ role:'assistant', content:reply });
-    await session.save();
-    await User.findByIdAndUpdate(req.user._id, {
-      $inc:{ totalChatMessages:2 },
-      $addToSet:{ subjectsStudied: subject||session.subject },
-      lastActiveDate: new Date(),
+    for await (const event of stream) {
+      if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+        fullReply += event.delta.text;
+      }
+    }
+
+    if (!fullReply) throw new Error('Empty response from AI');
+
+    // Save to session (skip for evaluation/one-off calls)
+    if (!isCustomPrompt) {
+      session.messages.push({ role: 'assistant', content: fullReply });
+      await session.save();
+      await User.findByIdAndUpdate(req.user._id, {
+        $inc:{ totalChatMessages: 2 },
+        $addToSet:{ subjectsStudied: subject || session.subject },
+        lastActiveDate: new Date(),
+      });
+    }
+
+    clearTimeout(reqTimeout);
+    res.json({
+      reply:        fullReply,
+      sessionId:    session?._id,
+      messageCount: session?.messages?.length,
     });
-    res.json({ reply, sessionId:session._id, messageCount:session.messages.length });
+
   } catch (err) {
+    clearTimeout(reqTimeout);
     console.error('=== CHAT ERROR ===', err.message);
-    const userMsg = err.status===401 ? 'Invalid Anthropic API key.'
-      : err.status===429 ? 'Rate limit reached. Please wait.'
-      : 'AI error: '+err.message;
-    res.status(500).json({ error:userMsg });
+    if (res.headersSent) return;
+    const userMsg = err.status === 401 ? 'Invalid Anthropic API key.'
+      : err.status === 429 ? 'Rate limit reached. Please wait a moment.'
+      : err.message?.includes('timeout') ? 'Request timed out. Please try again.'
+      : 'AI error: ' + err.message;
+    res.status(500).json({ error: userMsg });
   }
 });
 

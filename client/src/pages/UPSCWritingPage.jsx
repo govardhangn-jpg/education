@@ -314,12 +314,11 @@ Return this JSON:
       });
       clearTimeout(timeout);
       const data = await res.json();
-      const raw = (data.reply || data.message || '')
-        .replace(/```json|```/g,'')
-        .replace(/^[^{]*/,'')   // strip any text before first {
-        .replace(/[^}]*$/,'')   // strip any text after last }
-        .trim();
-      const evalData = JSON.parse(raw + '}'); // ensure closing brace
+      const rawText = (data.reply || data.message || '');
+      // Extract JSON — find the outermost { ... } block
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No JSON in response');
+      const evalData = JSON.parse(jsonMatch[0]);
       setEvaluation(evalData);
       addHistory({
         type: 'mains', paper: paperLabel, question: q.slice(0,100),
@@ -542,12 +541,10 @@ Return this JSON:
       });
       clearTimeout(timeout);
       const data = await res.json();
-      const raw = (data.reply || data.message || '')
-        .replace(/```json|```/g,'')
-        .replace(/^[^{]*/,'')
-        .replace(/[^}]*$/,'')
-        .trim();
-      const evalData = JSON.parse(raw + '}');
+      const rawText = (data.reply || data.message || '');
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No JSON in response');
+      const evalData = JSON.parse(jsonMatch[0]);
       setEvaluation(evalData);
       addHistory({
         type:'essay', topic: t.slice(0,80), section,
