@@ -833,12 +833,8 @@ function AICoach({ moduleId, accent, accentDim, accentBorder, userProfile, senso
   }, [messages, loading]);
 
   useEffect(() => {
-    isSpeakingRef.current = false;
-    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
-    activeSources.current.forEach(s => { try { s.stop(); } catch {} });
-    activeSources.current = [];
+    stopAll();
     setMessages([]);
-    setSpeakingIdx(null);
   }, [moduleId]); // eslint-disable-line
 
   const buildSystemPrompt = () => {
