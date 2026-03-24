@@ -56,6 +56,7 @@ export const generateQuiz = (data) => api.post('/quiz/generate', data);
 export const submitQuiz = (data) => api.post('/quiz/submit', data);
 export const getQuizHistory = (params) => api.get('/quiz/history', { params });
 export const getLeaderboard = (params) => api.get('/quiz/leaderboard', { params });
+export const evaluateAnswer = (data) => api.post('/quiz/evaluate-answer', data);
 
 // Curriculum
 export const getCurriculum = (params) => api.get('/curriculum', { params });

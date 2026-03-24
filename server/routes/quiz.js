@@ -46,6 +46,7 @@ router.post('/generate', protect, async (req, res) => {
     const {
       subject, grade, syllabus, chapter, topic,
       difficulty = 'medium', count = 5, language = 'English',
+      questionType = 'mcq',  // 'mcq' | 'short' | 'long'
     } = req.body;
 
     if (!subject || !grade) {
@@ -59,15 +60,14 @@ router.post('/generate', protect, async (req, res) => {
     const examLabel = grade === 'NEET Preparation' ? 'NEET UG' : 'Karnataka CET (KCET)';
 
     const examContext = isExam
-      ? `This is an entrance exam preparation quiz for ${examLabel}.
-- Questions should match actual ${examLabel} MCQ style
-- Include numerical/application-based questions where appropriate
-- Distractors should be common misconceptions seen in competitive exams`
-      : `This is a school curriculum quiz for ${grade} ${syllabus} students.
-- Questions should be age-appropriate and curriculum-aligned
-- Use simple, clear language suitable for school students`;
+      ? `This is an entrance exam preparation quiz for ${examLabel}.`
+      : `This is a school curriculum quiz for ${grade} ${syllabus} students.`;
 
-    const prompt = `Generate exactly ${count} multiple choice questions for:
+    // Build prompt based on question type
+    let prompt;
+
+    if (questionType === 'short') {
+      prompt = `Generate exactly ${count} short-answer questions for:
 - Grade / Exam: ${grade}
 - Syllabus / Board: ${syllabus}
 - Subject: ${subject}
@@ -76,8 +76,63 @@ router.post('/generate', protect, async (req, res) => {
 - Language: ${language}
 
 ${examContext}
+- Questions should require 3–5 sentence answers (2–3 marks style)
+- Suitable for board exam short-answer format
+- Test conceptual understanding, not just recall
 
-Return ONLY a valid JSON array (no markdown, no explanation, no preamble) with this exact structure:
+Return ONLY a valid JSON array with this exact structure:
+[
+  {
+    "question": "Question text here",
+    "markingPoints": ["Key point 1", "Key point 2", "Key point 3"],
+    "modelAnswer": "A complete model answer in 3-5 sentences.",
+    "marks": 3
+  }
+]
+- DO NOT wrap in markdown code fences`;
+
+    } else if (questionType === 'long') {
+      prompt = `Generate exactly ${count} long-answer / essay questions for:
+- Grade / Exam: ${grade}
+- Syllabus / Board: ${syllabus}
+- Subject: ${subject}
+- Chapter / Topic: ${resolvedChapter}${topic ? `\n- Specific topic: ${topic}` : ''}
+- Difficulty: ${difficulty}
+- Language: ${language}
+
+${examContext}
+- Questions should require detailed paragraph answers (5–8 marks style)
+- Include questions that ask to "explain", "describe", "compare", "discuss", or "analyse"
+- Suitable for board exam long-answer / essay format
+
+Return ONLY a valid JSON array with this exact structure:
+[
+  {
+    "question": "Question text here",
+    "markingPoints": ["Key point 1", "Key point 2", "Key point 3", "Key point 4", "Key point 5"],
+    "modelAnswer": "A detailed model answer covering all key points in well-structured paragraphs.",
+    "marks": 5,
+    "hints": ["Hint 1 to structure the answer", "Hint 2"]
+  }
+]
+- DO NOT wrap in markdown code fences`;
+
+    } else {
+      // Default: MCQ
+      prompt = `Generate exactly ${count} multiple choice questions for:
+- Grade / Exam: ${grade}
+- Syllabus / Board: ${syllabus}
+- Subject: ${subject}
+- Chapter / Topic: ${resolvedChapter}${topic ? `\n- Specific topic: ${topic}` : ''}
+- Difficulty: ${difficulty}
+- Language: ${language}
+
+${examContext}
+- Questions should be age-appropriate and curriculum-aligned
+- All 4 options must be distinct and plausible
+- Include numerical/application questions where appropriate
+
+Return ONLY a valid JSON array with this exact structure:
 [
   {
     "question": "Question text here",
@@ -86,13 +141,8 @@ Return ONLY a valid JSON array (no markdown, no explanation, no preamble) with t
     "explanation": "Brief explanation of why this answer is correct"
   }
 ]
-
-Rules:
-- correctIndex is 0–3 (zero-based index of the correct option)
-- All 4 options must be distinct and plausible
-- Explanation must be educational and mention the key concept
-- If language is Kannada/Hindi/Telugu/Tamil, write questions and options in that language
-- DO NOT wrap output in markdown code fences`;
+- DO NOT wrap in markdown code fences`;
+    }
 
     const anthropic = getClient();
 
@@ -145,7 +195,7 @@ Rules:
       return res.status(500).json({ error: 'AI returned empty quiz. Please try again.' });
     }
 
-    res.json({ questions, chapter: resolvedChapter, subject, grade, syllabus, difficulty });
+    res.json({ questions, chapter: resolvedChapter, subject, grade, syllabus, difficulty, questionType });
   } catch (err) {
     console.error('[quiz] generate error:', err.message);
     if (!res.headersSent) {
@@ -247,3 +297,49 @@ router.get('/leaderboard', protect, async (req, res) => {
 });
 
 export default router;
+
+// ─── POST /api/quiz/evaluate-answer ─────────────────────────────────────────
+router.post('/evaluate-answer', protect, async (req, res) => {
+  const { question, studentAnswer, modelAnswer, markingPoints, marks, grade, subject } = req.body;
+  if (!question || !studentAnswer) return res.status(400).json({ error: 'question and studentAnswer required' });
+
+  const prompt = `You are a ${grade} ${subject} teacher evaluating a student's written answer.
+
+QUESTION: ${question}
+TOTAL MARKS: ${marks}
+MARKING POINTS: ${(markingPoints||[]).join(' | ')}
+MODEL ANSWER: ${modelAnswer}
+STUDENT ANSWER: ${studentAnswer.slice(0,1500)}
+
+Evaluate strictly. Return ONLY valid JSON (no markdown):
+{"score":N,"percentage":N,"feedback":"2-3 sentences of specific feedback","pointsCovered":["point covered"],"pointsMissed":["point missed"],"improvement":"one specific suggestion"}`;
+
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    if (!res.headersSent) res.status(504).json({ error: 'Evaluation timed out. Please try again.' });
+  }, 45000);
+
+  try {
+    const anthropic = getClient();
+    let text = '';
+    const stream = anthropic.messages.stream({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 600,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    for await (const event of stream) {
+      if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+        text += event.delta.text;
+      }
+    }
+    clearTimeout(timer);
+    if (timedOut || res.headersSent) return;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return res.status(500).json({ error: 'Could not parse evaluation. Try again.' });
+    res.json(JSON.parse(jsonMatch[0]));
+  } catch (err) {
+    clearTimeout(timer);
+    if (!res.headersSent) res.status(500).json({ error: 'Evaluation failed: ' + err.message });
+  }
+});

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { generateQuiz, submitQuiz, getQuizHistory, getCurriculum, getLeaderboard } from '../utils/api';
+import { generateQuiz, submitQuiz, getQuizHistory, getCurriculum, getLeaderboard, evaluateAnswer } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { SUBJECT_META, SUBJECTS_BY_GRADE, DIFFICULTY_META, LANGUAGES, GRADES, SYLLABI,
          EXAM_META, EXAM_MODES, LLB_META, LLB_MODES, RGUHS_META, RGUHS_MODES,
@@ -20,14 +20,14 @@ export default function QuizPage() {
     if (urlMode && ALL_PROFESSIONAL_MODES.includes(urlMode)) {
       const syllabus = getSyllabusKey(urlMode) || 'CBSE';
       const subs = SUBJECTS_BY_GRADE[urlMode] || [];
-      return { grade: urlMode, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English' };
+      return { grade: urlMode, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English', questionType: 'mcq' };
     }
     // Admin starts at Class 7 (neutral), students start at their registered grade
     const isPriv = user?.role === 'admin' || user?.role === 'teacher';
     const grade    = isPriv ? 'Class 7' : (user?.grade || 'Class 7');
     const syllabus = getSyllabusKey(grade) || user?.syllabus || 'CBSE';
     const subs     = SUBJECTS_BY_GRADE[grade] || [];
-    return { grade, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English' };
+    return { grade, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English', questionType: 'mcq' };
   });
 
   const [chapters, setChapters]       = useState([]);
@@ -39,6 +39,9 @@ export default function QuizPage() {
   const [history, setHistory]         = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [currentQ, setCurrentQ]       = useState(0);
+  const [studentAnswers, setStudentAnswers] = useState({});  // for descriptive
+  const [evaluations, setEvaluations]       = useState({});  // per-question AI eval
+  const [evaluating, setEvaluating]         = useState(null); // index being evaluated
   const startTime = useRef(null);
 
   const set = (k, v) => setConfig(c => ({ ...c, [k]: v }));
@@ -87,7 +90,6 @@ export default function QuizPage() {
     if (!config.subject) return alert('Please select a subject first.');
     setGenerating(true);
     try {
-      // 50s client-side timeout — matches server timeout
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Quiz generation timed out. Please try again.')), 50000)
       );
@@ -97,6 +99,7 @@ export default function QuizPage() {
       ]);
       setQuestions(r.data.questions);
       setAnswers({}); setResult(null); setCurrentQ(0);
+      setStudentAnswers({}); setEvaluations({});
       startTime.current = Date.now();
       setTab('quiz');
     } catch (err) {
@@ -104,6 +107,29 @@ export default function QuizPage() {
       alert(msg);
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleEvaluate = async (idx) => {
+    const q = questions[idx];
+    const ans = studentAnswers[idx] || '';
+    if (!ans.trim() || ans.trim().length < 20) return alert('Please write at least a sentence before evaluating.');
+    setEvaluating(idx);
+    try {
+      const r = await evaluateAnswer({
+        question: q.question,
+        studentAnswer: ans,
+        modelAnswer: q.modelAnswer,
+        markingPoints: q.markingPoints,
+        marks: q.marks,
+        grade: config.grade,
+        subject: config.subject,
+      });
+      setEvaluations(e => ({ ...e, [idx]: r.data }));
+    } catch (err) {
+      alert(err.response?.data?.error || 'Evaluation failed. Try again.');
+    } finally {
+      setEvaluating(null);
     }
   };
 
@@ -370,6 +396,27 @@ export default function QuizPage() {
               </div>
             </div>
 
+            {/* Question Type — only for school syllabus */}
+            {!isProfMode && (
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 6 }}>QUESTION TYPE</label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[
+                    { id: 'mcq',   icon: '🔘', label: 'MCQ',         desc: '4 options' },
+                    { id: 'short', icon: '✏️', label: 'Short Ans',   desc: '3–5 lines' },
+                    { id: 'long',  icon: '📝', label: 'Long Ans',    desc: '5–8 marks' },
+                  ].map(qt => (
+                    <button key={qt.id} onClick={() => set('questionType', qt.id)}
+                      style={{ flex: 1, padding: '8px 4px', background: config.questionType === qt.id ? 'rgba(255,215,0,0.12)' : 'rgba(255,255,255,0.04)', border: `1.5px solid ${config.questionType === qt.id ? '#ffd700' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, color: config.questionType === qt.id ? '#ffd700' : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                      <span style={{ fontSize: 14 }}>{qt.icon}</span>
+                      <span>{qt.label}</span>
+                      <span style={{ fontSize: 9, opacity: 0.6 }}>{qt.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div style={{ marginBottom: 4 }}>
               <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 5 }}>DIFFICULTY</label>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -439,27 +486,124 @@ export default function QuizPage() {
       {/* ── QUIZ ── */}
       {tab === 'quiz' && questions.length > 0 && (
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
-          {/* Progress dots */}
+          {/* Progress */}
           <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
             {questions.map((_, i) => (
               <div key={i} onClick={() => setCurrentQ(i)}
-                style={{ flex: 1, height: 5, borderRadius: 3, background: answers[i]!==undefined ? meta.color : 'rgba(255,255,255,0.12)', cursor: 'pointer', transition: 'background 0.2s' }} />
+                style={{ flex: 1, height: 5, borderRadius: 3, cursor: 'pointer', transition: 'background 0.2s',
+                  background: config.questionType === 'mcq'
+                    ? (answers[i] !== undefined ? meta.color : 'rgba(255,255,255,0.12)')
+                    : (evaluations[i] ? '#27ae60' : studentAnswers[i] ? meta.color : 'rgba(255,255,255,0.12)') }} />
             ))}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>Q {currentQ+1} of {questions.length}</span>
-            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>{Object.keys(answers).length} answered</span>
+            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
+              {config.questionType === 'mcq'
+                ? `${Object.keys(answers).length} answered`
+                : `${Object.keys(evaluations).length} evaluated`}
+            </span>
           </div>
 
           <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '20px 16px', marginBottom: 16 }}>
-            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, marginBottom: 8 }}>Question {currentQ+1}</div>
-            <div style={{ color: 'white', fontSize: 15, fontWeight: 700, lineHeight: 1.6, marginBottom: 20 }}>{questions[currentQ]?.question}</div>
-            {questions[currentQ]?.options?.map((opt, i) => (
-              <button key={i} className={`option-btn ${answers[currentQ]===i?'selected':''}`} onClick={() => setAnswers(a => ({...a,[currentQ]:i}))}>
+            {/* Marks badge for descriptive */}
+            {config.questionType !== 'mcq' && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700 }}>
+                  {config.questionType === 'short' ? 'SHORT ANSWER' : 'LONG ANSWER'} — Question {currentQ+1}
+                </span>
+                <span style={{ padding: '2px 10px', background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: 8, color: '#ffd700', fontSize: 11, fontWeight: 800 }}>
+                  {questions[currentQ]?.marks || (config.questionType === 'short' ? 3 : 5)} marks
+                </span>
+              </div>
+            )}
+            {config.questionType === 'mcq' && (
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, marginBottom: 8 }}>Question {currentQ+1}</div>
+            )}
+
+            <div style={{ color: 'white', fontSize: 15, fontWeight: 700, lineHeight: 1.6, marginBottom: 16 }}>
+              {questions[currentQ]?.question}
+            </div>
+
+            {/* MCQ options */}
+            {config.questionType === 'mcq' && questions[currentQ]?.options?.map((opt, i) => (
+              <button key={i} className={`option-btn ${answers[currentQ]===i?'selected':''}`}
+                onClick={() => setAnswers(a => ({...a,[currentQ]:i}))}>
                 <span style={{ width: 26, height: 26, borderRadius: '50%', background: answers[currentQ]===i?meta.color:'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: answers[currentQ]===i?'white':'rgba(255,255,255,0.6)', flexShrink: 0 }}>{['A','B','C','D'][i]}</span>
                 <span style={{ lineHeight: 1.4, flex: 1, textAlign: 'left' }}>{opt}</span>
               </button>
             ))}
+
+            {/* Descriptive answer textarea */}
+            {config.questionType !== 'mcq' && (
+              <div>
+                {/* Hints */}
+                {questions[currentQ]?.hints?.length > 0 && (
+                  <div style={{ padding: '8px 12px', background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.15)', borderRadius: 10, marginBottom: 10 }}>
+                    <div style={{ color: 'rgba(255,215,0,0.7)', fontSize: 11, fontWeight: 800, marginBottom: 4 }}>💡 Hints</div>
+                    {questions[currentQ].hints.map((h, i) => (
+                      <div key={i} style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, lineHeight: 1.6 }}>• {h}</div>
+                    ))}
+                  </div>
+                )}
+
+                <textarea
+                  value={studentAnswers[currentQ] || ''}
+                  onChange={e => setStudentAnswers(a => ({...a, [currentQ]: e.target.value}))}
+                  placeholder={config.questionType === 'short'
+                    ? 'Write your answer here (3–5 sentences)…'
+                    : 'Write your detailed answer here (use paragraphs, cover all key points)…'}
+                  style={{ width: '100%', minHeight: config.questionType === 'short' ? 120 : 220, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12, color: 'white', fontSize: 14, lineHeight: 1.7, fontFamily: "'Nunito',sans-serif", resize: 'vertical', boxSizing: 'border-box' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>
+                    {(studentAnswers[currentQ] || '').split(/\s+/).filter(Boolean).length} words
+                  </span>
+                  <button onClick={() => handleEvaluate(currentQ)} disabled={evaluating === currentQ}
+                    style={{ padding: '8px 18px', background: 'linear-gradient(135deg,#ffd700,#ff9500)', border: 'none', borderRadius: 10, color: '#1a1a2e', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: "'Nunito',sans-serif" }}>
+                    {evaluating === currentQ ? '⏳ Evaluating…' : '📊 Evaluate My Answer'}
+                  </button>
+                </div>
+
+                {/* Evaluation result */}
+                {evaluations[currentQ] && (
+                  <div style={{ marginTop: 14, padding: '14px 16px', background: 'rgba(39,174,96,0.08)', border: '1px solid rgba(39,174,96,0.25)', borderRadius: 14 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <span style={{ color: 'white', fontWeight: 800, fontSize: 14 }}>Your Score</span>
+                      <span style={{ fontSize: 20, fontWeight: 900, color: evaluations[currentQ].percentage >= 70 ? '#27ae60' : evaluations[currentQ].percentage >= 40 ? '#f39c12' : '#e74c3c' }}>
+                        {evaluations[currentQ].score}/{questions[currentQ]?.marks || (config.questionType === 'short' ? 3 : 5)}
+                      </span>
+                    </div>
+                    <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, lineHeight: 1.7, marginBottom: 10 }}>
+                      {evaluations[currentQ].feedback}
+                    </div>
+                    {evaluations[currentQ].pointsCovered?.length > 0 && (
+                      <div style={{ marginBottom: 6 }}>
+                        <div style={{ color: '#27ae60', fontSize: 11, fontWeight: 800, marginBottom: 4 }}>✓ Points covered</div>
+                        {evaluations[currentQ].pointsCovered.map((p, i) => <div key={i} style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>• {p}</div>)}
+                      </div>
+                    )}
+                    {evaluations[currentQ].pointsMissed?.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ color: '#e74c3c', fontSize: 11, fontWeight: 800, marginBottom: 4 }}>✗ Points missed</div>
+                        {evaluations[currentQ].pointsMissed.map((p, i) => <div key={i} style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>• {p}</div>)}
+                      </div>
+                    )}
+                    <div style={{ padding: '8px 12px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.2)', borderRadius: 10 }}>
+                      <span style={{ color: '#ffd700', fontSize: 11, fontWeight: 800 }}>💡 Improvement: </span>
+                      <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>{evaluations[currentQ].improvement}</span>
+                    </div>
+                    {/* Model answer toggle */}
+                    <details style={{ marginTop: 10 }}>
+                      <summary style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>📖 View model answer</summary>
+                      <div style={{ marginTop: 8, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 10, color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 1.8 }}>
+                        {questions[currentQ]?.modelAnswer}
+                      </div>
+                    </details>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: 10 }}>
@@ -468,7 +612,9 @@ export default function QuizPage() {
             )}
             {currentQ < questions.length-1
               ? <button onClick={() => setCurrentQ(q=>q+1)} style={{ flex: 2, padding: 13, background: `linear-gradient(135deg,${meta.color},${meta.color}cc)`, border: 'none', borderRadius: 12, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: "'Nunito',sans-serif" }}>Next →</button>
-              : <button onClick={submit} disabled={submitting} style={{ flex: 2, padding: 13, background: 'linear-gradient(135deg,#ffd700,#ff9500)', border: 'none', borderRadius: 12, color: '#1a1a2e', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: submitting?0.7:1, fontFamily: "'Nunito',sans-serif" }}>{submitting?'Submitting...':'Submit ✓'}</button>
+              : config.questionType === 'mcq'
+                ? <button onClick={submit} disabled={submitting} style={{ flex: 2, padding: 13, background: 'linear-gradient(135deg,#ffd700,#ff9500)', border: 'none', borderRadius: 12, color: '#1a1a2e', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: submitting?0.7:1, fontFamily: "'Nunito',sans-serif" }}>{submitting?'Submitting...':'Submit ✓'}</button>
+                : <button onClick={() => setTab('setup')} style={{ flex: 2, padding: 13, background: 'linear-gradient(135deg,#ffd700,#ff9500)', border: 'none', borderRadius: 12, color: '#1a1a2e', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: "'Nunito',sans-serif" }}>✓ Done</button>
             }
           </div>
         </div>
