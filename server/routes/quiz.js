@@ -197,11 +197,18 @@ Return ONLY a valid JSON array with this exact structure:
 
     res.json({ questions, chapter: resolvedChapter, subject, grade, syllabus, difficulty, questionType });
   } catch (err) {
-    console.error('[quiz] generate error:', err.message);
+    console.error('[quiz] generate error:', JSON.stringify({
+      message: err.message,
+      status: err.status,
+      type: err.error?.type,
+      detail: err.error?.error?.message || err.error?.message,
+    }));
     if (!res.headersSent) {
-      const userMsg = err.message.includes('ANTHROPIC_API_KEY') ? err.message
-        : err.status === 401 ? 'Invalid Anthropic API key.'
+      const userMsg = err.message?.includes('ANTHROPIC_API_KEY') ? err.message
+        : err.status === 401 ? 'Invalid Anthropic API key — check Render env vars.'
         : err.status === 429 ? 'Rate limit reached. Please wait a moment.'
+        : err.status === 529 ? 'Anthropic API overloaded. Please try again.'
+        : err.status === 400 ? 'Bad request to AI: ' + (err.error?.error?.message || err.message)
         : 'Failed to generate quiz: ' + err.message;
       res.status(500).json({ error: userMsg });
     }
@@ -296,7 +303,6 @@ router.get('/leaderboard', protect, async (req, res) => {
   }
 });
 
-export default router;
 
 // ─── POST /api/quiz/evaluate-answer ─────────────────────────────────────────
 router.post('/evaluate-answer', protect, async (req, res) => {
@@ -343,3 +349,5 @@ Evaluate strictly. Return ONLY valid JSON (no markdown):
     if (!res.headersSent) res.status(500).json({ error: 'Evaluation failed: ' + err.message });
   }
 });
+
+export default router;

@@ -459,7 +459,10 @@ router.post('/message', protect, async (req, res) => {
 
   } catch (err) {
     clearTimeout(reqTimeout);
-    console.error('=== CHAT ERROR ===', err.message);
+    console.error('=== CHAT ERROR ===', JSON.stringify({
+      message: err.message, status: err.status,
+      type: err.error?.type, detail: err.error?.error?.message
+    }));
     if (res.headersSent) return;
     const userMsg = err.status === 401 ? 'Invalid Anthropic API key.'
       : err.status === 429 ? 'Rate limit reached. Please wait a moment.'

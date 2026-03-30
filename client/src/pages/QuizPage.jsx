@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { generateQuiz, submitQuiz, getQuizHistory, getCurriculum, getLeaderboard, evaluateAnswer } from '../utils/api';
+import { getChapterData, pickRandom } from '../utils/questionBankLoader';
 import { useAuth } from '../hooks/useAuth';
 import { SUBJECT_META, SUBJECTS_BY_GRADE, DIFFICULTY_META, LANGUAGES, GRADES, SYLLABI,
          EXAM_META, EXAM_MODES, LLB_META, LLB_MODES, RGUHS_META, RGUHS_MODES,
@@ -39,9 +40,10 @@ export default function QuizPage() {
   const [history, setHistory]         = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [currentQ, setCurrentQ]       = useState(0);
-  const [studentAnswers, setStudentAnswers] = useState({});  // for descriptive
-  const [evaluations, setEvaluations]       = useState({});  // per-question AI eval
-  const [evaluating, setEvaluating]         = useState(null); // index being evaluated
+  const [studentAnswers, setStudentAnswers] = useState({});
+  const [evaluations, setEvaluations]       = useState({});
+  const [evaluating, setEvaluating]         = useState(null);
+  const [usingStatic, setUsingStatic]       = useState(false); // true when using pre-built bank
   const startTime = useRef(null);
 
   const set = (k, v) => setConfig(c => ({ ...c, [k]: v }));
@@ -86,10 +88,39 @@ export default function QuizPage() {
     if (tab === 'leaderboard') getLeaderboard({ grade: config.grade }).then(r => setLeaderboard(r.data.leaderboard || [])).catch(() => {});
   }, [tab]);
 
+  // School syllabi: try static question bank first, fall back to LLM
+  const isSchoolSyllabus = ['CBSE','ICSE','Karnataka State'].includes(effectiveSyllabus);
+
   const startQuiz = async () => {
     if (!config.subject) return alert('Please select a subject first.');
     setGenerating(true);
+    setUsingStatic(false);
+
     try {
+      // ── Try static question bank first (school mode only) ──────────────
+      if (isSchoolSyllabus && config.chapter) {
+        const bankData = await getChapterData(
+          effectiveSyllabus, config.grade, config.subject, config.chapter
+        );
+
+        if (bankData) {
+          const typeKey = config.questionType || 'mcq';
+          const pool = bankData[typeKey] || [];
+
+          if (pool.length > 0) {
+            const picked = pickRandom(pool, config.count || 5);
+            setQuestions(picked);
+            setAnswers({}); setResult(null); setCurrentQ(0);
+            setStudentAnswers({}); setEvaluations({});
+            setUsingStatic(true);
+            startTime.current = Date.now();
+            setTab('quiz');
+            return; // ← no LLM call needed
+          }
+        }
+      }
+
+      // ── Fall back to LLM generation ────────────────────────────────────
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Quiz generation timed out. Please try again.')), 50000)
       );
@@ -102,6 +133,7 @@ export default function QuizPage() {
       setStudentAnswers({}); setEvaluations({});
       startTime.current = Date.now();
       setTab('quiz');
+
     } catch (err) {
       const msg = err.friendlyMessage || err.response?.data?.error || err.message || 'Failed to generate quiz.';
       alert(msg);
@@ -476,7 +508,7 @@ export default function QuizPage() {
               )}
               <button onClick={startQuiz} disabled={generating || !config.subject}
                 style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg,#ffd700,#ff9500)', border: 'none', borderRadius: 14, color: '#1a1a2e', fontSize: 15, fontWeight: 800, cursor: 'pointer', opacity: (generating||!config.subject)?0.6:1, fontFamily: "'Nunito',sans-serif" }}>
-                {generating ? '⏳ Generating… (may take ~15s)' : '🚀 Start Quiz'}
+                {usingStatic ? '⚡ Start Instantly' : generating ? '⏳ Generating… (may take ~15s)' : isSchoolSyllabus && config.chapter ? '⚡ Start Quiz' : '🚀 Start Quiz'}
               </button>
             </div>
           </div>
@@ -496,13 +528,20 @@ export default function QuizPage() {
                     : (evaluations[i] ? '#27ae60' : studentAnswers[i] ? meta.color : 'rgba(255,255,255,0.12)') }} />
             ))}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>Q {currentQ+1} of {questions.length}</span>
-            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
-              {config.questionType === 'mcq'
-                ? `${Object.keys(answers).length} answered`
-                : `${Object.keys(evaluations).length} evaluated`}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {usingStatic && (
+                <span style={{ padding: '2px 8px', background: 'rgba(82,183,136,0.12)', border: '1px solid rgba(82,183,136,0.3)', borderRadius: 8, color: '#52b788', fontSize: 10, fontWeight: 800 }}>
+                  ⚡ Instant
+                </span>
+              )}
+              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
+                {config.questionType === 'mcq'
+                  ? `${Object.keys(answers).length} answered`
+                  : `${Object.keys(evaluations).length} evaluated`}
+              </span>
+            </div>
           </div>
 
           <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '20px 16px', marginBottom: 16 }}>
