@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import { protect } from '../middleware/auth.js';
 import QuizAttempt from '../models/QuizAttempt.js';
 import User from '../models/User.js';
-import { CURRICULUM, SUBJECTS_BY_GRADE } from '../data/curriculum.js';
+import { CURRICULUM } from '../data/curriculum.js';
 
 // Load .env explicitly (same pattern as chat.js — handles spaces in path)
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -156,19 +156,24 @@ Return ONLY a valid JSON array with this exact structure:
 
     const anthropic = getClient();
 
-    // 45-second hard timeout — prevents infinite hang on Render
+    // Scale max_tokens by question count (15Q needs ~4000 tokens)
+    const maxTok = Math.min(4096, 800 + (count * 200));
+
+    // Raise timeout based on question count — 15Q at hard difficulty can take ~60s
+    const timeoutMs = 30000 + (count * 3000); // 30s base + 3s per question
     let timedOut = false;
     const timer = setTimeout(() => {
       timedOut = true;
-      if (!res.headersSent) res.status(504).json({ error: 'Quiz generation timed out. Please try again.' });
-    }, 45000);
+      if (!res.headersSent) res.status(504).json({ error: `Quiz generation timed out after ${Math.round(timeoutMs/1000)}s. Try fewer questions or try again.` });
+    }, timeoutMs);
 
     // Use streaming so Render does not kill the idle connection
     let text = '';
     try {
       const stream = anthropic.messages.stream({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2500,
+        max_tokens: maxTok,
+        system: 'You are a quiz generator. Return ONLY valid JSON arrays. No explanations, no markdown, no preamble. Start your response with [ and end with ].',
         messages: [{ role: 'user', content: prompt }],
       });
       for await (const event of stream) {

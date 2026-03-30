@@ -121,8 +121,9 @@ export default function QuizPage() {
       }
 
       // ── Fall back to LLM generation ────────────────────────────────────
+      const clientTimeoutMs = 30000 + ((config.count || 5) * 3500); // matches server
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Quiz generation timed out. Please try again.')), 50000)
+        setTimeout(() => reject(new Error('Quiz generation timed out. Try fewer questions or try again.')), clientTimeoutMs)
       );
       const r = await Promise.race([
         generateQuiz({ ...config, syllabus: effectiveSyllabus }),
@@ -426,6 +427,11 @@ export default function QuizPage() {
                     style={{ flex: 1, padding: '9px', background: config.count===n?'rgba(255,215,0,0.15)':'rgba(255,255,255,0.05)', border: `1.5px solid ${config.count===n?'#ffd700':'rgba(255,255,255,0.1)'}`, borderRadius: 10, color: config.count===n?'#ffd700':'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{n}</button>
                 ))}
               </div>
+              {config.count === 15 && (
+                <div style={{ fontSize:10, color:'rgba(255,215,0,0.5)', marginTop:4 }}>
+                  ⚠ 15Q may take ~45s to generate
+                </div>
+              )}
             </div>
 
             {/* Question Type — only for school syllabus */}
