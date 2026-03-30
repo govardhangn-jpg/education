@@ -423,7 +423,7 @@ router.post('/message', protect, async (req, res) => {
     let fullReply = '';
 
     const stream = anthropic.messages.stream({
-      model:      'claude-sonnet-4-20250514',
+      model:      'claude-sonnet-4-6',
       max_tokens: isCustomPrompt ? 2048 : 1024,
       system:     systemPromptToUse,
       messages,

@@ -14,6 +14,16 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const router = express.Router();
 
+// GET /api/quiz/health — quick check that API key is configured
+router.get('/health', (req, res) => {
+  const key = process.env.ANTHROPIC_API_KEY;
+  res.json({
+    ok: !!key,
+    keyPrefix: key ? key.slice(0,16)+'...' : 'NOT SET',
+    model: 'claude-sonnet-4-6',
+  });
+});
+
 // Create Anthropic client per-request so key is always fresh
 function getClient() {
   const key = process.env.ANTHROPIC_API_KEY;
@@ -157,7 +167,7 @@ Return ONLY a valid JSON array with this exact structure:
     let text = '';
     try {
       const stream = anthropic.messages.stream({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 2500,
         messages: [{ role: 'user', content: prompt }],
       });
@@ -330,7 +340,7 @@ Evaluate strictly. Return ONLY valid JSON (no markdown):
     const anthropic = getClient();
     let text = '';
     const stream = anthropic.messages.stream({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 600,
       messages: [{ role: 'user', content: prompt }],
     });
