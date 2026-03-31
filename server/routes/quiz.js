@@ -191,7 +191,8 @@ ${optExplRule}`;
     const maxTok = Math.min(8000, 500 + (count * tokensPerQ));
 
     // Raise timeout: regional languages take longer to generate
-    const timeoutMs = 30000 + (count * (isRegionalLang ? 5000 : 3000));
+    // 60s base accounts for cold start; regional languages get more per-question time
+    const timeoutMs = 60000 + (count * (isRegionalLang ? 5000 : 3000));
     let timedOut = false;
     const timer = setTimeout(() => {
       timedOut = true;

@@ -43,7 +43,9 @@ export default function QuizPage() {
   const [studentAnswers, setStudentAnswers] = useState({});
   const [evaluations, setEvaluations]       = useState({});
   const [evaluating, setEvaluating]         = useState(null);
-  const [usingStatic, setUsingStatic]       = useState(false); // true when using pre-built bank
+  const [usingStatic, setUsingStatic]       = useState(false);
+  const [quizError, setQuizError]           = useState('');
+  const [warmingUp, setWarmingUp]           = useState(false); // true while pinging server
   const startTime = useRef(null);
 
   const set = (k, v) => setConfig(c => ({ ...c, [k]: v }));
@@ -128,9 +130,10 @@ export default function QuizPage() {
   const isSchoolSyllabus = ['CBSE','ICSE','Karnataka State'].includes(effectiveSyllabus);
 
   const startQuiz = async () => {
-    if (!config.subject) return alert('Please select a subject first.');
+    if (!config.subject) { setQuizError('Please select a subject first.'); return; }
     setGenerating(true);
     setUsingStatic(false);
+    setQuizError('');
 
     try {
       // ── Try static question bank first (school mode only) ──────────────
@@ -138,11 +141,8 @@ export default function QuizPage() {
         const bankData = await getChapterData(
           effectiveSyllabus, config.grade, config.subject, config.chapter
         );
-
         if (bankData) {
-          const typeKey = config.questionType || 'mcq';
-          const pool = bankData[typeKey] || [];
-
+          const pool = bankData[config.questionType || 'mcq'] || [];
           if (pool.length > 0) {
             const picked = pickRandom(pool, config.count || 5);
             setQuestions(picked);
@@ -151,15 +151,34 @@ export default function QuizPage() {
             setUsingStatic(true);
             startTime.current = Date.now();
             setTab('quiz');
-            return; // ← no LLM call needed
+            return;
           }
         }
       }
 
-      // ── Fall back to LLM generation ────────────────────────────────────
-      const clientTimeoutMs = 30000 + ((config.count || 5) * 3500); // matches server
+      // ── Warm up server — wait up to 15s for it to respond ──────────────
+      setWarmingUp(true);
+      const BACKEND_BASE = (process.env.REACT_APP_API_URL || '/api').replace(/\/api$/, '');
+      const warmUp = async () => {
+        for (let i = 0; i < 5; i++) {
+          try {
+            const r = await fetch(`${BACKEND_BASE}/health`, { method:'GET', cache:'no-store', signal: AbortSignal.timeout(4000) });
+            if (r.ok) return true;
+          } catch { /* sleeping — keep trying */ }
+          await new Promise(r => setTimeout(r, 2500));
+        }
+        return false; // server did not respond — try generate anyway
+      };
+      await warmUp();
+      setWarmingUp(false);
+
+      // ── Scale timeout: cold start (50s) + generation time ─────────────
+      const isRegional = !['English'].includes(config.language || 'English');
+      const perQTime   = isRegional ? 6000 : 4000;
+      const clientTimeoutMs = 55000 + ((config.count || 5) * perQTime);
+
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Quiz generation timed out. Try fewer questions or try again.')), clientTimeoutMs)
+        setTimeout(() => reject(new Error('timeout')), clientTimeoutMs)
       );
       const r = await Promise.race([
         generateQuiz({ ...config, syllabus: effectiveSyllabus }),
@@ -172,8 +191,11 @@ export default function QuizPage() {
       setTab('quiz');
 
     } catch (err) {
-      const msg = err.friendlyMessage || err.response?.data?.error || err.message || 'Failed to generate quiz.';
-      alert(msg);
+      const isTimeout = err.message === 'timeout' || err.code === 'ECONNABORTED';
+      const msg = isTimeout
+        ? 'The server took too long to respond. It may have been sleeping — please try again, it should be faster now.'
+        : err.friendlyMessage || err.response?.data?.error || err.message || 'Failed to generate quiz.';
+      setQuizError(msg);
     } finally {
       setGenerating(false);
     }
@@ -574,9 +596,25 @@ export default function QuizPage() {
                   ← Select a subject to begin
                 </div>
               )}
+              {/* Inline error banner with retry */}
+              {quizError && (
+                <div style={{ marginBottom: 10, padding: '12px 14px', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', borderRadius: 12, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: '#ff6b6b', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
+                      {quizError.includes('sleeping') || quizError.includes('timed out') || quizError.includes('starting') ? 'Server waking up…' : 'Generation failed'}
+                    </div>
+                    <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, lineHeight: 1.5 }}>{quizError}</div>
+                    <button onClick={startQuiz} disabled={generating}
+                      style={{ marginTop: 8, padding: '6px 14px', background: 'rgba(255,107,107,0.15)', border: '1px solid rgba(255,107,107,0.4)', borderRadius: 8, color: '#ff6b6b', fontSize: 12, fontWeight: 800, cursor: 'pointer', fontFamily: "'Nunito',sans-serif" }}>
+                      🔄 Try Again
+                    </button>
+                  </div>
+                </div>
+              )}
               <button onClick={startQuiz} disabled={generating || !config.subject}
-                style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg,#ffd700,#ff9500)', border: 'none', borderRadius: 14, color: '#1a1a2e', fontSize: 15, fontWeight: 800, cursor: 'pointer', opacity: (generating||!config.subject)?0.6:1, fontFamily: "'Nunito',sans-serif" }}>
-                {usingStatic ? '⚡ Start Instantly' : generating ? '⏳ Generating… (may take ~15s)' : isSchoolSyllabus && config.chapter ? '⚡ Start Quiz' : '🚀 Start Quiz'}
+                style={{ width: '100%', padding: '14px', background: quizError ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg,#ffd700,#ff9500)', border: quizError ? '1px solid rgba(255,255,255,0.15)' : 'none', borderRadius: 14, color: quizError ? 'rgba(255,255,255,0.6)' : '#1a1a2e', fontSize: 15, fontWeight: 800, cursor: 'pointer', opacity: (generating||!config.subject)?0.6:1, fontFamily: "'Nunito',sans-serif" }}>
+                {warmingUp ? '🔌 Waking server up…' : generating ? '⏳ Generating…' : usingStatic ? '⚡ Start Instantly' : quizError ? '🔄 Retry' : isSchoolSyllabus && config.chapter ? '⚡ Start Quiz' : '🚀 Start Quiz'}
               </button>
             </div>
           </div>
