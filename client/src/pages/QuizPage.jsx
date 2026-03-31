@@ -21,14 +21,18 @@ export default function QuizPage() {
     if (urlMode && ALL_PROFESSIONAL_MODES.includes(urlMode)) {
       const syllabus = getSyllabusKey(urlMode) || 'CBSE';
       const subs = SUBJECTS_BY_GRADE[urlMode] || [];
-      return { grade: urlMode, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English', questionType: 'mcq' };
+      const UPSC_MAINS_GRADES = ['UPSC Mains – GS','UPSC Mains – Essay'];
+      const initQType = (UPSC_MAINS_GRADES.includes(urlMode) || urlMode?.startsWith('Optional –') || urlMode?.startsWith('LLB')) ? 'short' : 'mcq';
+      return { grade: urlMode, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English', questionType: initQType };
     }
     // Admin starts at Class 7 (neutral), students start at their registered grade
     const isPriv = user?.role === 'admin' || user?.role === 'teacher';
     const grade    = isPriv ? 'Class 7' : (user?.grade || 'Class 7');
     const syllabus = getSyllabusKey(grade) || user?.syllabus || 'CBSE';
     const subs     = SUBJECTS_BY_GRADE[grade] || [];
-    return { grade, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English', questionType: 'mcq' };
+    const UPSC_MAINS_INIT = ['UPSC Mains – GS','UPSC Mains – Essay'];
+    const initQt = (UPSC_MAINS_INIT.includes(grade) || grade?.startsWith('Optional –') || grade?.startsWith('LLB')) ? 'short' : 'mcq';
+    return { grade, syllabus, subject: subs[0] || '', chapter: '', difficulty: 'medium', count: 5, language: user?.preferredLanguage || 'English', questionType: initQt };
   });
 
   const [chapters, setChapters]       = useState([]);
@@ -140,6 +144,19 @@ export default function QuizPage() {
 
   const startQuiz = async () => {
     if (!config.subject) { setQuizError('Please select a subject first.'); return; }
+
+    // Auto-correct questionType if grade changed but type wasn't updated
+    const correctType = defaultQType(config.grade);
+    // For UPSC Mains/Optional/LLB/RGUHS: if still 'mcq' → upgrade to correct default
+    const NEEDS_DESCRIPTIVE = ['UPSC Mains – GS','UPSC Mains – Essay'].includes(config.grade)
+      || config.grade?.startsWith('Optional –')
+      || config.grade?.startsWith('LLB');
+    if (NEEDS_DESCRIPTIVE && config.questionType === 'mcq') {
+      setConfig(cfg => ({ ...cfg, questionType: correctType }));
+      // Update local ref so this quiz uses the right type
+      config = { ...config, questionType: correctType };
+    }
+
     setGenerating(true);
     setUsingStatic(false);
     setQuizError('');
