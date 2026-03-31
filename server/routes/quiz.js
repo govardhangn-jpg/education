@@ -422,4 +422,80 @@ Return ONLY valid JSON (no markdown):
   }
 });
 
+
+// ─── POST /api/quiz/evaluate-scan ────────────────────────────────────────────
+// Evaluates a handwritten/scanned answer image using Claude Vision
+router.post('/evaluate-scan', protect, async (req, res) => {
+  const { question, modelAnswer, markingPoints, marks, grade, subject, syllabus, imageBase64, mediaType = 'image/jpeg' } = req.body;
+  if (!question)    return res.status(400).json({ error: 'question is required' });
+  if (!imageBase64) return res.status(400).json({ error: 'imageBase64 is required' });
+  if (imageBase64.length > 7_000_000) return res.status(400).json({ error: 'Image too large. Use a file under 5MB.' });
+
+  const UPSC_GRADES = ['UPSC Prelims','UPSC Mains – GS','UPSC Mains – Essay'];
+  const LLB_GRADES  = ['LLB Year 1','LLB Year 2','LLB Year 3','LLB Year 4','LLB Year 5'];
+  const isUPSC  = UPSC_GRADES.includes(grade) || (grade||'').startsWith('Optional –');
+  const isLLB   = LLB_GRADES.includes(grade);
+  const isRGUHS = ['RGUHS','MBBS','BDS'].some(k => (grade||'').includes(k) || (syllabus||'').includes(k));
+
+  const persona = isUPSC ? 'You are a senior UPSC examiner who evaluates IAS answer scripts.'
+    : isLLB   ? 'You are a law professor evaluating an LLB answer using IRAC method.'
+    : isRGUHS ? 'You are an RGUHS examiner evaluating a health sciences answer.'
+    :           `You are an experienced ${grade} ${subject} teacher.`;
+
+  const rubric = isUPSC ? 'Evaluate on: Content accuracy (40%), Structure (25%), Analysis (20%), Language (15%).'
+    : isLLB   ? 'Evaluate on: Issue, Rule, Application, Conclusion, Case citations.'
+    : isRGUHS ? 'Evaluate on: Clinical accuracy, Completeness, Investigations, Management.'
+    :           'Evaluate on: Conceptual accuracy, Coverage of marking points, Clarity.';
+
+  const prompt = `${persona}
+
+You are given an IMAGE of a student's handwritten answer. Your tasks:
+1. Read and transcribe the handwritten text from the image
+2. Evaluate it based on the question and marking scheme
+3. Return JSON only
+
+QUESTION: ${question}
+TOTAL MARKS: ${marks || 5}
+MARKING POINTS: ${(markingPoints||[]).join(' | ')}
+MODEL ANSWER: ${modelAnswer || 'Not provided'}
+${rubric}
+
+Return ONLY valid JSON, no markdown:
+{"transcribedText":"exact text read from handwriting","handwritingNote":"brief legibility note","score":N,"percentage":N,"feedback":"3 sentences of specific feedback","pointsCovered":["points covered"],"pointsMissed":["points missed"],"improvement":"one specific suggestion","examinerNote":"one sentence examiner observation","presentationNote":"note on handwriting and presentation"}`;
+
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    if (!res.headersSent) res.status(504).json({ error: 'Scan evaluation timed out. Try again.' });
+  }, 60000);
+
+  try {
+    const anthropic = getClient();
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+    const imgType = ['image/jpeg','image/png','image/gif','image/webp'].includes(mediaType) ? mediaType : 'image/jpeg';
+
+    let text = '';
+    const stream = anthropic.messages.stream({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1500,
+      messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: imgType, data: base64Data } },
+        { type: 'text', text: prompt },
+      ]}],
+    });
+    for await (const event of stream) {
+      if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') text += event.delta.text;
+    }
+    clearTimeout(timer);
+    if (timedOut || res.headersSent) return;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return res.status(500).json({ error: 'Could not parse evaluation. Try again.' });
+    res.json(JSON.parse(jsonMatch[0]));
+  } catch (err) {
+    clearTimeout(timer);
+    console.error('[evaluate-scan]', err.message);
+    if (!res.headersSent) res.status(500).json({ error: 'Scan evaluation failed: ' + err.message });
+  }
+});
+
 export default router;

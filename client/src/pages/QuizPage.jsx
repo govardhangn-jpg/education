@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { generateQuiz, submitQuiz, getQuizHistory, getCurriculum, getLeaderboard, evaluateAnswer } from '../utils/api';
+import { generateQuiz, submitQuiz, getQuizHistory, getCurriculum, getLeaderboard, evaluateAnswer, evaluateScan } from '../utils/api';
 import { getChapterData, pickRandom } from '../utils/questionBankLoader';
 import { useAuth } from '../hooks/useAuth';
 import { SUBJECT_META, SUBJECTS_BY_GRADE, DIFFICULTY_META, LANGUAGES, GRADES, SYLLABI,
@@ -89,6 +89,42 @@ export default function QuizPage() {
   }, [tab]);
 
   // School syllabi: try static question bank first, fall back to LLM
+  // Handle image upload and scan evaluation
+  const handleScanEvaluate = async (idx, file) => {
+    if (!file) return;
+    const q = questions[idx];
+    setScanning(idx);
+
+    try {
+      // Convert file to base64
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const r = await evaluateScan({
+        question:      q.question,
+        modelAnswer:   q.modelAnswer,
+        markingPoints: q.markingPoints,
+        marks:         q.marks,
+        grade:         config.grade,
+        subject:       config.subject,
+        syllabus:      config.syllabus,
+        imageBase64:   base64,
+        mediaType:     file.type || 'image/jpeg',
+      });
+
+      setScanEvaluations(e => ({ ...e, [idx]: r.data }));
+    } catch (err) {
+      const msg = err.response?.data?.error || err.message || 'Scan evaluation failed.';
+      alert(msg);
+    } finally {
+      setScanning(null);
+    }
+  };
+
   const isSchoolSyllabus = ['CBSE','ICSE','Karnataka State'].includes(effectiveSyllabus);
 
   const startQuiz = async () => {
@@ -629,14 +665,26 @@ export default function QuizPage() {
                     : 'Write your detailed answer here (use paragraphs, cover all key points)…'}
                   style={{ width: '100%', minHeight: config.questionType === 'extralong' ? 320 : config.questionType === 'short' ? 140 : 240, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12, color: 'white', fontSize: 14, lineHeight: 1.7, fontFamily: "'Nunito',sans-serif", resize: 'vertical', boxSizing: 'border-box' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, flexWrap: 'wrap', gap: 8 }}>
                   <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>
                     {(studentAnswers[currentQ] || '').split(/\s+/).filter(Boolean).length} words
                   </span>
-                  <button onClick={() => handleEvaluate(currentQ)} disabled={evaluating === currentQ}
-                    style={{ padding: '8px 18px', background: 'linear-gradient(135deg,#ffd700,#ff9500)', border: 'none', borderRadius: 10, color: '#1a1a2e', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: "'Nunito',sans-serif" }}>
-                    {evaluating === currentQ ? '⏳ Evaluating…' : '📊 Evaluate My Answer'}
-                  </button>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {/* Scan upload button */}
+                    <label style={{ padding: '8px 14px', background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700, cursor: scanning === currentQ ? 'wait' : 'pointer', fontFamily: "'Nunito',sans-serif", display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {scanning === currentQ ? '⏳ Reading scan…' : '📷 Upload Scan'}
+                      <input type="file" accept="image/*" capture="environment"
+                        style={{ display: 'none' }}
+                        disabled={scanning === currentQ}
+                        onChange={e => { if (e.target.files[0]) handleScanEvaluate(currentQ, e.target.files[0]); e.target.value=''; }}
+                      />
+                    </label>
+                    {/* Type and evaluate button */}
+                    <button onClick={() => handleEvaluate(currentQ)} disabled={evaluating === currentQ || !(studentAnswers[currentQ]?.trim().length > 10)}
+                      style={{ padding: '8px 14px', background: studentAnswers[currentQ]?.trim().length > 10 ? 'linear-gradient(135deg,#ffd700,#ff9500)' : 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 10, color: studentAnswers[currentQ]?.trim().length > 10 ? '#1a1a2e' : 'rgba(255,255,255,0.3)', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: "'Nunito',sans-serif" }}>
+                      {evaluating === currentQ ? '⏳ Evaluating…' : '📊 Evaluate Typed'}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Evaluation result */}
@@ -682,6 +730,81 @@ export default function QuizPage() {
                     </details>
                   </div>
                 )}
+
+                {/* ── Scan evaluation result ── */}
+                {scanEvaluations[currentQ] && (() => {
+                  const se = scanEvaluations[currentQ];
+                  return (
+                    <div style={{ marginTop: 14, padding: '14px 16px', background: 'rgba(79,142,247,0.07)', border: '1px solid rgba(79,142,247,0.25)', borderRadius: 14, animation: 'fadein 0.3s ease' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                        <div>
+                          <span style={{ color: '#4f8ef7', fontWeight: 800, fontSize: 14 }}>📷 Scan Evaluation</span>
+                          {se.handwritingNote && <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, marginLeft: 8 }}>{se.handwritingNote}</span>}
+                        </div>
+                        <span style={{ fontSize: 20, fontWeight: 900, color: se.percentage >= 70 ? '#27ae60' : se.percentage >= 40 ? '#f39c12' : '#e74c3c' }}>
+                          {se.score}/{questions[currentQ]?.marks || 5}
+                        </span>
+                      </div>
+
+                      {/* Transcribed text */}
+                      {se.transcribedText && (
+                        <details style={{ marginBottom: 10 }}>
+                          <summary style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>📝 What Claude read from your handwriting</summary>
+                          <div style={{ marginTop: 6, padding: '8px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 8, color: 'rgba(255,255,255,0.6)', fontSize: 12, lineHeight: 1.7, fontStyle: 'italic' }}>
+                            "{se.transcribedText}"
+                          </div>
+                        </details>
+                      )}
+
+                      <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, lineHeight: 1.7, marginBottom: 10 }}>
+                        {se.feedback}
+                      </div>
+
+                      {se.pointsCovered?.length > 0 && (
+                        <div style={{ marginBottom: 6 }}>
+                          <div style={{ color: '#27ae60', fontSize: 11, fontWeight: 800, marginBottom: 4 }}>✓ Points covered</div>
+                          {se.pointsCovered.map((p,i) => <div key={i} style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>• {p}</div>)}
+                        </div>
+                      )}
+                      {se.pointsMissed?.length > 0 && (
+                        <div style={{ marginBottom: 8 }}>
+                          <div style={{ color: '#e74c3c', fontSize: 11, fontWeight: 800, marginBottom: 4 }}>✗ Points missed</div>
+                          {se.pointsMissed.map((p,i) => <div key={i} style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>• {p}</div>)}
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {se.improvement && (
+                          <div style={{ flex: 1, minWidth: 200, padding: '7px 10px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.2)', borderRadius: 8 }}>
+                            <span style={{ color: '#ffd700', fontSize: 11, fontWeight: 800 }}>💡 </span>
+                            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>{se.improvement}</span>
+                          </div>
+                        )}
+                        {se.presentationNote && (
+                          <div style={{ flex: 1, minWidth: 200, padding: '7px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8 }}>
+                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 800 }}>✍️ </span>
+                            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>{se.presentationNote}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {se.examinerNote && (
+                        <div style={{ marginTop: 8, padding: '7px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>
+                          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 800 }}>🧑‍🏫 </span>
+                          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, fontStyle: 'italic' }}>{se.examinerNote}</span>
+                        </div>
+                      )}
+
+                      {/* Model answer */}
+                      <details style={{ marginTop: 10 }}>
+                        <summary style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>📖 View model answer</summary>
+                        <div style={{ marginTop: 6, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 10, color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 1.8 }}>
+                          {questions[currentQ]?.modelAnswer}
+                        </div>
+                      </details>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
