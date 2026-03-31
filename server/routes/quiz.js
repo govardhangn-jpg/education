@@ -165,7 +165,19 @@ Return ONLY a valid JSON array:
 - Context: ${courseCtx}
 
 Return ONLY a valid JSON array:
-[{"question":"...","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why this answer is correct."}]`;
+[{
+  "question":"...",
+  "options":["Option A","Option B","Option C","Option D"],
+  "correctIndex":0,
+  "explanation":"Why the correct answer is correct — explain the underlying concept in 2-3 sentences.",
+  "optionExplanations":[
+    "Option A: Why this is correct — explain the concept it tests.",
+    "Option B: Why this is wrong — explain the common misconception behind this distractor.",
+    "Option C: Why this is wrong — what concept students confuse this with.",
+    "Option D: Why this is wrong — clarify the distinction from the correct answer."
+  ]
+}]
+The optionExplanations array must have exactly 4 entries, one per option, starting with the option letter.`;
     }
 
     const anthropic = getClient();
@@ -257,6 +269,7 @@ router.post('/submit', protect, async (req, res) => {
         questionIndex: i, question: q.question, options: q.options,
         selectedOption: answers[i], correctOption: q.correctIndex,
         isCorrect, explanation: q.explanation,
+        optionExplanations: q.optionExplanations || [],
       };
     });
     const score = Math.round((correct / questions.length) * 100);

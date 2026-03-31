@@ -7,7 +7,8 @@ const answerSchema = new mongoose.Schema({
   selectedOption: Number,
   correctOption: Number,
   isCorrect: Boolean,
-  explanation: String,
+  explanation: String,          // why the correct answer is correct
+  optionExplanations: [String], // per-option: why correct OR why it's a distractor
 });
 
 const quizAttemptSchema = new mongoose.Schema({

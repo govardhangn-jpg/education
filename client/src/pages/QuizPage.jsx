@@ -724,15 +724,40 @@ export default function QuizPage() {
                   <span style={{ fontSize: 16, flexShrink: 0 }}>{a.isCorrect?'✅':'❌'}</span>
                   <span style={{ color: 'white', fontSize: 13, fontWeight: 700, lineHeight: 1.5 }}>{a.question}</span>
                 </div>
-                {a.options.map((opt, j) => (
-                  <div key={j} style={{ padding: '7px 10px', borderRadius: 9, marginBottom: 5, background: j===a.correctOption?'rgba(39,174,96,0.12)':j===a.selectedOption&&!a.isCorrect?'rgba(231,76,60,0.1)':'transparent', border: `1px solid ${j===a.correctOption?'rgba(39,174,96,0.4)':j===a.selectedOption&&!a.isCorrect?'rgba(231,76,60,0.3)':'transparent'}`, color: 'rgba(255,255,255,0.8)', fontSize: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>{['A','B','C','D'][j]}</span>
-                    <span style={{ flex: 1 }}>{opt}</span>
-                    {j===a.correctOption && <span style={{ color: '#27ae60', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>✓</span>}
-                    {j===a.selectedOption && !a.isCorrect && <span style={{ color: '#e74c3c', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>✗</span>}
+                {a.options.map((opt, j) => {
+                  const isCorrect  = j === a.correctOption;
+                  const isSelected = j === a.selectedOption;
+                  const isWrong    = isSelected && !a.isCorrect;
+                  const optExpl    = a.optionExplanations?.[j];
+                  // Strip leading "Option X: " prefix that Claude adds
+                  const cleanExpl  = optExpl ? optExpl.replace(/^Option\s+[A-D]:\s*/i, '') : '';
+                  return (
+                    <div key={j} style={{ marginBottom: 8 }}>
+                      {/* Option row */}
+                      <div style={{ padding: '8px 12px', borderRadius: 10, background: isCorrect ? 'rgba(39,174,96,0.1)' : isWrong ? 'rgba(231,76,60,0.08)' : 'rgba(255,255,255,0.03)', border: `1.5px solid ${isCorrect ? 'rgba(39,174,96,0.4)' : isWrong ? 'rgba(231,76,60,0.3)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <span style={{ width: 20, height: 20, borderRadius: '50%', background: isCorrect ? '#27ae60' : isWrong ? '#e74c3c' : 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: (isCorrect||isWrong) ? 'white' : 'rgba(255,255,255,0.35)', flexShrink: 0 }}>
+                          {isCorrect ? '✓' : isWrong ? '✗' : ['A','B','C','D'][j]}
+                        </span>
+                        <span style={{ flex: 1, color: isCorrect ? '#52b788' : isWrong ? '#ff6b6b' : 'rgba(255,255,255,0.65)', fontSize: 13, fontWeight: isCorrect ? 700 : 400 }}>{opt}</span>
+                        {isCorrect && <span style={{ fontSize: 10, color: '#52b788', fontWeight: 800, flexShrink: 0 }}>CORRECT</span>}
+                        {isWrong  && <span style={{ fontSize: 10, color: '#ff6b6b', fontWeight: 800, flexShrink: 0 }}>YOUR ANSWER</span>}
+                      </div>
+                      {/* Per-option explanation */}
+                      {cleanExpl && (
+                        <div style={{ marginTop: 4, marginLeft: 10, padding: '7px 10px', borderLeft: `2px solid ${isCorrect ? 'rgba(39,174,96,0.4)' : 'rgba(255,255,255,0.1)'}`, color: isCorrect ? 'rgba(82,183,136,0.85)' : 'rgba(255,255,255,0.4)', fontSize: 11, lineHeight: 1.6 }}>
+                          {cleanExpl}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {/* Overall explanation */}
+                {a.explanation && (
+                  <div style={{ marginTop: 8, padding: '10px 14px', background: 'rgba(79,142,247,0.08)', border: '1px solid rgba(79,142,247,0.2)', borderRadius: 12 }}>
+                    <div style={{ color: '#4f8ef7', fontSize: 11, fontWeight: 800, marginBottom: 4 }}>📖 Concept Explanation</div>
+                    <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, lineHeight: 1.65 }}>{a.explanation}</div>
                   </div>
-                ))}
-                {a.explanation && <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(79,142,247,0.08)', border: '1px solid rgba(79,142,247,0.2)', borderRadius: 10, color: 'rgba(255,255,255,0.7)', fontSize: 12, lineHeight: 1.55 }}>💡 {a.explanation}</div>}
+                )}
               </div>
             ))}
           </div>
