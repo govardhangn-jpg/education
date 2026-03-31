@@ -165,34 +165,60 @@ export default function QuizPage() {
         }
       }
 
-      // ── Warm up server — wait up to 15s for it to respond ──────────────
+      // ── Warm up server — keep pinging until it responds (up to 50s) ────
       setWarmingUp(true);
       const BACKEND_BASE = (process.env.REACT_APP_API_URL || '/api').replace(/\/api$/, '');
       const warmUp = async () => {
-        for (let i = 0; i < 5; i++) {
+        // Ping every 3s for up to 50s — Render cold start is typically 30-50s
+        for (let i = 0; i < 17; i++) {
           try {
-            const r = await fetch(`${BACKEND_BASE}/health`, { method:'GET', cache:'no-store', signal: AbortSignal.timeout(4000) });
-            if (r.ok) return true;
-          } catch { /* sleeping — keep trying */ }
-          await new Promise(r => setTimeout(r, 2500));
+            const r = await fetch(`${BACKEND_BASE}/health`, {
+              method: 'GET', cache: 'no-store',
+              signal: AbortSignal.timeout(5000),
+            });
+            if (r.ok) return true; // server is awake
+          } catch { /* still sleeping */ }
+          await new Promise(r => setTimeout(r, 3000));
         }
-        return false; // server did not respond — try generate anyway
+        return false;
       };
-      await warmUp();
+      const serverReady = await warmUp();
       setWarmingUp(false);
 
-      // ── Scale timeout: cold start (50s) + generation time ─────────────
-      const isRegional = !['English'].includes(config.language || 'English');
-      const perQTime   = isRegional ? 6000 : 4000;
-      const clientTimeoutMs = 55000 + ((config.count || 5) * perQTime);
+      if (!serverReady) {
+        setQuizError('Server could not be reached. Please check your internet connection and try again.');
+        return;
+      }
 
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), clientTimeoutMs)
-      );
-      const r = await Promise.race([
-        generateQuiz({ ...config, syllabus: effectiveSyllabus }),
-        timeoutPromise,
-      ]);
+      // ── Generate — server is now warm, use generous timeout ───────────
+      const isRegional = !['English'].includes(config.language || 'English');
+      const perQTime   = isRegional ? 7000 : 5000;
+      // No cold-start buffer needed now (server is confirmed warm)
+      const clientTimeoutMs = 20000 + ((config.count || 5) * perQTime);
+
+      const tryGenerate = () => {
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), clientTimeoutMs)
+        );
+        return Promise.race([
+          generateQuiz({ ...config, syllabus: effectiveSyllabus }),
+          timeoutPromise,
+        ]);
+      };
+
+      // Auto-retry once on timeout (server was warm, generation just took long)
+      let r;
+      try {
+        r = await tryGenerate();
+      } catch (firstErr) {
+        if (firstErr.message === 'timeout') {
+          setQuizError('Still generating… retrying automatically.');
+          r = await tryGenerate(); // second attempt
+        } else {
+          throw firstErr;
+        }
+      }
+
       setQuestions(r.data.questions);
       setAnswers({}); setResult(null); setCurrentQ(0);
       setStudentAnswers({}); setEvaluations({});
@@ -202,11 +228,12 @@ export default function QuizPage() {
     } catch (err) {
       const isTimeout = err.message === 'timeout' || err.code === 'ECONNABORTED';
       const msg = isTimeout
-        ? 'The server took too long to respond. It may have been sleeping — please try again, it should be faster now.'
-        : err.friendlyMessage || err.response?.data?.error || err.message || 'Failed to generate quiz.';
+        ? 'Generation timed out even after retrying. Try fewer questions (5 or 10) or switch to English.'
+        : err.response?.data?.error || err.message || 'Failed to generate quiz.';
       setQuizError(msg);
     } finally {
       setGenerating(false);
+      setWarmingUp(false);
     }
   };
 
@@ -611,7 +638,7 @@ export default function QuizPage() {
                   <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ color: '#ff6b6b', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
-                      {quizError.includes('sleeping') || quizError.includes('timed out') || quizError.includes('starting') ? 'Server waking up…' : 'Generation failed'}
+                      {quizError.includes('timed out') || quizError.includes('timeout') || quizError.includes('Timed out') ? 'Generation timed out' : quizError.includes('waking') || quizError.includes('sleeping') ? 'Server waking up…' : quizError.includes('retrying') ? 'Retrying…' : 'Generation failed'}
                     </div>
                     <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, lineHeight: 1.5 }}>{quizError}</div>
                     <button onClick={startQuiz} disabled={generating}
@@ -623,7 +650,7 @@ export default function QuizPage() {
               )}
               <button onClick={startQuiz} disabled={generating || !config.subject}
                 style={{ width: '100%', padding: '14px', background: quizError ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg,#ffd700,#ff9500)', border: quizError ? '1px solid rgba(255,255,255,0.15)' : 'none', borderRadius: 14, color: quizError ? 'rgba(255,255,255,0.6)' : '#1a1a2e', fontSize: 15, fontWeight: 800, cursor: 'pointer', opacity: (generating||!config.subject)?0.6:1, fontFamily: "'Nunito',sans-serif" }}>
-                {warmingUp ? '🔌 Waking server up…' : generating ? '⏳ Generating…' : usingStatic ? '⚡ Start Instantly' : quizError ? '🔄 Retry' : isSchoolSyllabus && config.chapter ? '⚡ Start Quiz' : '🚀 Start Quiz'}
+                {warmingUp ? '🔌 Waking server up… (30-50s on first use)' : generating ? '⏳ Generating…' : usingStatic ? '⚡ Start Instantly' : quizError ? '🔄 Retry' : isSchoolSyllabus && config.chapter ? '⚡ Start Quiz' : '🚀 Start Quiz'}
               </button>
             </div>
           </div>
