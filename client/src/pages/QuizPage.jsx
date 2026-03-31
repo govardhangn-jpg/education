@@ -157,6 +157,7 @@ export default function QuizPage() {
         marks: q.marks,
         grade: config.grade,
         subject: config.subject,
+        syllabus: config.syllabus,
       });
       setEvaluations(e => ({ ...e, [idx]: r.data }));
     } catch (err) {
@@ -434,26 +435,51 @@ export default function QuizPage() {
               )}
             </div>
 
-            {/* Question Type — only for school syllabus */}
-            {!isProfMode && (
-              <div style={{ marginBottom: 12 }}>
-                <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 6 }}>QUESTION TYPE</label>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {[
-                    { id: 'mcq',   icon: '🔘', label: 'MCQ',         desc: '4 options' },
-                    { id: 'short', icon: '✏️', label: 'Short Ans',   desc: '3–5 lines' },
-                    { id: 'long',  icon: '📝', label: 'Long Ans',    desc: '5–8 marks' },
-                  ].map(qt => (
-                    <button key={qt.id} onClick={() => set('questionType', qt.id)}
-                      style={{ flex: 1, padding: '8px 4px', background: config.questionType === qt.id ? 'rgba(255,215,0,0.12)' : 'rgba(255,255,255,0.04)', border: `1.5px solid ${config.questionType === qt.id ? '#ffd700' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, color: config.questionType === qt.id ? '#ffd700' : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                      <span style={{ fontSize: 14 }}>{qt.icon}</span>
-                      <span>{qt.label}</span>
-                      <span style={{ fontSize: 9, opacity: 0.6 }}>{qt.desc}</span>
-                    </button>
-                  ))}
+            {/* Question Type — course-aware options */}
+            {(() => {
+              const isEntranceOnly = ['NEET Preparation','KCET Preparation','NEET PG','IIT-JEE'].includes(config.grade);
+              const isUPSCMains = ['UPSC Mains – GS','UPSC Mains – Essay'].includes(config.grade) || config.grade?.startsWith('Optional –');
+              const isUPSCPrelims = config.grade === 'UPSC Prelims';
+              const isLLB  = config.grade?.startsWith('LLB');
+              const isRGUHS = isRGUHSMode;
+
+              if (isEntranceOnly || isUPSCPrelims) return null; // objective only
+
+              const qtOptions = isUPSCMains ? [
+                { id:'mcq',       icon:'🔘', label:'MCQ',      desc:'4 options' },
+                { id:'short',     icon:'✏️', label:'10 Mark',  desc:'150 words' },
+                { id:'long',      icon:'📝', label:'15 Mark',  desc:'250 words' },
+                { id:'extralong', icon:'📜', label:'20 Mark',  desc:'350 words' },
+              ] : isLLB ? [
+                { id:'mcq',   icon:'🔘', label:'MCQ',      desc:'4 options' },
+                { id:'short', icon:'⚖️', label:'5 Mark',   desc:'IRAC format' },
+                { id:'long',  icon:'📝', label:'10 Mark',  desc:'Legal essay' },
+              ] : isRGUHS ? [
+                { id:'mcq',   icon:'🔘', label:'MCQ',      desc:'4 options' },
+                { id:'short', icon:'🩺', label:'5 Mark',   desc:'Clinical ans' },
+                { id:'long',  icon:'📝', label:'10 Mark',  desc:'Essay answer' },
+              ] : [
+                { id:'mcq',   icon:'🔘', label:'MCQ',      desc:'4 options' },
+                { id:'short', icon:'✏️', label:'Short Ans', desc:'3 marks' },
+                { id:'long',  icon:'📝', label:'Long Ans',  desc:'5 marks' },
+              ];
+
+              return (
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 6 }}>QUESTION TYPE</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {qtOptions.map(qt => (
+                      <button key={qt.id} onClick={() => set('questionType', qt.id)}
+                        style={{ flex: 1, padding: '8px 4px', background: config.questionType === qt.id ? 'rgba(255,215,0,0.12)' : 'rgba(255,255,255,0.04)', border: `1.5px solid ${config.questionType === qt.id ? '#ffd700' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, color: config.questionType === qt.id ? '#ffd700' : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <span style={{ fontSize: 14 }}>{qt.icon}</span>
+                        <span>{qt.label}</span>
+                        <span style={{ fontSize: 9, opacity: 0.6 }}>{qt.desc}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             <div style={{ marginBottom: 4 }}>
               <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, display: 'block', marginBottom: 5 }}>DIFFICULTY</label>
@@ -595,10 +621,13 @@ export default function QuizPage() {
                 <textarea data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false"
                   value={studentAnswers[currentQ] || ''}
                   onChange={e => setStudentAnswers(a => ({...a, [currentQ]: e.target.value}))}
-                  placeholder={config.questionType === 'short'
-                    ? 'Write your answer here (3–5 sentences)…'
+                  placeholder={
+                    config.questionType === 'short' && ['UPSC Mains – GS','UPSC Mains – Essay'].includes(config.grade) ? 'Write your 10-mark answer (150 words)…'
+                    : config.questionType === 'long' && ['UPSC Mains – GS','UPSC Mains – Essay'].includes(config.grade) ? 'Write your 15-mark answer (250 words)…'
+                    : config.questionType === 'extralong' ? 'Write your 20-mark answer (300–350 words)…'
+                    : config.questionType === 'short' ? 'Write your answer here (3–5 sentences)…'
                     : 'Write your detailed answer here (use paragraphs, cover all key points)…'}
-                  style={{ width: '100%', minHeight: config.questionType === 'short' ? 120 : 220, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12, color: 'white', fontSize: 14, lineHeight: 1.7, fontFamily: "'Nunito',sans-serif", resize: 'vertical', boxSizing: 'border-box' }}
+                  style={{ width: '100%', minHeight: config.questionType === 'extralong' ? 320 : config.questionType === 'short' ? 140 : 240, padding: '12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12, color: 'white', fontSize: 14, lineHeight: 1.7, fontFamily: "'Nunito',sans-serif", resize: 'vertical', boxSizing: 'border-box' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
                   <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>
@@ -638,6 +667,12 @@ export default function QuizPage() {
                       <span style={{ color: '#ffd700', fontSize: 11, fontWeight: 800 }}>💡 Improvement: </span>
                       <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>{evaluations[currentQ].improvement}</span>
                     </div>
+                    {evaluations[currentQ].examinerNote && (
+                      <div style={{ marginTop: 8, padding: '8px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
+                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 800 }}>🧑‍🏫 Examiner: </span>
+                        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontStyle: 'italic' }}>{evaluations[currentQ].examinerNote}</span>
+                      </div>
+                    )}
                     {/* Model answer toggle */}
                     <details style={{ marginTop: 10 }}>
                       <summary style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>📖 View model answer</summary>

@@ -66,92 +66,106 @@ router.post('/generate', protect, async (req, res) => {
     // chapter is now OPTIONAL — pick randomly if empty
     const resolvedChapter = resolveChapter(chapter, grade, syllabus, subject);
 
-    const isExam    = grade === 'NEET Preparation' || grade === 'KCET Preparation';
-    const examLabel = grade === 'NEET Preparation' ? 'NEET UG' : 'Karnataka CET (KCET)';
+    // ── Classify the course for context-aware prompts ────────────────────
+    const EXAM_GRADES   = ['NEET Preparation','KCET Preparation','NEET PG','IIT-JEE'];
+    const UPSC_LIST     = ['UPSC Prelims','UPSC Mains – GS','UPSC Mains – Essay',
+      'Optional – History','Optional – Geography','Optional – Political Science & IR',
+      'Optional – Public Administration','Optional – Sociology','Optional – Philosophy',
+      'Optional – Economics','Optional – Anthropology','Optional – Psychology',
+      'Optional – Law','Optional – Mathematics'];
+    const LLB_LIST      = ['LLB Year 1','LLB Year 2','LLB Year 3','LLB Year 4','LLB Year 5'];
+    const isExamGrade   = EXAM_GRADES.includes(grade);
+    const isUPSCGrade   = UPSC_LIST.includes(grade);
+    const isUPSCMains   = isUPSCGrade && grade !== 'UPSC Prelims';
+    const isLLBGrade    = LLB_LIST.includes(grade);
+    const isRGUHSGrade  = !isExamGrade && !isUPSCGrade && !isLLBGrade &&
+      !['CBSE','ICSE','Karnataka State'].includes(syllabus) && syllabus !== 'NEET' &&
+      syllabus !== 'KCET' && syllabus !== 'IIT-JEE';
+    const isSchool      = !isExamGrade && !isUPSCGrade && !isLLBGrade && !isRGUHSGrade;
 
-    const examContext = isExam
-      ? `This is an entrance exam preparation quiz for ${examLabel}.`
-      : `This is a school curriculum quiz for ${grade} ${syllabus} students.`;
+    // Course-specific context for prompts
+    const courseCtx = isExamGrade
+      ? `Entrance exam: ${grade}. Questions must match actual exam MCQ style with precise scientific accuracy.`
+      : isUPSCGrade
+        ? `UPSC Civil Services (${grade}). Questions must match UPSC exam pattern. Use UPSC answer-writing standards.`
+        : isLLBGrade
+          ? `LLB (${grade}). Questions must test legal reasoning, case laws, sections and statutes.`
+          : isRGUHSGrade
+            ? `RGUHS Health Sciences (${grade}). Questions must follow clinical/medical education standards.`
+            : `${grade} ${syllabus} school curriculum. Questions must be age-appropriate and board-exam aligned.`;
+
+    // Descriptive mark schemes vary by course
+    const shortMarks = isUPSCMains ? 10 : (isLLBGrade || isRGUHSGrade) ? 5 : 3;
+    const longMarks  = isUPSCMains ? 15 : (isLLBGrade || isRGUHSGrade) ? 10 : 5;
+    const extraLongMarks = isUPSCMains ? 20 : null;
+
+    const shortDesc = isUPSCMains
+      ? '10-mark answer (150 words): Introduction, 4-5 substantive points, conclusion'
+      : isLLBGrade
+        ? '5-mark legal answer: Issue, Rule, Application, Conclusion (IRAC format)'
+        : isRGUHSGrade
+          ? '5-mark clinical answer: Definition, aetiology/mechanism, features, management'
+          : '3-mark short answer: 3-5 sentences covering key points';
+
+    const longDesc = isUPSCMains
+      ? '15-mark answer (250 words): Intro, multi-dimensional analysis, conclusion with way forward'
+      : isLLBGrade
+        ? '10-mark legal essay: Detailed IRAC, case law citations, statutory provisions'
+        : isRGUHSGrade
+          ? '10-mark essay: Full clinical presentation, investigations, treatment, complications'
+          : '5-mark long answer: Structured paragraphs covering all marking points';
 
     // Build prompt based on question type
     let prompt;
 
     if (questionType === 'short') {
       prompt = `Generate exactly ${count} short-answer questions for:
-- Grade / Exam: ${grade}
-- Syllabus / Board: ${syllabus}
+- Course: ${grade} | Syllabus: ${syllabus}
 - Subject: ${subject}
 - Chapter / Topic: ${resolvedChapter}${topic ? `\n- Specific topic: ${topic}` : ''}
 - Difficulty: ${difficulty}
 - Language: ${language}
+- Context: ${courseCtx}
+- Format: ${shortDesc}
 
-${examContext}
-- Questions should require 3–5 sentence answers (2–3 marks style)
-- Suitable for board exam short-answer format
-- Test conceptual understanding, not just recall
-
-Return ONLY a valid JSON array with this exact structure:
-[
-  {
-    "question": "Question text here",
-    "markingPoints": ["Key point 1", "Key point 2", "Key point 3"],
-    "modelAnswer": "A complete model answer in 3-5 sentences.",
-    "marks": 3
-  }
-]
-- DO NOT wrap in markdown code fences`;
+Return ONLY a valid JSON array:
+[{"question":"...","markingPoints":["point 1","point 2","point 3"],"modelAnswer":"Complete model answer following the format above.","marks":${shortMarks}}]`;
 
     } else if (questionType === 'long') {
-      prompt = `Generate exactly ${count} long-answer / essay questions for:
-- Grade / Exam: ${grade}
-- Syllabus / Board: ${syllabus}
+      prompt = `Generate exactly ${count} long-answer questions for:
+- Course: ${grade} | Syllabus: ${syllabus}
 - Subject: ${subject}
 - Chapter / Topic: ${resolvedChapter}${topic ? `\n- Specific topic: ${topic}` : ''}
 - Difficulty: ${difficulty}
 - Language: ${language}
+- Context: ${courseCtx}
+- Format: ${longDesc}
 
-${examContext}
-- Questions should require detailed paragraph answers (5–8 marks style)
-- Include questions that ask to "explain", "describe", "compare", "discuss", or "analyse"
-- Suitable for board exam long-answer / essay format
+Return ONLY a valid JSON array:
+[{"question":"...","markingPoints":["point 1","point 2","point 3","point 4","point 5"],"modelAnswer":"Detailed model answer with structured paragraphs.","marks":${longMarks},"hints":["Structure hint 1","Structure hint 2"]}]`;
 
-Return ONLY a valid JSON array with this exact structure:
-[
-  {
-    "question": "Question text here",
-    "markingPoints": ["Key point 1", "Key point 2", "Key point 3", "Key point 4", "Key point 5"],
-    "modelAnswer": "A detailed model answer covering all key points in well-structured paragraphs.",
-    "marks": 5,
-    "hints": ["Hint 1 to structure the answer", "Hint 2"]
-  }
-]
-- DO NOT wrap in markdown code fences`;
+    } else if (questionType === 'extralong' && isUPSCMains) {
+      prompt = `Generate exactly ${count} 20-mark UPSC Mains questions for:
+- Course: ${grade} | Subject: ${subject}
+- Chapter / Topic: ${resolvedChapter}
+- Difficulty: ${difficulty}
+- Format: 20-mark answer (300-350 words): Comprehensive intro, 6-8 dimensions, data/examples, conclusion
+
+Return ONLY a valid JSON array:
+[{"question":"...","markingPoints":["p1","p2","p3","p4","p5","p6"],"modelAnswer":"Comprehensive model answer 300-350 words.","marks":20,"hints":["Dimension 1","Dimension 2","Way forward"]}]`;
 
     } else {
-      // Default: MCQ
+      // MCQ (default, and only option for entrance exams)
       prompt = `Generate exactly ${count} multiple choice questions for:
-- Grade / Exam: ${grade}
-- Syllabus / Board: ${syllabus}
+- Course: ${grade} | Syllabus: ${syllabus}
 - Subject: ${subject}
 - Chapter / Topic: ${resolvedChapter}${topic ? `\n- Specific topic: ${topic}` : ''}
 - Difficulty: ${difficulty}
 - Language: ${language}
+- Context: ${courseCtx}
 
-${examContext}
-- Questions should be age-appropriate and curriculum-aligned
-- All 4 options must be distinct and plausible
-- Include numerical/application questions where appropriate
-
-Return ONLY a valid JSON array with this exact structure:
-[
-  {
-    "question": "Question text here",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
-    "correctIndex": 0,
-    "explanation": "Brief explanation of why this answer is correct"
-  }
-]
-- DO NOT wrap in markdown code fences`;
+Return ONLY a valid JSON array:
+[{"question":"...","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why this answer is correct."}]`;
     }
 
     const anthropic = getClient();
@@ -321,19 +335,44 @@ router.get('/leaderboard', protect, async (req, res) => {
 
 // ─── POST /api/quiz/evaluate-answer ─────────────────────────────────────────
 router.post('/evaluate-answer', protect, async (req, res) => {
-  const { question, studentAnswer, modelAnswer, markingPoints, marks, grade, subject } = req.body;
+  const { question, studentAnswer, modelAnswer, markingPoints, marks, grade, subject, syllabus } = req.body;
   if (!question || !studentAnswer) return res.status(400).json({ error: 'question and studentAnswer required' });
 
-  const prompt = `You are a ${grade} ${subject} teacher evaluating a student's written answer.
+  // Course-specific evaluator persona
+  const UPSC_GRADES = ['UPSC Prelims','UPSC Mains – GS','UPSC Mains – Essay'];
+  const LLB_GRADES  = ['LLB Year 1','LLB Year 2','LLB Year 3','LLB Year 4','LLB Year 5'];
+  const isUPSC = UPSC_GRADES.includes(grade) || (grade||'').startsWith('Optional –');
+  const isLLB  = LLB_GRADES.includes(grade);
+  const isRGUHS = ['RGUHS','MBBS','BDS','B.Pharm','BSc Nursing','BMLT','BPT','BOT'].some(k => (grade||'').includes(k) || (syllabus||'').includes(k));
+
+  const persona = isUPSC
+    ? `You are a senior UPSC examiner who has evaluated thousands of IAS answer scripts.`
+    : isLLB
+      ? `You are a law professor evaluating an LLB student's answer using IRAC method.`
+      : isRGUHS
+        ? `You are an RGUHS examiner evaluating a health sciences student's clinical answer.`
+        : `You are an experienced ${grade} ${subject} teacher evaluating a student's answer.`;
+
+  const rubric = isUPSC
+    ? 'Evaluate on: Content accuracy (40%), Structure & flow (25%), Analytical depth (20%), Language (15%). Provide UPSC-specific feedback.'
+    : isLLB
+      ? 'Evaluate on: Issue identification, Rule statement, Application, Conclusion, Case citations.'
+      : isRGUHS
+        ? 'Evaluate on: Clinical accuracy, Completeness, Investigations mentioned, Management protocol.'
+        : 'Evaluate on: Conceptual accuracy, Coverage of marking points, Language clarity.';
+
+  const prompt = `${persona}
 
 QUESTION: ${question}
 TOTAL MARKS: ${marks}
 MARKING POINTS: ${(markingPoints||[]).join(' | ')}
 MODEL ANSWER: ${modelAnswer}
-STUDENT ANSWER: ${studentAnswer.slice(0,1500)}
+STUDENT ANSWER: ${studentAnswer.slice(0,2000)}
 
-Evaluate strictly. Return ONLY valid JSON (no markdown):
-{"score":N,"percentage":N,"feedback":"2-3 sentences of specific feedback","pointsCovered":["point covered"],"pointsMissed":["point missed"],"improvement":"one specific suggestion"}`;
+${rubric}
+
+Return ONLY valid JSON (no markdown):
+{"score":N,"percentage":N,"feedback":"3 sentences of specific actionable feedback mentioning what was good and what was missing","pointsCovered":["specific point the student covered well"],"pointsMissed":["specific point the student missed"],"improvement":"one concrete suggestion to improve this answer","examinerNote":"one sentence as the examiner — what this answer tells you about the student's understanding"}`;
 
   let timedOut = false;
   const timer = setTimeout(() => {
