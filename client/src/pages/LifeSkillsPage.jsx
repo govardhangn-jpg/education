@@ -1380,7 +1380,7 @@ function ReflectionJournal({ moduleId, accent, accentDim, accentBorder, getJourn
       </div>
       <div style={{ color:'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.7, marginBottom:14, fontStyle:'italic' }}>{prompts[idx]}</div>
       <div style={{ position:'relative' }}>
-        <textarea value={text} onChange={e => saveJournal(moduleId, idx, e.target.value)}
+        <textarea data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false" value={text} onChange={e => saveJournal(moduleId, idx, e.target.value)}
           placeholder={t('ls_ask_coach')}
           rows={5}
           style={{ width:'100%', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'12px 48px 12px 14px', color:'white', fontSize:13, fontFamily:'inherit', outline:'none', resize:'vertical', lineHeight:1.7 }} />
@@ -2563,7 +2563,7 @@ function CareerPlanningModule({ accent, accentDim, accentBorder, sensors, userPr
             ].map(([key,lbl,ph,col]) => (
               <div key={key} style={{ padding:'14px', background:'rgba(255,255,255,0.03)', border:`1px solid rgba(255,255,255,0.08)`, borderRadius:14 }}>
                 <div style={{ color:col, fontSize:13, fontWeight:800, marginBottom:8 }}>{lbl}</div>
-                <textarea value={ikigai[key]} onChange={e => setIkigai(i=>({...i,[key]:e.target.value}))}
+                <textarea data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false" value={ikigai[key]} onChange={e => setIkigai(i=>({...i,[key]:e.target.value}))}
                   placeholder={ph} rows={3}
                   style={{ width:'100%', background:'rgba(255,255,255,0.06)', border:`1px solid rgba(255,255,255,0.1)`, borderRadius:8, padding:'8px 12px', color:'white', fontSize:13, fontFamily:'inherit', outline:'none', resize:'none' }} />
               </div>

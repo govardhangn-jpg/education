@@ -592,7 +592,7 @@ export default function QuizPage() {
                   </div>
                 )}
 
-                <textarea
+                <textarea data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false"
                   value={studentAnswers[currentQ] || ''}
                   onChange={e => setStudentAnswers(a => ({...a, [currentQ]: e.target.value}))}
                   placeholder={config.questionType === 'short'

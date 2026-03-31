@@ -353,7 +353,7 @@ export default function ChatPage() {
         <div style={{ padding:'10px 14px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(0,0,0,0.15)', flexShrink:0 }}>
           {listening && <div style={{ color:'#ff5050', fontSize:12, fontWeight:700, marginBottom:6, display:'flex', alignItems:'center', gap:6 }}><span style={{ animation:'pulse 0.8s infinite', display:'inline-block' }}>🎙️</span> Listening...</div>}
           <div style={{ display:'flex', gap:8, alignItems:'flex-end' }}>
-            <textarea className="chat-input-field" rows={2} placeholder={`Ask about ${subject}...`} value={input} onChange={e=>setInput(e.target.value)}
+            <textarea data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false" className="chat-input-field" rows={2} placeholder={`Ask about ${subject}...`} value={input} onChange={e=>setInput(e.target.value)}
               onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}} />
             <button onClick={listening?stopMic:startMic} style={{ background:listening?'rgba(255,80,80,0.2)':'rgba(255,255,255,0.07)', border:`1.5px solid ${listening?'#ff5050':'rgba(255,255,255,0.12)'}`, borderRadius:12, width:44, height:44, cursor:'pointer', fontSize:18, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{listening?'⏹️':'🎙️'}</button>
             <button onClick={() => send()} disabled={loading||!input.trim()} style={{ background:'linear-gradient(135deg,#ffd700,#ff9500)', border:'none', borderRadius:12, width:44, height:44, cursor:'pointer', fontSize:18, display:'flex', alignItems:'center', justifyContent:'center', opacity:loading||!input.trim()?0.5:1, color:'#1a1a2e', fontWeight:900, flexShrink:0 }}>

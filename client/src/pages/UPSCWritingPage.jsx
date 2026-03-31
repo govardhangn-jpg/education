@@ -415,7 +415,7 @@ Return this JSON:
             ✏️ Type your own question
           </button>
           {useCustomQ && (
-            <textarea value={customQ} onChange={e => setCustomQ(e.target.value)} placeholder="Paste your question here…" rows={3}
+            <textarea data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false" value={customQ} onChange={e => setCustomQ(e.target.value)} placeholder="Paste your question here…" rows={3}
               style={{ marginTop:8, width:'100%', background:'rgba(255,255,255,0.04)', border:`1px solid ${UPSC_BDR}`, borderRadius:10, padding:'12px 14px', color:'white', fontSize:13, fontFamily:'inherit', outline:'none', resize:'vertical', lineHeight:1.6 }} />
           )}
         </div>
@@ -437,7 +437,7 @@ Return this JSON:
             💡 Structure: <strong style={{color:UPSC_ORANGE}}>Intro</strong> (definition/context) → <strong style={{color:UPSC_ORANGE}}>Body</strong> (dimensions: historical, social, economic, political, constitutional) → <strong style={{color:UPSC_ORANGE}}>Conclusion</strong> (way forward). Use data, schemes, cases.
           </div>
 
-          <textarea value={answer} onChange={e => setAnswer(e.target.value)}
+          <textarea data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false" value={answer} onChange={e => setAnswer(e.target.value)}
             placeholder={`Write your ${marks}-mark answer here in approximately ${wordLimit} words.\n\nIntroduction (20-30 words):\n\nMain body:\n  • Point 1\n  • Point 2\n  ...\n\nConclusion with Way Forward (20-30 words):`}
             rows={18}
             style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:`1.5px solid ${wc > wordLimit*1.15 ? '#e74c3c' : wc >= wordLimit*0.85 ? 'rgba(82,183,136,0.4)' : UPSC_BDR}`, borderRadius:12, padding:'14px 16px', color:'white', fontSize:14, fontFamily:"'Nunito',sans-serif", outline:'none', resize:'vertical', lineHeight:1.9 }} />
@@ -634,7 +634,7 @@ Return this JSON:
             <div style={{ color:wcColor, fontSize:13, fontWeight:800 }}>{wc} / {WC_TARGET} words (min {WC_MIN})</div>
           </div>
 
-          <textarea value={essay} onChange={e => setEssay(e.target.value)}
+          <textarea data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false" value={essay} onChange={e => setEssay(e.target.value)}
             placeholder={`Write your essay in continuous prose (no bullet points).\n\nParagraph 1 — Introduction: Powerful hook + define key terms + thesis\n\nParagraph 2 — Historical dimension:\n\nParagraph 3 — Social dimension:\n\nParagraph 4 — Economic dimension:\n\nParagraph 5 — Political/Constitutional dimension:\n\nParagraph 6 — Ethical dimension:\n\nConclusion — Vision + Way Forward + Memorable closing line:`}
             rows={25}
             style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:`1.5px solid ${wc > WC_MAX ? '#e74c3c' : wc >= WC_MIN ? 'rgba(82,183,136,0.4)' : UPSC_BDR}`, borderRadius:12, padding:'14px 16px', color:'white', fontSize:14, fontFamily:"'Nunito',sans-serif", outline:'none', resize:'vertical', lineHeight:2.0 }} />
