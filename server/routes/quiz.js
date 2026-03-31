@@ -122,43 +122,76 @@ router.post('/generate', protect, async (req, res) => {
     // Build prompt based on question type
     let prompt;
 
+    // ── Course-specific model answer structure ──────────────────────────
+    const modelAnswerStructure = isUPSCMains
+      ? `MANDATORY STRUCTURE:
+1. INTRODUCTION (2-3 lines): Define the key term, give current context or data point, state relevance.
+2. BODY — cover relevant dimensions with subheadings (use only those applicable):
+   • Historical background & evolution
+   • Constitutional / Legal provisions (Article numbers, Acts, amendments)
+   • Social dimensions (impact on communities, gender, marginalised groups)
+   • Economic dimensions (GDP, employment, growth data)
+   • Political / Governance dimensions (policy failures, federalism)
+   • Schemes & programmes (cite real scheme names and year launched)
+   • Judicial pronouncements (landmark case names and year)
+   • International / Comparative perspective
+3. CONCLUSION (2-3 lines): Specific way forward (committee recommendation or policy), balanced statement, end with forward-looking quote or vision.
+Use at least 2 real data points, 1 scheme, and 1 case or constitutional provision.`
+      : isLLBGrade
+        ? `MANDATORY STRUCTURE (IRAC):
+1. ISSUE: State the precise legal question raised
+2. RULE: Cite the specific Section/Article and legal principle verbatim
+3. APPLICATION: Apply rule to facts — cite 2 landmark cases with year and court
+4. CONCLUSION: Give the legal answer with reasoned justification`
+        : isRGUHSGrade
+          ? `MANDATORY STRUCTURE:
+1. DEFINITION / CLASSIFICATION (with types/grades if applicable)
+2. AETIOLOGY / RISK FACTORS / PATHOPHYSIOLOGY
+3. CLINICAL FEATURES: Symptoms and Signs (tabulate if possible)
+4. INVESTIGATIONS: Relevant tests with normal values
+5. MANAGEMENT: Medical / Surgical / Nursing care with drug names and doses
+6. COMPLICATIONS and PROGNOSIS`
+          : `STRUCTURE: Clear introduction → core concept explanation → examples → conclusion.`;
+
     if (questionType === 'short') {
-      prompt = `Generate exactly ${count} short-answer questions for:
-- Course: ${grade} | Syllabus: ${syllabus}
-- Subject: ${subject}
-- Chapter / Topic: ${resolvedChapter}${topic ? `\n- Specific topic: ${topic}` : ''}
-- Difficulty: ${difficulty}
-- Language: ${language}
-- Context: ${courseCtx}
-- Format: ${shortDesc}
+      const wl = isUPSCMains ? '150 words' : (isLLBGrade || isRGUHSGrade) ? '120 words' : '4-6 sentences';
+      prompt = `Generate exactly ${count} short-answer questions.
+Course: ${grade} | Syllabus: ${syllabus} | Subject: ${subject}
+Topic: ${resolvedChapter}${topic ? ' — '+topic : ''} | Difficulty: ${difficulty} | Language: ${language}
+Context: ${courseCtx}
+${isRegionalLang ? `IMPORTANT: Write ALL content (questions, marking points, model answers) entirely in ${language} script.` : ''}
 
-Return ONLY a valid JSON array:
-[{"question":"...","markingPoints":["point 1","point 2","point 3"],"modelAnswer":"Complete model answer following the format above.","marks":${shortMarks}}]`;
-
-    } else if (questionType === 'long') {
-      prompt = `Generate exactly ${count} long-answer questions for:
-- Course: ${grade} | Syllabus: ${syllabus}
-- Subject: ${subject}
-- Chapter / Topic: ${resolvedChapter}${topic ? `\n- Specific topic: ${topic}` : ''}
-- Difficulty: ${difficulty}
-- Language: ${language}
-${isRegionalLang ? `- IMPORTANT: Write questions, marking points AND model answers entirely in ${language} script.` : ''}
-- Context: ${courseCtx}
-- Format: ${longDesc}
+${modelAnswerStructure}
+Model answer word limit: ${wl}
 
 Return ONLY a valid JSON array — start with [ end with ]:
-[{"question":"...","markingPoints":["point 1","point 2","point 3","point 4","point 5"],"modelAnswer":"Detailed model answer with structured paragraphs.","marks":${longMarks},"hints":["Structure hint 1","Structure hint 2"]}]`;
+[{"question":"...","markingPoints":["point 1","point 2","point 3"],"modelAnswer":"Structured model answer following the mandatory structure above. Include real data, schemes, cases where applicable.","marks":${shortMarks}}]`;
+
+    } else if (questionType === 'long') {
+      const wl = isUPSCMains ? '250 words' : (isLLBGrade || isRGUHSGrade) ? '200 words' : '3-4 paragraphs';
+      prompt = `Generate exactly ${count} long-answer questions.
+Course: ${grade} | Syllabus: ${syllabus} | Subject: ${subject}
+Topic: ${resolvedChapter}${topic ? ' — '+topic : ''} | Difficulty: ${difficulty} | Language: ${language}
+Context: ${courseCtx}
+${isRegionalLang ? `IMPORTANT: Write ALL content entirely in ${language} script.` : ''}
+
+${modelAnswerStructure}
+Model answer word limit: ${wl}
+
+Return ONLY a valid JSON array — start with [ end with ]:
+[{"question":"...","markingPoints":["intro with data","dimension 1","dimension 2","dimension 3","conclusion"],"modelAnswer":"Fully structured model answer following the mandatory structure. Cite real data, schemes, cases, articles.","marks":${longMarks},"hints":["How to write the introduction","Which dimensions to cover","How to structure the conclusion"]}]`;
 
     } else if (questionType === 'extralong' && isUPSCMains) {
-      prompt = `Generate exactly ${count} 20-mark UPSC Mains questions for:
-- Course: ${grade} | Subject: ${subject}
-- Chapter / Topic: ${resolvedChapter}
-- Difficulty: ${difficulty}
-- Format: 20-mark answer (300-350 words): Comprehensive intro, 6-8 dimensions, data/examples, conclusion
+      prompt = `Generate exactly ${count} 20-mark UPSC Mains questions.
+Course: ${grade} | Subject: ${subject} | Topic: ${resolvedChapter} | Difficulty: ${difficulty}
 
-Return ONLY a valid JSON array:
-[{"question":"...","markingPoints":["p1","p2","p3","p4","p5","p6"],"modelAnswer":"Comprehensive model answer 300-350 words.","marks":20,"hints":["Dimension 1","Dimension 2","Way forward"]}]`;
+${modelAnswerStructure}
+Model answer word limit: 350 words
 
+Return ONLY a valid JSON array — start with [ end with ]:
+[{"question":"...","markingPoints":["intro with current data","historical evolution","constitutional provisions","social dimension","economic dimension","governance/political","global perspective","way forward with schemes"],"modelAnswer":"350-word fully structured answer covering all 8 dimensions. Cite: at least 3 data points, 2 schemes with year, 2 constitutional articles, 1 landmark judgment.","marks":20,"hints":["Open with definition + recent event/data","Cover 5-6 dimensions in separate paragraphs","Close with committee recommendation and quote"]}]`;
+
+    } else {
     } else {
       // MCQ (default, and only option for entrance exams)
       const langNote = isRegionalLang

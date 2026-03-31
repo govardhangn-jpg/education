@@ -50,6 +50,15 @@ export default function QuizPage() {
 
   const set = (k, v) => setConfig(c => ({ ...c, [k]: v }));
 
+  // Return the appropriate default questionType when switching grades
+  const defaultQType = (grade) => {
+    const UPSC_MAINS = ['UPSC Mains – GS','UPSC Mains – Essay'];
+    const ENTRANCE   = ['NEET Preparation','KCET Preparation','NEET PG','IIT-JEE','UPSC Prelims'];
+    if (ENTRANCE.includes(grade)) return 'mcq';
+    if (UPSC_MAINS.includes(grade) || grade?.startsWith('Optional –')) return 'short'; // default to 10-mark
+    return 'mcq'; // school, LLB, RGUHS default MCQ
+  };
+
   // Classify current mode
   const isExamMode  = EXAM_MODES.includes(config.grade);  // neet/kcet/iit/neetpg
   const isLLBMode   = LLB_MODES.includes(config.grade);
@@ -355,7 +364,7 @@ export default function QuizPage() {
                     const syllabusMap = { 'NEET Preparation':'NEET','KCET Preparation':'KCET','NEET PG':'NEET PG','IIT-JEE':'IIT-JEE' };
                     const firstSub = SUBJECTS_BY_GRADE[em]?.[0] || '';
                     return (
-                      <button key={em} onClick={() => setConfig(c => ({ ...c, grade:em, syllabus:syllabusMap[em], subject:firstSub, chapter:'' }))}
+                      <button key={em} onClick={() => setConfig(c => ({ ...c, grade:em, syllabus:syllabusMap[em], subject:firstSub, chapter:'', questionType: defaultQType(em) }))}
                         style={{ padding:'10px 8px', background: active?em_meta.bg:'rgba(255,255,255,0.04)', border:`2px solid ${active?em_meta.color:'rgba(255,255,255,0.1)'}`, borderRadius:12, color: active?em_meta.color:'rgba(255,255,255,0.5)', fontSize:12, fontWeight:800, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
                         <span style={{ fontSize:18 }}>{em_meta.icon}</span>
                         <span>{em_meta.label}</span>
@@ -377,7 +386,7 @@ export default function QuizPage() {
                     ].map(([g,s,lbl]) => {
                       const active = config.grade === g;
                       return (
-                        <button key={g} onClick={() => setConfig(c => ({ ...c, grade:g, syllabus:s, subject:SUBJECTS_BY_GRADE[g]?.[0]||'', chapter:'' }))}
+                        <button key={g} onClick={() => setConfig(c => ({ ...c, grade:g, syllabus:s, subject:SUBJECTS_BY_GRADE[g]?.[0]||'', chapter:'', questionType: defaultQType(g) }))}
                           style={{ flex:1, padding:'8px 4px', background: active?'rgba(230,126,34,0.2)':'rgba(255,255,255,0.04)', border:`1.5px solid ${active?'#e67e22':'rgba(255,255,255,0.1)'}`, borderRadius:10, color: active?'#e67e22':'rgba(255,255,255,0.5)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
                           {lbl}
                         </button>
@@ -408,7 +417,7 @@ export default function QuizPage() {
                       const lbl = UPSC_META.stages.optional.labels[g];
                       const active = config.grade === g;
                       return (
-                        <button key={g} onClick={() => setConfig(c => ({ ...c, grade:g, syllabus:'UPSC', subject:SUBJECTS_BY_GRADE[g]?.[0]||'', chapter:'' }))}
+                        <button key={g} onClick={() => setConfig(c => ({ ...c, grade:g, syllabus:'UPSC', subject:SUBJECTS_BY_GRADE[g]?.[0]||'', chapter:'', questionType: defaultQType(g) }))}
                           style={{ padding:'6px 8px', background: active?'rgba(155,89,182,0.2)':'rgba(255,255,255,0.04)', border:`1.5px solid ${active?'#9b59b6':'rgba(255,255,255,0.1)'}`, borderRadius:8, color: active?'#c39bd3':'rgba(255,255,255,0.45)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
                           {lbl}
                         </button>
@@ -426,7 +435,7 @@ export default function QuizPage() {
                     {LLB_META.years.map(y => {
                       const active = config.grade === y;
                       return (
-                        <button key={y} onClick={() => setConfig(c => ({ ...c, grade:y, syllabus:'LLB', subject:SUBJECTS_BY_GRADE[y]?.[0]||'', chapter:'' }))}
+                        <button key={y} onClick={() => setConfig(c => ({ ...c, grade:y, syllabus:'LLB', subject:SUBJECTS_BY_GRADE[y]?.[0]||'', chapter:'', questionType: defaultQType(y) }))}
                           style={{ padding:'7px 10px', background: active?'rgba(192,57,43,0.2)':'rgba(255,255,255,0.04)', border:`1.5px solid ${active?'#c0392b':'rgba(255,255,255,0.1)'}`, borderRadius:10, color: active?'#e74c3c':'rgba(255,255,255,0.5)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
                           {LLB_META.yearLabels[y]}
                         </button>
@@ -444,7 +453,7 @@ export default function QuizPage() {
                     {Object.entries(RGUHS_META.programs).map(([key, prog]) => {
                       const isActiveProg = prog.years.includes(config.grade);
                       return (
-                        <button key={key} onClick={() => setConfig(c => ({ ...c, grade:prog.years[0], syllabus:'RGUHS', subject:SUBJECTS_BY_GRADE[prog.years[0]]?.[0]||'', chapter:'' }))}
+                        <button key={key} onClick={() => setConfig(c => ({ ...c, grade:prog.years[0], syllabus:'RGUHS', subject:SUBJECTS_BY_GRADE[prog.years[0]]?.[0]||'', chapter:'', questionType: defaultQType(prog.years[0]) }))}
                           style={{ padding:'7px 10px', background: isActiveProg?prog.color+'25':'rgba(255,255,255,0.04)', border:`1.5px solid ${isActiveProg?prog.color:'rgba(255,255,255,0.1)'}`, borderRadius:10, color: isActiveProg?prog.color:'rgba(255,255,255,0.5)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
                           {prog.icon} {prog.label}
                         </button>
@@ -459,7 +468,7 @@ export default function QuizPage() {
                       return activeProg.years.map(y => {
                         const active = config.grade === y;
                         return (
-                          <button key={y} onClick={() => setConfig(c => ({ ...c, grade:y, syllabus:'RGUHS', subject:SUBJECTS_BY_GRADE[y]?.[0]||'', chapter:'' }))}
+                          <button key={y} onClick={() => setConfig(c => ({ ...c, grade:y, syllabus:'RGUHS', subject:SUBJECTS_BY_GRADE[y]?.[0]||'', chapter:'', questionType: defaultQType(y) }))}
                             style={{ padding:'7px 10px', background: active?activeProg.color+'25':'rgba(255,255,255,0.04)', border:`1.5px solid ${active?activeProg.color:'rgba(255,255,255,0.1)'}`, borderRadius:10, color: active?activeProg.color:'rgba(255,255,255,0.5)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
                             {y}
                           </button>
