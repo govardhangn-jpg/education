@@ -66,6 +66,10 @@ router.post('/generate', protect, async (req, res) => {
     // chapter is now OPTIONAL — pick randomly if empty
     const resolvedChapter = resolveChapter(chapter, grade, syllabus, subject);
 
+    // Language flags — calculated early so prompts can use them
+    const isRegionalLang = !['English'].includes(language);
+    const includeOptionExplanations = !(isRegionalLang && count > 8);
+
     // ── Classify the course for context-aware prompts ────────────────────
     const EXAM_GRADES   = ['NEET Preparation','KCET Preparation','NEET PG','IIT-JEE'];
     const UPSC_LIST     = ['UPSC Prelims','UPSC Mains – GS','UPSC Mains – Essay',
@@ -138,10 +142,11 @@ Return ONLY a valid JSON array:
 - Chapter / Topic: ${resolvedChapter}${topic ? `\n- Specific topic: ${topic}` : ''}
 - Difficulty: ${difficulty}
 - Language: ${language}
+${isRegionalLang ? `- IMPORTANT: Write questions, marking points AND model answers entirely in ${language} script.` : ''}
 - Context: ${courseCtx}
 - Format: ${longDesc}
 
-Return ONLY a valid JSON array:
+Return ONLY a valid JSON array — start with [ end with ]:
 [{"question":"...","markingPoints":["point 1","point 2","point 3","point 4","point 5"],"modelAnswer":"Detailed model answer with structured paragraphs.","marks":${longMarks},"hints":["Structure hint 1","Structure hint 2"]}]`;
 
     } else if (questionType === 'extralong' && isUPSCMains) {
@@ -156,37 +161,37 @@ Return ONLY a valid JSON array:
 
     } else {
       // MCQ (default, and only option for entrance exams)
-      prompt = `Generate exactly ${count} multiple choice questions for:
-- Course: ${grade} | Syllabus: ${syllabus}
-- Subject: ${subject}
-- Chapter / Topic: ${resolvedChapter}${topic ? `\n- Specific topic: ${topic}` : ''}
-- Difficulty: ${difficulty}
-- Language: ${language}
-- Context: ${courseCtx}
+      const langNote = isRegionalLang
+        ? `IMPORTANT: Write ALL content (questions, options, explanations) entirely in ${language} script.`
+        : '';
+      const optExplField = includeOptionExplanations ? `,
+  "optionExplanations":["Option A: why correct/wrong","Option B: why wrong","Option C: why wrong","Option D: why wrong"]` : '';
+      const optExplRule = includeOptionExplanations
+        ? 'The optionExplanations array must have exactly 4 entries, each starting with the option letter, explaining why correct or why a distractor.'
+        : '';
 
-Return ONLY a valid JSON array:
-[{
-  "question":"...",
-  "options":["Option A","Option B","Option C","Option D"],
-  "correctIndex":0,
-  "explanation":"Why the correct answer is correct — explain the underlying concept in 2-3 sentences.",
-  "optionExplanations":[
-    "Option A: Why this is correct — explain the concept it tests.",
-    "Option B: Why this is wrong — explain the common misconception behind this distractor.",
-    "Option C: Why this is wrong — what concept students confuse this with.",
-    "Option D: Why this is wrong — clarify the distinction from the correct answer."
-  ]
-}]
-The optionExplanations array must have exactly 4 entries, one per option, starting with the option letter.`;
+      prompt = `Generate exactly ${count} multiple choice questions.
+Course: ${grade} | Syllabus: ${syllabus} | Subject: ${subject}
+Topic: ${resolvedChapter}${topic ? ' — '+topic : ''} | Difficulty: ${difficulty} | Language: ${language}
+Context: ${courseCtx}
+${langNote}
+
+Return ONLY a valid JSON array — start with [ and end with ]:
+[{"question":"...","options":["...","...","...","..."],"correctIndex":0,"explanation":"2-3 sentences explaining why the correct answer is correct and the key concept it tests."${optExplField}}]
+${optExplRule}`;
     }
 
     const anthropic = getClient();
 
-    // Scale max_tokens by question count (15Q needs ~4000 tokens)
-    const maxTok = Math.min(4096, 800 + (count * 200));
+    // Scale max_tokens properly for language and count
+    // Regional languages tokenise ~1.8x less efficiently
+    const langMultiplier = isRegionalLang ? 1.8 : 1.0;
+    // Per question: question(50) + 4 options(80) + explanation(80) + optionExplanations(240)
+    const tokensPerQ = Math.ceil(450 * langMultiplier);
+    const maxTok = Math.min(8000, 500 + (count * tokensPerQ));
 
-    // Raise timeout based on question count — 15Q at hard difficulty can take ~60s
-    const timeoutMs = 30000 + (count * 3000); // 30s base + 3s per question
+    // Raise timeout: regional languages take longer to generate
+    const timeoutMs = 30000 + (count * (isRegionalLang ? 5000 : 3000));
     let timedOut = false;
     const timer = setTimeout(() => {
       timedOut = true;
