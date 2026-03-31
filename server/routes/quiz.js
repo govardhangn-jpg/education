@@ -192,7 +192,6 @@ Return ONLY a valid JSON array — start with [ end with ]:
 [{"question":"...","markingPoints":["intro with current data","historical evolution","constitutional provisions","social dimension","economic dimension","governance/political","global perspective","way forward with schemes"],"modelAnswer":"350-word fully structured answer covering all 8 dimensions. Cite: at least 3 data points, 2 schemes with year, 2 constitutional articles, 1 landmark judgment.","marks":20,"hints":["Open with definition + recent event/data","Cover 5-6 dimensions in separate paragraphs","Close with committee recommendation and quote"]}]`;
 
     } else {
-    } else {
       // MCQ (default, and only option for entrance exams)
       const langNote = isRegionalLang
         ? `IMPORTANT: Write ALL content (questions, options, explanations) entirely in ${language} script.`
